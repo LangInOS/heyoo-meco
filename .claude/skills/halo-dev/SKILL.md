@@ -5,7 +5,19 @@ allowed-tools: Read, Write, Edit, Bash
 user-invocable: true
 ---
 
-# Halo Development Context v3
+# Meco Development Context v3
+
+## Startup Instructions
+
+Before starting work, read and follow these documents:
+
+1. `docs/plans/rebrand-halo-to-meco.md` — Rebrand decisions and scope
+2. `docs/operations/upstream-sync.md` — Upstream sync workflow and Rebrand Impact Map
+3. `docs/plans/meco-next-steps.md` — Current development direction
+4. `docs/plans/rebrand-follow-up-backlog.md` — Non-critical rename items (backlog only)
+5. `docs/operations/agent-startup.md` — Agent startup instructions
+
+**Current Status**: Working on `heyoo-meco/main` for Meco project development. Execute rebrand using `rebrand-halo-to-meco.md`; sync upstream using `upstream-sync.md`. The rebrand follow-up backlog is for reference only — do not proactively expand the rename scope.
 
 ## Mandatory Entry (Read in Order)
 
