@@ -11,7 +11,8 @@
 |---|---|---|
 | Display name (user-facing) | Halo | **Meco** |
 | Repo / npm package name | hello-halo | **heyoo-meco** |
-| Data folder | `~/.halo/` | `~/.meco/` |
+| Data folder (prod) | `~/.halo/` | `~/.meco/` |
+| Data folder (dev) | `~/.halo-dev/` | `~/.meco-dev/` |
 | Desktop Bundle ID | `com.halo.app` | `com.meco.app` |
 | Mobile Bundle ID | `com.halo.mobile` | `com.meco.mobile` |
 | Repository description | 7×24 Desktop AI Agent for Everyone. Visual AI assistant with remote access, file management, and built-in AI browser. | **Meco is an always-on, multi-device AI workspace companion for everyday digital life — run it on desktop, control it from mobile, and stay connected anywhere with remote access, file workflows, AI browser automation, and persistent workspace memory.** |
@@ -78,7 +79,7 @@ The standalone repository setup is complete. Rebranding should now happen in the
 
 All edits below are mechanical string replacements. No logic change, no new dependency, no schema migration. After applying, no test or runtime behavior should differ from main.
 
-### Phase 1 — Core product config (7 changes)
+### Phase 1 — Core product config (8 changes)
 
 | # | File | Field / Location | Old | New |
 |---|---|---|---|---|
@@ -89,6 +90,7 @@ All edits below are mechanical string replacements. No logic change, no new depe
 | 5 | `product.pro.json` | `name` | `Halo` | `Meco` |
 | 6 | `product.pro.json` | `dataFolderName` | `halo` | `meco` |
 | 7 | `src/main/services/ai-sources/auth-loader.ts` | `getDefaultProductConfig().name` | `Halo` | `Meco` |
+| 7b | `src/main/services/config.service.ts` | dev-mode hardcoded dir (line ~603) | `'.halo-dev'` | `'.meco-dev'` |
 
 ### Phase 2 — Desktop (Electron) user-visible strings (6 changes)
 
