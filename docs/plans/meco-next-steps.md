@@ -14,9 +14,10 @@ This document records the immediate Meco-side development direction after the re
 Before executing Meco work, read and follow:
 
 1. [Rebrand plan](./rebrand-halo-to-meco.md)
-2. [Upstream sync runbook](../operations/upstream-sync.md)
-3. [Agent startup instructions](../operations/agent-startup.md)
-4. [Rebrand follow-up backlog](./rebrand-follow-up-backlog.md)
+2. [Rebrand implementation phases](./rebrand-implementation-phases.md) — Phase 1 vs Phase 2 strategy
+3. [Upstream sync runbook](../operations/upstream-sync.md)
+4. [Agent startup instructions](../operations/agent-startup.md)
+5. [Rebrand follow-up backlog](./rebrand-follow-up-backlog.md)
 
 ## Immediate Direction
 

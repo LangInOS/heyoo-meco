@@ -5,9 +5,10 @@
 Before starting work on this repository, read and follow these documents:
 
 1. `docs/plans/rebrand-halo-to-meco.md` — Rebrand decisions and scope
-2. `docs/operations/upstream-sync.md` — Upstream sync workflow and Rebrand Impact Map
-3. `docs/plans/meco-next-steps.md` — Current development direction
-4. `docs/plans/rebrand-follow-up-backlog.md` — Non-critical rename items (backlog only)
+2. `docs/plans/rebrand-implementation-phases.md` — Phased implementation strategy (Phase 1 vs Phase 2)
+3. `docs/operations/upstream-sync.md` — Upstream sync workflow and Rebrand Impact Map
+4. `docs/plans/meco-next-steps.md` — Current development direction
+5. `docs/plans/rebrand-follow-up-backlog.md` — Non-critical rename items (backlog only)
 
 ## Current Development Context
 

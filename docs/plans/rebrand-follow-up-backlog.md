@@ -2,7 +2,61 @@
 
 This document lists non-critical Halo → Meco rename items intentionally left out of the first rebrand pass.
 
-Use this as backlog only. Do not expand the active rebrand scope from this file unless the user explicitly confirms it.
+**Phase 1 (Current)**: These items are NOT replaced. See [rebrand-implementation-phases.md](./rebrand-implementation-phases.md) for phased implementation strategy.
+
+**Phase 2 (Future)**: When Meco becomes fully independent, these items will be replaced via complete rebrand script.
+
+---
+
+## Phase 2 — Complete Rebrand Items
+
+The following items are deferred to Phase 2 complete rebrand. The replacement script designed for Phase 1 already covers string replacements; Phase 2 adds file/directory rename operations.
+
+### File Names and Directory Names
+
+These require file system operations (not string replacement):
+
+- `HaloLogo.tsx` → `MecoLogo.tsx`
+- `android/app/src/main/java/com/halo/mobile/` → `com/meco/mobile/`
+- All files containing `Halo` in name
+- All directories containing `halo` in path
+
+### Java Package Declaration
+
+After directory move:
+
+- `package com.halo.mobile;` → `package com.meco.mobile;`
+- `android/app/build.gradle` `namespace` → `com.meco.mobile`
+
+### Internal Code Names
+
+These are string replacements but deferred to Phase 2 to reduce merge conflict risk:
+
+- `window.halo`
+- `HaloAPI`
+- `HaloConfig`
+- `halo:` IPC and DOM event prefixes
+- CSS variables and classes such as `--halo-glow`, `.halo-breathe`, and `.halo-space-card`
+- developer-only module, type, or directory names that contain `halo`
+
+### SDK Package Name
+
+- `@hello-halo/agent-sdk` — independently published artifact; rename decision depends on SDK ownership
+
+---
+
+## Phase 1 — Already Replaced
+
+The following are replaced in Phase 1 via global string replacement (see [rebrand-halo-to-meco.md](./rebrand-halo-to-meco.md)):
+
+- User-facing display names (`Halo` → `Meco`)
+- Product configuration (`product.json` fields)
+- Bundle IDs (`com.halo.app`, `com.halo.mobile`)
+- Data folder names (`halo`, `halo-dev`)
+- Android/iOS app names and labels
+- All runtime-visible strings containing `halo` or `Halo`
+
+---
 
 ## Documentation and Marketing
 
@@ -14,19 +68,6 @@ These items do not affect runtime behavior and can be handled in a separate pass
 - GitHub repository About, Topics, and Description
 - release notes and changelog entries
 - documentation asset paths that contain Halo branding
-
-## Internal Code Names
-
-These are intentionally not part of the first rebrand pass because changing them would create a large diff and increase merge risk:
-
-- `window.halo`
-- `HaloAPI`
-- `HaloConfig`
-- `HaloLogo`
-- `halo:` IPC and DOM event prefixes
-- CSS variables and classes such as `--halo-glow`, `.halo-breathe`, and `.halo-space-card`
-- SDK package names such as `@hello-halo/agent-sdk`
-- developer-only module, type, or directory names that contain `halo`
 
 ## Build and Release Metadata
 
@@ -53,7 +94,7 @@ The first development rebrand can use the new Meco data directory directly. Prod
 
 ## Tests, Fixtures, and Snapshots
 
-Handle these when validation exposes failures or when a dedicated cleanup pass is approved:
+Phase 1 replacement script already covers test files. Handle these when validation exposes failures:
 
 - test snapshots containing `Halo`
 - mock configuration values

@@ -408,9 +408,9 @@ During Stage 4, if upstream changes touch any item below, preserve Meco identity
 | `capacitor.config.ts` | `appName`: `Meco` | `Halo` |
 | `capacitor.config.ts` | `appId`: `com.meco.mobile` | `com.halo.mobile` |
 | `android/app/src/main/res/values/strings.xml` | launcher/app strings use `Meco` and `com.meco.mobile` | `Halo` and `com.halo.mobile` |
-| `android/app/build.gradle` | `namespace`: `com.meco.mobile` | `com.halo.mobile` |
+| `android/app/build.gradle` | `namespace`: `com.halo.mobile` (Phase 1, unchanged; Phase 2 will change to `com.meco.mobile` once directory paths are renamed) | `com.halo.mobile` |
 | `android/app/build.gradle` | `applicationId`: `com.meco.mobile` | `com.halo.mobile` |
-| `android/app/src/main/java/com/meco/mobile/**` | Java package path and declarations: `com.meco.mobile` | `com.halo.mobile` |
+| `android/app/src/main/java/com/halo/mobile/**` | Java package path: `com.halo.mobile` (Phase 1, directory not moved; Phase 2 will move to `com/meco/mobile/`) | `com.halo.mobile` |
 | `ios/App/App/Info.plist` | `CFBundleDisplayName`: `Meco` | `Halo` |
 | `ios/App/App.xcodeproj/project.pbxproj` | `PRODUCT_BUNDLE_IDENTIFIER`: `com.meco.mobile` | `com.halo.mobile` |
 

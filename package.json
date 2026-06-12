@@ -7,6 +7,11 @@
   "author": "Halo Team",
   "license": "MIT",
   "scripts": {
+    "rebrand": "node scripts/rebrand.mjs",
+    "rebrand:reverse": "node scripts/rebrand.mjs --reverse",
+    "rebrand:check": "node scripts/rebrand.mjs --check",
+    "rebrand:auto": "node scripts/rebrand.mjs --auto",
+    "rebrand:dry-run": "node scripts/rebrand.mjs --dry-run",
     "dev": "npm run bundle:builtin && cross-env HALO_DATA_DIR=~/.halo-dev electron-vite dev",
     "build": "electron-vite build",
     "prebuild": "node scripts/sync-builtin-apps.mjs",

@@ -103,18 +103,23 @@ All edits below are mechanical string replacements. No logic change, no new depe
 | 12 | `resources/README.txt` | full file | All `Halo` instances | `Meco` |
 | 13 | `package.json` | top-level `name` (npm) | `halo` | `heyoo-meco` (optional — see §4) |
 
-### Phase 3 — Android (5 changes + 1 directory move)
+### Phase 3 — Android (3 changes, directory move deferred to Phase 2)
+
+> **Note**: Java directory move (`com/halo/mobile/` → `com/meco/mobile/`) is deferred to Phase 2 complete rebrand (see [rebrand-implementation-phases.md](./rebrand-implementation-phases.md)). In Phase 1, `applicationId` change alone creates a separate Meco app on device.
 
 | # | File | Field / Location | Old | New |
 |---|---|---|---|---|
 | 14 | `android/app/src/main/res/values/strings.xml` | `app_name` | `Halo` | `Meco` |
 | 15 | `android/app/src/main/res/values/strings.xml` | `title_activity_main` | `Halo` | `Meco` |
 | 16 | `android/app/src/main/res/values/strings.xml` | `package_name`, `custom_url_scheme` | `com.halo.mobile` | `com.meco.mobile` |
-| 17 | `android/app/build.gradle` | `namespace` | `com.halo.mobile` | `com.meco.mobile` |
-| 18 | `android/app/build.gradle` | `applicationId` | `com.halo.mobile` | `com.meco.mobile` |
-| 19 | `android/app/src/main/java/com/halo/mobile/` | **3 Java files + whole directory tree** | `com/halo/mobile/*.java` with `package com.halo.mobile;` | Move to `com/meco/mobile/*.java` with `package com.meco.mobile;` |
+| 17 | `android/app/build.gradle` | `applicationId` | `com.halo.mobile` | `com.meco.mobile` |
+| 18 | `android/app/src/main/java/com/halo/mobile/ForegroundServicePlugin.java` | `call.getString("title", "Halo")` default | `"Halo"` | `"Meco"` |
+| 19 | `android/app/src/main/java/com/halo/mobile/HaloForegroundService.java` | Default notification title `String title = "Halo"` | `"Halo"` | `"Meco"` |
 
-Affected files: `MainActivity.java`, `HaloForegroundService.java`, `ForegroundServicePlugin.java`.
+**Deferred to Phase 2** (not executed in Phase 1):
+- `android/app/build.gradle` `namespace` change
+- `android/app/src/main/java/com/halo/mobile/` directory move
+- Java `package com.halo.mobile;` declaration update
 
 ### Phase 4 — iOS / Capacitor (4 changes)
 
@@ -215,3 +220,4 @@ If any of these need to flip later (e.g. marketing wants the README updated), do
 - **Code signing / notarization**: macOS code signing identity is tied to the Team ID, not the Bundle ID, so signing continues to work. Android keystore stays valid; only `applicationId` flips.
 - **iOS App Store Connect**: A new Bundle ID requires a new App Store entry. Not relevant for dev branch.
 - **macOS Gatekeeper**: A new Bundle ID means a fresh `quarantine` flag — first launch needs right-click → Open once.
+- **`halo-locale` localStorage key**: `src/renderer/i18n/index.ts` stores the user's language preference under key `halo-locale`. After rebrand this becomes `meco-locale`. Existing user locale preferences will be lost on first Meco launch (the app will fall back to the default language). No migration is performed in Phase 1; this is acceptable for the dev branch.
