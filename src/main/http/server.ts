@@ -432,8 +432,8 @@ function getRemoteLoginPage(): string {
       margin: 0 auto;
     }
     input {
-      -webkit-appearance: none;
-      flex: 1;
+      width: 100%;
+      min-width: 0;
       padding: 1rem;
       border: 1px solid #333;
       border-radius: 12px;
