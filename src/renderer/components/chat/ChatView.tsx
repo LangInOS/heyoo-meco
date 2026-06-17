@@ -16,6 +16,8 @@ import { useOnboardingStore } from '../../stores/onboarding.store'
 import { useAIBrowserStore } from '../../stores/ai-browser.store'
 import { MessageList } from './MessageList'
 import type { MessageListHandle } from './MessageList'
+import { TurnRail } from './TurnRail'
+import type { TurnItem } from './TurnRail'
 import { InputArea } from './InputArea'
 import { ScrollToBottomButton } from './ScrollToBottomButton'
 import { Sparkles } from '../icons/ToolIcons'
@@ -331,6 +333,30 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
   // Keep displayMessagesRef in sync for search navigation
   displayMessagesRef.current = displayMessages
 
+  // User-question turns for the right-edge navigation rail.
+  // Exclude injected (file-context) messages — they aren't real questions.
+  // Ordered oldest→newest (top→bottom on the rail, matching reading order).
+  const userTurns = useMemo<TurnItem[]>(
+    () =>
+      displayMessages
+        .filter(m => m.role === 'user' && m.source !== 'injection')
+        .map(m => ({ id: m.id, content: m.content })),
+    [displayMessages],
+  )
+
+  // Navigate to a user-question turn by reusing the existing
+  // search:navigate-to-message event bus (handled in the effect above).
+  // It calls scrollToIndex(messageIndex, 'smooth') for center alignment and
+  // applies a short highlight pulse — both exactly what we want here.
+  // query:'' skips search-term highlighting but keeps the location pulse.
+  const handleNavigateTurn = useCallback((messageId: string) => {
+    window.dispatchEvent(
+      new CustomEvent('search:navigate-to-message', {
+        detail: { messageId, query: '' },
+      }),
+    )
+  }, [])
+
   const displayStreamingContent = mockStreamingContent || streamingContent
   const displayIsGenerating = isMockAnimating || isGenerating
   const displayIsThinking = isMockThinking || isThinking
@@ -395,6 +421,10 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
           visible={showScrollButton && hasMessages}
           onClick={() => messageListRef.current?.scrollToBottom('auto')}
         />
+
+        {/* Conversation-turn navigation rail (desktop only, >=3 user turns).
+            Shares this relative wrapper so it overlays the scroll area. */}
+        <TurnRail turns={userTurns} onNavigate={handleNavigateTurn} />
       </div>
 
       {/* Input area */}

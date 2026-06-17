@@ -15,13 +15,16 @@
  *   for consistent message and streaming display across all chat views.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Loader2, AlertCircle, Eraser } from 'lucide-react'
 import { api } from '../../api'
 import { useChatStore } from '../../stores/chat.store'
 import { useSmartScroll } from '../../hooks/useSmartScroll'
 import { MessageRow } from '../chat/MessageRow'
 import { StreamingSection } from '../chat/StreamingSection'
+import { TurnRail } from '../chat/TurnRail'
+import { ScrollToBottomButton } from '../chat/ScrollToBottomButton'
+import type { TurnItem } from '../chat/TurnRail'
 import { useBrowserToolCalls } from '../chat/useBrowserToolCalls'
 import { InterruptedBubble } from '../chat/InterruptedBubble'
 import { CompactNotice } from '../chat/CompactNotice'
@@ -72,7 +75,7 @@ export function AppChatView({ appId, spaceId }: AppChatViewProps) {
   } = session
 
   // ── Smart scroll: auto-follow during streaming, snap after message load ──
-  const { scrollToBottom, handleScroll } = useSmartScroll({
+  const { scrollToBottom, handleScroll, showScrollButton } = useSmartScroll({
     containerRef: scrollRef,
     deps: [streamingContent, thoughts.length, isStreaming, isThinking, pendingQuestion, messages],
     behavior: 'auto',
@@ -257,6 +260,27 @@ export function AppChatView({ appId, spaceId }: AppChatViewProps) {
     answerQuestion(conversationId, answers)
   }, [conversationId, answerQuestion])
 
+  // User-question turns for the right-edge navigation rail.
+  // Exclude injected (file-context) messages — they aren't real questions.
+  // Ordered oldest→newest (top→bottom on the rail, matching reading order).
+  // NOTE: these hooks must run before any early return so hook order stays
+  // stable across the loading/error/active render branches.
+  const userTurns = useMemo<TurnItem[]>(
+    () =>
+      messages
+        .filter(m => m.role === 'user' && m.source !== 'injection')
+        .map(m => ({ id: m.id, content: m.content })),
+    [messages],
+  )
+
+  // Navigate to a user-question turn. Unlike the Space chat (virtualized with
+  // react-virtuoso), AppChatView renders every message to the DOM, so we can
+  // scroll directly via scrollIntoView — no event bus needed.
+  const handleNavigateTurn = useCallback((messageId: string) => {
+    const el = scrollRef.current?.querySelector(`[data-message-id="${messageId}"]`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [])
+
   // ── Loading state ──
   if (loadState === 'loading') {
     return (
@@ -309,8 +333,9 @@ export function AppChatView({ appId, spaceId }: AppChatViewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Message area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto" onScroll={handleScroll}>
+      {/* Message area — relative wrapper so the turn rail can overlay it */}
+      <div className="flex-1 relative overflow-hidden">
+      <div ref={scrollRef} className="h-full overflow-y-auto" onScroll={handleScroll}>
         <div className="sm:max-w-3xl sm:mx-auto py-6 px-2 sm:px-4">
           {/* Empty state hint */}
           {loadState === 'empty' && !hasStreamingContent && (
@@ -372,6 +397,17 @@ export function AppChatView({ appId, spaceId }: AppChatViewProps) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Scroll to bottom button */}
+      <ScrollToBottomButton
+        visible={showScrollButton && messages.length > 0}
+        onClick={() => scrollToBottom('smooth')}
+      />
+
+      {/* Conversation-turn navigation rail (desktop only, >=1 user turn).
+          Shares this relative wrapper so it overlays the scroll area. */}
+      <TurnRail turns={userTurns} onNavigate={handleNavigateTurn} />
       </div>
 
       {/* Clear chat + Input area */}
