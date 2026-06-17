@@ -19,7 +19,7 @@ import { Header } from '../components/layout/Header'
 import { SpaceGuide } from '../components/space/SpaceGuide'
 import { CreateSpaceDialog } from '../components/space/CreateSpaceDialog'
 import { Popover, PopoverTrigger, PopoverContent } from '../components/ui/Popover'
-import { Blocks, ArrowRight, AlertCircle, SendHorizontal, Unplug, Bot, LayoutGrid, List, Play, Pause, AlignJustify, MessageSquare, HelpCircle, Clock } from 'lucide-react'
+import { Blocks, ArrowRight, AlertCircle, SendHorizontal, Unplug, Bot, LayoutGrid, List, Play, Pause, MessageSquare, HelpCircle, Clock } from 'lucide-react'
 import { AppAvatar } from '../components/apps/AppAvatar'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { api } from '../api'
@@ -32,8 +32,9 @@ import type { ConversationMeta } from '../types'
 import { DigitalHumanDetailNew } from '../components/apps/DigitalHumanDetailNew'
 import { AppInstallDialog } from '../components/apps/AppInstallDialog'
 
-// Layout mode for space and digital human card sections
-type LayoutMode = 'list' | 'grid' | 'detail'
+// Layout mode for space and digital human card sections: 'grid' (2-col) or 'list' (1-col).
+// Detail level is controlled separately by per-section "show details" toggles.
+type LayoutMode = 'list' | 'grid'
 
 // Filter out auto-generated empty conversation titles like "Chat 6-7 10:46"
 const AUTO_TITLE_PATTERN = /^Chat \d{1,2}-\d{1,2} \d{1,2}:\d{2}$/
@@ -46,9 +47,14 @@ function isMeaningfulConversation(c: ConversationMeta): boolean {
 // Persistent storage keys for layout preferences
 const SPACE_LAYOUT_KEY = 'halo-space-layout'
 const DH_LAYOUT_KEY = 'halo-dh-layout'
+// Per-section "show details" toggles (independent of grid/list layout): shows recent
+// conversations, associated apps/spaces, and last-run info on each card when enabled.
+// Spaces and Digital Humans keep separate toggles so each can be shown/hidden independently.
+const SPACE_SHOW_DETAILS_KEY = 'halo-space-show-details'
+const DH_SHOW_DETAILS_KEY = 'halo-dh-show-details'
 
 function readLayout(key: string, fallback: LayoutMode, isMobile: boolean): LayoutMode {
-  const valid: LayoutMode[] = ['grid', 'list', 'detail']
+  const valid: LayoutMode[] = ['grid', 'list']
   const saved = localStorage.getItem(key)
   if (saved && valid.includes(saved as LayoutMode)) return saved as LayoutMode
   return isMobile ? 'list' : fallback
@@ -82,21 +88,31 @@ export function HomePageNew() {
   // View mode: 'classic' (Halo+Studio side by side) or 'unified' (stacked sections)
   const [viewMode, setViewMode] = useState<'classic' | 'unified'>('unified')
   const isMobile = useIsMobile()
-  // Digital humans layout: 'list' (1 col), 'grid' (2 col), or 'detail' (1 col expanded)
+  // Digital humans layout: 'list' (1 col) or 'grid' (2 col)
   const [dhLayout, setDhLayoutState] = useState<LayoutMode>(() => readLayout(DH_LAYOUT_KEY, 'grid', isMobile))
   const setDhLayout = (v: LayoutMode) => { setDhLayoutState(v); writeLayout(DH_LAYOUT_KEY, v) }
-  // Spaces layout: 'list' (1 col), 'grid' (2 col), or 'detail' (1 col expanded with more info)
+  // Spaces layout: 'list' (1 col) or 'grid' (2 col)
   const [spaceLayout, setSpaceLayoutState] = useState<LayoutMode>(() => readLayout(SPACE_LAYOUT_KEY, 'grid', isMobile))
   const setSpaceLayout = (v: LayoutMode) => { setSpaceLayoutState(v); writeLayout(SPACE_LAYOUT_KEY, v) }
-  // Space guide visibility: collapsed by default in list/detail modes
+  // Per-section "show details" toggles: enrich cards (grid or list) with recent conversations,
+  // associated apps/spaces, and last-run info. Independent of layout; persisted across reloads.
+  const [showSpaceDetails, setShowSpaceDetails] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem(SPACE_SHOW_DETAILS_KEY) === 'true'
+  )
+  useEffect(() => { localStorage.setItem(SPACE_SHOW_DETAILS_KEY, String(showSpaceDetails)) }, [showSpaceDetails])
+  const [showDhDetails, setShowDhDetails] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem(DH_SHOW_DETAILS_KEY) === 'true'
+  )
+  useEffect(() => { localStorage.setItem(DH_SHOW_DETAILS_KEY, String(showDhDetails)) }, [showDhDetails])
+  // Space guide visibility: collapsed by default
   const [showSpaceGuide, setShowSpaceGuide] = useState(false)
   // Classic mode: always grid. Unified mode: respects spaceLayout state.
   const effectiveSpaceLayout = viewMode === 'classic' ? 'grid' : spaceLayout
 
-  // Fetch latest meaningful conversation per space for detail mode
+  // Fetch latest meaningful conversation per space when details are shown
   const [latestConversations, setLatestConversations] = useState<Record<string, ConversationMeta | null>>({})
   useEffect(() => {
-    if (effectiveSpaceLayout !== 'detail' || spaces.length === 0) return
+    if (!showSpaceDetails || viewMode !== 'unified' || spaces.length === 0) return
     const fetchAll = async () => {
       const results: Record<string, ConversationMeta | null> = {}
       await Promise.all(spaces.map(async (space) => {
@@ -119,12 +135,12 @@ export function HomePageNew() {
       setLatestConversations(results)
     }
     fetchAll()
-  }, [spaces, effectiveSpaceLayout])
+  }, [spaces, showSpaceDetails, viewMode])
 
-  // Fetch latest meaningful conversation per digital human for detail mode
+  // Fetch latest meaningful conversation per digital human when details are shown
   const [dhLatestConversations, setDhLatestConversations] = useState<Record<string, ConversationMeta | null>>({})
   useEffect(() => {
-    if (dhLayout !== 'detail') return
+    if (!showDhDetails) return
     const dhApps = apps.filter(a => a.spec.type === 'automation' && a.status !== 'uninstalled' && a.spaceId)
     if (dhApps.length === 0) return
     const fetchAll = async () => {
@@ -149,7 +165,7 @@ export function HomePageNew() {
       setDhLatestConversations(results)
     }
     fetchAll()
-  }, [apps, dhLayout])
+  }, [apps, showDhDetails])
 
   // Restore scroll position on mount (from sessionStorage, for returning from space/settings)
   useEffect(() => {
@@ -436,7 +452,10 @@ export function HomePageNew() {
           </div>
           <div className="flex items-center gap-1">
             {viewMode === 'unified' && (
-              <LayoutToggle value={spaceLayout} onChange={setSpaceLayout} />
+              <>
+                <LayoutToggle value={spaceLayout} onChange={setSpaceLayout} />
+                <DetailsSwitch active={showSpaceDetails} onToggle={() => setShowSpaceDetails(v => !v)} />
+              </>
             )}
             <button
               onClick={() => setShowCreateDialog(true)}
@@ -465,6 +484,7 @@ export function HomePageNew() {
                   key={`${space.id}-${i}`}
                   space={space}
                   layout={effectiveSpaceLayout}
+                  showDetails={viewMode === 'unified' && showSpaceDetails}
                   onClick={() => handleSpaceClick(space)}
                   onEdit={(e) => handleEditSpace(e, space)}
                   onDelete={(e) => handleDeleteSpace(e, space.id)}
@@ -483,8 +503,6 @@ export function HomePageNew() {
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-medium text-muted-foreground">{t('Digital Humans')}</h3>
               <div className="flex items-center gap-1">
-                <LayoutToggle value={dhLayout} onChange={setDhLayout} />
-
                 {/* Apps & Marketplace — aggregates Digital Humans / Skills / MCP (the digital-human ecosystem) in one popover */}
                 <Popover>
                   <PopoverTrigger className="p-1.5 rounded-lg text-muted-foreground hover:bg-secondary/50 transition-colors">
@@ -531,13 +549,16 @@ export function HomePageNew() {
                   </PopoverContent>
                 </Popover>
 
+                <LayoutToggle value={dhLayout} onChange={setDhLayout} />
+                <DetailsSwitch active={showDhDetails} onToggle={() => setShowDhDetails(v => !v)} />
+
                 {/* Create button */}
                 <button
                   onClick={() => setShowInstallDialog(true)}
                   className="flex items-center gap-1 px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  {t('Create')}
+                  {t('New')}
                 </button>
               </div>
             </div>
@@ -556,6 +577,7 @@ export function HomePageNew() {
                       key={app.id}
                       app={app}
                       layout={dhLayout}
+                      showDetails={showDhDetails}
                       associatedSpace={associatedSpace}
                       latestConversation={latestConv}
                       formatTimeAgo={formatTimeAgo}
@@ -839,6 +861,7 @@ function AppPreviewChip({ app, showStatusDot, onSelect }: AppPreviewChipProps) {
 interface DigitalHumanCardProps {
   app: InstalledApp
   layout?: LayoutMode
+  showDetails?: boolean
   associatedSpace?: Space
   latestConversation?: ConversationMeta | null
   formatTimeAgo?: (dateStr: string) => string
@@ -855,115 +878,10 @@ const STATUS_CONFIG = {
   uninstalled: { dot: 'border border-muted-foreground/40', label: 'Uninstalled' },
 } as const
 
-function DigitalHumanCard({ app, layout = 'grid', associatedSpace, latestConversation, formatTimeAgo, onClick, onTogglePause }: DigitalHumanCardProps) {
+function DigitalHumanCard({ app, layout = 'grid', showDetails = false, associatedSpace, latestConversation, formatTimeAgo, onClick, onTogglePause }: DigitalHumanCardProps) {
   const { t } = useTranslation()
   const statusInfo = STATUS_CONFIG[app.status] || STATUS_CONFIG.active
 
-  // Detail layout: expanded card with more info
-  if (layout === 'detail') {
-    return (
-      <div
-        onClick={onClick}
-        className="p-4 rounded-xl border border-border sm:hover:border-primary/40 sm:hover:bg-secondary/50 transition-all cursor-pointer group animate-fade-in"
-      >
-        <div className="flex items-start gap-3">
-          {/* Avatar/Icon */}
-          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-            <AppAvatar
-              size={40}
-              name={app.spec.name || app.id}
-              status={app.status}
-            />
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusInfo.dot}`} />
-              <span className="font-medium text-sm truncate">{app.spec.name}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-              {app.spec.description || t('No description')}
-            </p>
-          </div>
-
-          {/* Actions */}
-          {(app.status === 'active' || app.status === 'paused') && (
-            <button
-              onClick={e => {
-                e.stopPropagation()
-                onTogglePause()
-              }}
-              className="p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:hover:bg-secondary transition-all"
-              title={app.status === 'active' ? t('Pause') : t('Resume')}
-            >
-              {app.status === 'active' ? (
-                <Pause className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <Play className="w-4 h-4 text-primary" />
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Footer: status label */}
-        <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground">{t(statusInfo.label)}</span>
-          {app.lastRunAt && (
-            <span className="text-[11px] text-muted-foreground/70">
-              {t('Last run')}: {new Date(app.lastRunAt).toLocaleDateString()}
-            </span>
-          )}
-        </div>
-
-        {/* Detail mode: additional info below */}
-        {/* Associated Space */}
-        {associatedSpace && (
-          <div className="mt-2 flex items-center gap-2">
-            <SpaceIcon iconId={associatedSpace.icon} size={14} />
-            <span className="text-xs truncate">{associatedSpace.name}</span>
-          </div>
-        )}
-
-        {/* Recent Conversation */}
-        {latestConversation && (
-          <div className="mt-2 flex items-start gap-2">
-            <MessageSquare className="w-3.5 h-3.5 text-primary/60 mt-0.5 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <div className="text-sm truncate">{latestConversation.title || t('Untitled')}</div>
-              {latestConversation.preview && (
-                <div className="text-xs text-muted-foreground truncate mt-0.5">
-                  {latestConversation.preview}
-                </div>
-              )}
-            </div>
-            {formatTimeAgo && (
-              <span className="text-[10px] text-muted-foreground/60 shrink-0">
-                {formatTimeAgo(latestConversation.updatedAt)}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Last Run Info */}
-        {app.lastRunAt && (
-          <div className="mt-2 flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-            <span className="text-xs">
-              {formatTimeAgo ? formatTimeAgo(new Date(app.lastRunAt).toISOString()) : new Date(app.lastRunAt).toLocaleDateString()}
-              {app.lastRunOutcome && (
-                <span className={`ml-1 ${app.lastRunOutcome === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
-                  ({app.lastRunOutcome})
-                </span>
-              )}
-            </span>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // Default: grid/list layout (original rendering)
   return (
     <div
       onClick={onClick}
@@ -1009,21 +927,116 @@ function DigitalHumanCard({ app, layout = 'grid', associatedSpace, latestConvers
         )}
       </div>
 
-      {/* Footer: status label */}
+      {/* Footer: status label (+ last-run date only when details are hidden, to avoid duplication) */}
       <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
         <span className="text-[11px] text-muted-foreground">{t(statusInfo.label)}</span>
-        {app.lastRunAt && (
+        {!showDetails && app.lastRunAt && (
           <span className="text-[11px] text-muted-foreground/70">
             {t('Last run')}: {new Date(app.lastRunAt).toLocaleDateString()}
           </span>
         )}
       </div>
+
+      {/* Details (toggled by the global "show details" switch) */}
+      {showDetails && (
+        <>
+          {/* Associated Space */}
+          {associatedSpace && (
+            <div className="mt-2 flex items-center gap-2">
+              <SpaceIcon iconId={associatedSpace.icon} size={14} />
+              <span className="text-xs truncate">{associatedSpace.name}</span>
+            </div>
+          )}
+
+          {/* Recent Conversation */}
+          {latestConversation && (
+            <div className="mt-2 flex items-start gap-2">
+              <MessageSquare className="w-3.5 h-3.5 text-primary/60 mt-0.5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm truncate">{latestConversation.title || t('Untitled')}</div>
+                {latestConversation.preview && (
+                  <div className="text-xs text-muted-foreground truncate mt-0.5">
+                    {latestConversation.preview}
+                  </div>
+                )}
+              </div>
+              {formatTimeAgo && (
+                <span className="text-[10px] text-muted-foreground/60 shrink-0">
+                  {formatTimeAgo(latestConversation.updatedAt)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Last Run Info */}
+          {app.lastRunAt && (
+            <div className="mt-2 flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
+              <span className="text-xs">
+                {formatTimeAgo ? formatTimeAgo(new Date(app.lastRunAt).toISOString()) : new Date(app.lastRunAt).toLocaleDateString()}
+                {app.lastRunOutcome && (
+                  <span className={`ml-1 ${app.lastRunOutcome === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+                    ({app.lastRunOutcome})
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
 
 // ──────────────────────────────────────────────
-// Layout Toggle — single button to cycle list/grid/detail
+// Details Toggle — global switch to enrich cards (recent conversations, associated
+// apps/spaces, last-run info). Independent of the grid/list layout choice.
+// ──────────────────────────────────────────────
+// Details Switch — per-section boolean toggle (Switch + label) that enriches cards
+// with recent conversations, associated apps/spaces, and last-run info. Intentionally
+// a labeled switch (not an icon button) so it reads as on/off and stays distinct from
+// the icon-based LayoutToggle (grid/list mode).
+// ──────────────────────────────────────────────
+
+interface DetailsSwitchProps {
+  active: boolean
+  onToggle: () => void
+}
+
+function DetailsSwitch({ active, onToggle }: DetailsSwitchProps) {
+  const { t } = useTranslation()
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      onClick={onToggle}
+      title={t('Show details')}
+      className={`flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full text-[11px] leading-none transition-colors ${
+        active
+          ? 'bg-primary/15 text-primary'
+          : 'bg-secondary text-muted-foreground hover:bg-secondary/70'
+      }`}
+    >
+      {t('Details')}
+      {/* Mini Switch-style sliding knob inside the capsule: track fills + knob slides when active */}
+      <span
+        className={`inline-flex items-center h-3.5 w-6 rounded-full transition-colors ${
+          active ? 'bg-primary' : 'bg-muted-foreground/30'
+        }`}
+      >
+        <span
+          className={`inline-block h-2.5 w-2.5 rounded-full bg-background shadow transition-transform ${
+            active ? 'translate-x-[12px]' : 'translate-x-0.5'
+          }`}
+        />
+      </span>
+    </button>
+  )
+}
+
+// ──────────────────────────────────────────────
+// Layout Toggle — single button to cycle list/grid
 // ──────────────────────────────────────────────
 
 interface LayoutToggleProps {
@@ -1031,7 +1044,7 @@ interface LayoutToggleProps {
   onChange: (mode: LayoutMode) => void
 }
 
-const LAYOUT_CYCLE: LayoutMode[] = ['grid', 'list', 'detail']
+const LAYOUT_CYCLE: LayoutMode[] = ['grid', 'list']
 
 function LayoutToggle({ value, onChange }: LayoutToggleProps) {
   const { t } = useTranslation()
@@ -1039,23 +1052,26 @@ function LayoutToggle({ value, onChange }: LayoutToggleProps) {
     const idx = LAYOUT_CYCLE.indexOf(value)
     onChange(LAYOUT_CYCLE[(idx + 1) % LAYOUT_CYCLE.length])
   }
+  // The icon shows the *target* mode (what clicking will switch to), so the button
+  // reads as an action ("switch to list") rather than a state indicator.
+  const next: LayoutMode = LAYOUT_CYCLE[(LAYOUT_CYCLE.indexOf(value) + 1) % LAYOUT_CYCLE.length]
   const icons: Record<LayoutMode, React.ReactNode> = {
     grid: <LayoutGrid className="w-4 h-4" />,
     list: <List className="w-4 h-4" />,
-    detail: <AlignJustify className="w-4 h-4" />,
   }
   const titles: Record<LayoutMode, string> = {
     grid: t('Grid view'),
     list: t('List view'),
-    detail: t('Detail view'),
   }
+  const targetTitle = t('Switch to {{view}}', { view: titles[next] })
   return (
     <button
       onClick={cycle}
       className="p-1.5 rounded-lg text-muted-foreground sm:hover:bg-secondary/50 transition-colors"
-      title={titles[value]}
+      title={targetTitle}
+      aria-label={targetTitle}
     >
-      {icons[value]}
+      {icons[next]}
     </button>
   )
 }
@@ -1090,12 +1106,14 @@ function getAppsStatusSummary(apps: { status: AppStatus }[], t: (key: string) =>
 }
 
 // ──────────────────────────────────────────────
-// Space Card — supports list, grid, and detail layouts
+// Space Card — supports grid/list layouts; details (conversations, associated
+// digital humans) are shown when the global "show details" toggle is on.
 // ──────────────────────────────────────────────
 
 interface SpaceCardProps {
   space: Space
   layout: LayoutMode
+  showDetails?: boolean
   onClick: () => void
   onEdit: (e: React.MouseEvent) => void
   onDelete: (e: React.MouseEvent) => void
@@ -1104,149 +1122,9 @@ interface SpaceCardProps {
   latestConversation?: ConversationMeta | null
 }
 
-function SpaceCard({ space, layout, onClick, onEdit, onDelete, formatTimeAgo, spaceApps = [], latestConversation }: SpaceCardProps) {
+function SpaceCard({ space, layout, showDetails = false, onClick, onEdit, onDelete, formatTimeAgo, spaceApps = [], latestConversation }: SpaceCardProps) {
   const { t } = useTranslation()
   const isMissing = space.isMissing
-
-  // Detail layout: expanded card with conversations and digital humans
-  if (layout === 'detail') {
-    return (
-      <div
-        onClick={onClick}
-        className={`px-4 py-3 rounded-xl border border-border sm:hover:border-primary/40 sm:hover:bg-secondary/50 transition-all cursor-pointer group animate-fade-in ${
-          isMissing ? 'opacity-70 border-dashed' : ''
-        }`}
-      >
-        {/* Title row */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <SpaceIcon iconId={space.icon} size={20} />
-            <span className="font-medium truncate">{space.name}</span>
-            {isMissing && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                <Unplug className="w-3 h-3" />
-                {t('Unavailable')}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(e) }}
-              className="p-1 sm:hover:bg-secondary rounded transition-all"
-              title={t('Edit Space')}
-            >
-              <Pencil className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(e) }}
-              className="p-1 sm:hover:bg-destructive/20 rounded transition-all"
-              title={t('Delete space')}
-            >
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </button>
-          </div>
-        </div>
-
-        {/* Last active time - right below title */}
-        <p className="text-xs text-muted-foreground mt-1">
-          {isMissing
-            ? t('Path unavailable. Reconnect the drive to open this space.')
-            : `${formatTimeAgo(space.lastActiveAt || space.updatedAt)}${t('active')}`}
-        </p>
-
-        {/* Detail info section - below divider */}
-        {(latestConversation || spaceApps.length > 0) && (
-          <div className="mt-3 pt-2 border-t border-border/50">
-            {/* Recent conversation */}
-            {latestConversation && (
-              <div className="flex items-start gap-2">
-                <MessageSquare className="w-3.5 h-3.5 text-primary/60 mt-0.5 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm truncate">{latestConversation.title || t('Untitled')}</div>
-                  {latestConversation.preview && (
-                    <div className="text-xs text-muted-foreground truncate mt-0.5">
-                      {latestConversation.preview}
-                    </div>
-                  )}
-                </div>
-                <span className="text-[10px] text-muted-foreground/60 shrink-0">
-                  {formatTimeAgo(latestConversation.updatedAt)}
-                </span>
-              </div>
-            )}
-
-            {/* Associated digital humans */}
-            {spaceApps.length > 0 && (
-              <div className={`${latestConversation ? 'mt-2' : ''}`}>
-                {/* Icon + status summary on one line */}
-                <div className="flex items-center gap-2">
-                  <Bot className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-                  <span className="text-[11px] text-muted-foreground/70">
-                    {getAppsStatusSummary(spaceApps, t)}
-                  </span>
-                </div>
-                {/* Digital human names below - aligned with status text */}
-                <div className="mt-1.5 pl-5.5 flex items-center gap-2 flex-wrap min-w-0" style={{ paddingLeft: '22px' }}>
-                  {spaceApps.map(app => (
-                    <span key={app.id} className="text-xs inline-flex items-center gap-1">
-                      <AppAvatar size={14} name={app.spec.name || app.id} />
-                      <span className="truncate max-w-[100px]">{app.spec.name}</span>
-                      <StatusDot status={app.status} />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  if (layout === 'list') {
-    return (
-      <div
-        onClick={onClick}
-        className={`px-4 py-3 rounded-xl border border-border sm:hover:border-primary/40 sm:hover:bg-secondary/50 transition-all cursor-pointer group animate-fade-in ${
-          isMissing ? 'opacity-70 border-dashed' : ''
-        }`}
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <SpaceIcon iconId={space.icon} size={20} />
-            <span className="font-medium truncate">{space.name}</span>
-            {isMissing && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                <Unplug className="w-3 h-3" />
-                {t('Unavailable')}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(e) }}
-              className="p-1 sm:hover:bg-secondary rounded transition-all"
-              title={t('Edit Space')}
-            >
-              <Pencil className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(e) }}
-              className="p-1 sm:hover:bg-destructive/20 rounded transition-all"
-              title={t('Delete space')}
-            >
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </button>
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          {isMissing
-            ? t('Path unavailable. Reconnect the drive to open this space.')
-            : `${formatTimeAgo(space.lastActiveAt || space.updatedAt)}${t('active')}`}
-        </p>
-      </div>
-    )
-  }
 
   return (
     <div
@@ -1255,6 +1133,7 @@ function SpaceCard({ space, layout, onClick, onEdit, onDelete, formatTimeAgo, sp
         isMissing ? 'opacity-70 border-dashed' : ''
       }`}
     >
+      {/* Title row */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <SpaceIcon iconId={space.icon} size={20} />
@@ -1269,25 +1148,73 @@ function SpaceCard({ space, layout, onClick, onEdit, onDelete, formatTimeAgo, sp
         <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(e) }}
-            className="p-1 hover:bg-secondary rounded transition-all"
+            className="p-1 sm:hover:bg-secondary rounded transition-all"
             title={t('Edit Space')}
           >
             <Pencil className="w-4 h-4 text-muted-foreground" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(e) }}
-            className="p-1 hover:bg-destructive/20 rounded transition-all"
+            className="p-1 sm:hover:bg-destructive/20 rounded transition-all"
             title={t('Delete space')}
           >
             <Trash2 className="w-4 h-4 text-destructive" />
           </button>
         </div>
       </div>
+
+      {/* Last active time */}
       <p className="text-xs text-muted-foreground mt-2">
         {isMissing
           ? t('Path unavailable. Reconnect the drive to open this space.')
           : `${formatTimeAgo(space.lastActiveAt || space.updatedAt)}${t('active')}`}
       </p>
+
+      {/* Details (toggled by the global "show details" switch) */}
+      {showDetails && (latestConversation || spaceApps.length > 0) && (
+        <div className="mt-3 pt-2 border-t border-border/50">
+          {/* Recent conversation */}
+          {latestConversation && (
+            <div className="flex items-start gap-2">
+              <MessageSquare className="w-3.5 h-3.5 text-primary/60 mt-0.5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm truncate">{latestConversation.title || t('Untitled')}</div>
+                {latestConversation.preview && (
+                  <div className="text-xs text-muted-foreground truncate mt-0.5">
+                    {latestConversation.preview}
+                  </div>
+                )}
+              </div>
+              <span className="text-[10px] text-muted-foreground/60 shrink-0">
+                {formatTimeAgo(latestConversation.updatedAt)}
+              </span>
+            </div>
+          )}
+
+          {/* Associated digital humans */}
+          {spaceApps.length > 0 && (
+            <div className={`${latestConversation ? 'mt-2' : ''}`}>
+              {/* Icon + status summary on one line */}
+              <div className="flex items-center gap-2">
+                <Bot className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
+                <span className="text-[11px] text-muted-foreground/70">
+                  {getAppsStatusSummary(spaceApps, t)}
+                </span>
+              </div>
+              {/* Digital human names below - aligned with status text */}
+              <div className="mt-1.5 flex items-center gap-2 flex-wrap min-w-0" style={{ paddingLeft: '22px' }}>
+                {spaceApps.map(app => (
+                  <span key={app.id} className="text-xs inline-flex items-center gap-1">
+                    <AppAvatar size={14} name={app.spec.name || app.id} />
+                    <span className="truncate max-w-[100px]">{app.spec.name}</span>
+                    <StatusDot status={app.status} />
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

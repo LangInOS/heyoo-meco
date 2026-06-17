@@ -12,11 +12,18 @@ interface SwitchProps {
   checked: boolean
   onCheckedChange: (checked: boolean) => void
   disabled?: boolean
-  size?: 'sm' | 'md'
+  size?: 'xs' | 'sm' | 'md'
   className?: string
 }
 
 const sizeConfig = {
+  xs: {
+    track: 'h-4 w-7',
+    knob: 'h-3 w-3',
+    knobOn: 'translate-x-[14px]',
+    knobOff: 'translate-x-0.5',
+    mt: 'mt-0.5',
+  },
   sm: {
     track: 'h-5 w-9',
     knob: 'h-4 w-4',
