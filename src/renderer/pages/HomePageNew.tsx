@@ -18,7 +18,8 @@ import {
 import { Header } from '../components/layout/Header'
 import { SpaceGuide } from '../components/space/SpaceGuide'
 import { CreateSpaceDialog } from '../components/space/CreateSpaceDialog'
-import { Blocks, ArrowRight, AlertCircle, SendHorizontal, Unplug, Bot, LayoutGrid, List, Play, Pause, ChevronDown, AlignJustify, MessageSquare, HelpCircle, Clock } from 'lucide-react'
+import { Popover, PopoverTrigger, PopoverContent } from '../components/ui/Popover'
+import { Blocks, ArrowRight, AlertCircle, SendHorizontal, Unplug, Bot, LayoutGrid, List, Play, Pause, AlignJustify, MessageSquare, HelpCircle, Clock } from 'lucide-react'
 import { AppAvatar } from '../components/apps/AppAvatar'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { api } from '../api'
@@ -200,16 +201,8 @@ export function HomePageNew() {
   // Filter automation apps for digital humans section
   const automationApps = apps.filter(a => a.spec.type === 'automation' && a.status !== 'uninstalled')
 
-  // Studio section: collapsed by default, persisted to localStorage
-  const [studioExpanded, setStudioExpanded] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('halo-studio-expanded') === 'true'
-    }
-    return false
-  })
-  useEffect(() => {
-    localStorage.setItem('halo-studio-expanded', String(studioExpanded))
-  }, [studioExpanded])
+  // Studio section state is used by the classic layout's in-place expand (handled inside StudioCard).
+  // The unified layout surfaces Digital Humans / Skills / MCP via the Apps & Marketplace popover instead.
 
   // Load spaces on mount
   useEffect(() => {
@@ -430,10 +423,11 @@ export function HomePageNew() {
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <h3 className="text-sm font-medium text-muted-foreground">{t('Dedicated Spaces')}</h3>
-            {effectiveSpaceLayout !== 'grid' && (
+            {/* New layout: question-mark icon toggles the space guide. Legacy layout keeps its original behavior (no icon, auto-shown). */}
+            {viewMode === 'unified' && (
               <button
                 onClick={() => setShowSpaceGuide(v => !v)}
-                className="p-0.5 rounded-full text-muted-foreground/60 hover:text-muted-foreground hover:bg-secondary transition-colors"
+                className={`p-0.5 rounded-full transition-colors ${showSpaceGuide ? 'text-primary bg-primary/10' : 'text-muted-foreground/60 hover:text-muted-foreground hover:bg-secondary'}`}
                 title={t('What is a space?')}
               >
                 <HelpCircle className="w-3.5 h-3.5" />
@@ -454,8 +448,8 @@ export function HomePageNew() {
           </div>
         </div>
 
-        {/* Space Guide - always in grid mode, toggleable in list/detail modes */}
-        {(effectiveSpaceLayout === 'grid' || showSpaceGuide) && <SpaceGuide />}
+        {/* Space Guide - legacy layout auto-shows in grid mode; new layout is toggleable via the question-mark icon */}
+        {(viewMode === 'classic' ? effectiveSpaceLayout === 'grid' : showSpaceGuide) && <SpaceGuide />}
 
         {spaces.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
@@ -490,6 +484,53 @@ export function HomePageNew() {
               <h3 className="text-sm font-medium text-muted-foreground">{t('Digital Humans')}</h3>
               <div className="flex items-center gap-1">
                 <LayoutToggle value={dhLayout} onChange={setDhLayout} />
+
+                {/* Apps & Marketplace — aggregates Digital Humans / Skills / MCP (the digital-human ecosystem) in one popover */}
+                <Popover>
+                  <PopoverTrigger className="p-1.5 rounded-lg text-muted-foreground hover:bg-secondary/50 transition-colors">
+                    <span title={t('Apps & Marketplace')}>
+                      <Blocks className="w-4 h-4" />
+                    </span>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" side="bottom" sideOffset={6} className="w-80 p-0">
+                    <div className="p-3 space-y-1">
+                      <StudioRow
+                        label={t('Digital Humans')}
+                        type="automation"
+                        apps={apps.filter(a => a.spec.type === 'automation' && a.status !== 'uninstalled')}
+                        onOpenList={() => { setCurrentTab('my-digital-humans'); setView('apps') }}
+                        onSelectApp={(appId) => navigateToDetail(appId)}
+                        emptyAction={{ label: t('Create'), onAction: () => setShowInstallDialog(true) }}
+                        createAction={() => setShowInstallDialog(true)}
+                      />
+                      <StudioRow
+                        label={t('Skills')}
+                        type="skill"
+                        apps={apps.filter(a => a.spec.type === 'skill' && a.status !== 'uninstalled')}
+                        onOpenList={() => { setCurrentTab('my-skills'); setView('apps') }}
+                        onSelectApp={(appId) => navigateToDetail(appId)}
+                        emptyAction={{ label: t('Add from marketplace'), onAction: () => { setView('apps'); void openMarketplaceFilteredBy('skill') } }}
+                      />
+                      <StudioRow
+                        label={t('MCP')}
+                        type="mcp"
+                        apps={apps.filter(a => a.spec.type === 'mcp' && a.status !== 'uninstalled')}
+                        onOpenList={() => { setCurrentTab('my-mcp'); setView('apps') }}
+                        onSelectApp={(appId) => navigateToDetail(appId)}
+                        emptyAction={{ label: t('Add from marketplace'), onAction: () => { setView('apps'); void openMarketplaceFilteredBy('mcp') } }}
+                      />
+                    </div>
+                    <div className="px-3 py-2 border-t border-border/50 flex justify-end">
+                      <button
+                        onClick={() => { setCurrentTab('my-digital-humans'); setView('apps') }}
+                        className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
+                      >
+                        {t('Open')} <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
                 {/* Create button */}
                 <button
                   onClick={() => setShowInstallDialog(true)}
@@ -535,29 +576,6 @@ export function HomePageNew() {
               </div>
             )}
           </div>
-        )}
-
-        {/* Studio Section — collapsible, only in unified mode */}
-        {viewMode === 'unified' && (
-          <StudioSection
-            apps={apps}
-            expanded={studioExpanded}
-            onToggle={() => setStudioExpanded(v => !v)}
-            onOpenTab={(tab) => {
-              setCurrentTab(tab)
-              setView('apps')
-            }}
-            onSelectApp={(appId) => navigateToDetail(appId)}
-            onCreateAutomation={() => setShowInstallDialog(true)}
-            onBrowseSkillsMarket={() => {
-              setView('apps')
-              void openMarketplaceFilteredBy('skill')
-            }}
-            onBrowseMcpMarket={() => {
-              setView('apps')
-              void openMarketplaceFilteredBy('mcp')
-            }}
-          />
         )}
       </main>
 
@@ -1000,109 +1018,6 @@ function DigitalHumanCard({ app, layout = 'grid', associatedSpace, latestConvers
           </span>
         )}
       </div>
-    </div>
-  )
-}
-
-// ──────────────────────────────────────────────
-// Studio Section — collapsible summary for unified layout
-// ──────────────────────────────────────────────
-
-interface StudioSectionProps {
-  apps: InstalledApp[]
-  expanded: boolean
-  onToggle: () => void
-  onOpenTab: (tab: 'my-digital-humans' | 'my-skills' | 'my-mcp') => void
-  onSelectApp: (appId: string) => void
-  onCreateAutomation: () => void
-  onBrowseSkillsMarket: () => void
-  onBrowseMcpMarket: () => void
-}
-
-function StudioSection({
-  apps,
-  expanded,
-  onToggle,
-  onOpenTab,
-  onSelectApp,
-  onCreateAutomation,
-  onBrowseSkillsMarket,
-  onBrowseMcpMarket,
-}: StudioSectionProps) {
-  const { t } = useTranslation()
-
-  const automationApps = apps.filter(a => a.spec.type === 'automation' && a.status !== 'uninstalled')
-  const skillApps = apps.filter(a => a.spec.type === 'skill' && a.status !== 'uninstalled')
-  const mcpApps = apps.filter(a => a.spec.type === 'mcp' && a.status !== 'uninstalled')
-
-  // Build summary string: "3 Digital Humans · 2 Skills · 1 MCP"
-  const parts: string[] = []
-  if (automationApps.length > 0) parts.push(`${automationApps.length} ${t('Digital Humans')}`)
-  if (skillApps.length > 0) parts.push(`${skillApps.length} ${t('Skills')}`)
-  if (mcpApps.length > 0) parts.push(`${mcpApps.length} ${t('MCP')}`)
-  const summary = parts.length > 0 ? parts.join(' · ') : t('No apps yet')
-
-  return (
-    <div className="mt-8 animate-fade-in">
-      {/* Collapsed title bar */}
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2.5 sm:px-4 rounded-lg bg-card border border-border sm:hover:border-primary/30 transition-all group"
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Blocks className="w-3.5 h-3.5 text-primary" />
-          </div>
-          <span className="text-sm font-medium flex-shrink-0">{t('Studio')}</span>
-          <span className="text-xs text-muted-foreground truncate">{summary}</span>
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${
-            expanded ? 'rotate-0' : '-rotate-90'
-          }`}
-        />
-      </button>
-
-      {/* Expanded content */}
-      {expanded && (
-        <div className="mt-2 rounded-lg bg-card border border-border overflow-hidden animate-slide-down">
-          <div className="p-3 sm:p-4 space-y-1">
-            <StudioRow
-              label={t('Digital Humans')}
-              type="automation"
-              apps={automationApps}
-              onOpenList={() => onOpenTab('my-digital-humans')}
-              onSelectApp={onSelectApp}
-              emptyAction={{ label: t('Create'), onAction: onCreateAutomation }}
-              createAction={onCreateAutomation}
-            />
-            <StudioRow
-              label={t('Skills')}
-              type="skill"
-              apps={skillApps}
-              onOpenList={() => onOpenTab('my-skills')}
-              onSelectApp={onSelectApp}
-              emptyAction={{ label: t('Add from marketplace'), onAction: onBrowseSkillsMarket }}
-            />
-            <StudioRow
-              label={t('MCP')}
-              type="mcp"
-              apps={mcpApps}
-              onOpenList={() => onOpenTab('my-mcp')}
-              onSelectApp={onSelectApp}
-              emptyAction={{ label: t('Add from marketplace'), onAction: onBrowseMcpMarket }}
-            />
-          </div>
-          <div className="px-3 py-2 border-t border-border/50 flex justify-end">
-            <button
-              onClick={() => onOpenTab('my-digital-humans')}
-              className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
-            >
-              {t('Open')} <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
