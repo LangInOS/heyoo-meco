@@ -45,6 +45,11 @@ interface TurnRailProps {
  *  Even a single user question gets a tick so it can be navigated back to. */
 const MIN_TURNS = 1
 
+/** Debounce (ms) before the scroll-spy commits a new "visible turn". Keeps
+ *  transient sweep-throughs (auto-scroll to bottom on entry, inertia) from
+ *  momentarily pinning an early turn as the active one. */
+const PICK_DEBOUNCE_MS = 120
+
 /**
  * Width (px) for a tick based on its signed offset from the highlighted tick.
  *   offset 0  (the closest)  → 40px (longest)
@@ -110,35 +115,63 @@ function PreviewPortal({
 // ============================================================
 
 function TurnNavButtons({ turns, activeTurnId, onNavigate }: TurnRailProps) {
-  // Find active index, default to 0 if no active turn is found
-  const activeIndex = activeTurnId 
-    ? turns.findIndex(t => t.id === activeTurnId) 
-    : 0
-  // Clamp to valid range
-  const clampedIndex = Math.max(0, Math.min(turns.length - 1, activeIndex))
-  
-  const isFirst = clampedIndex === 0
-  const isLast = clampedIndex === turns.length - 1
-
   // Only show when there are at least 2 turns to navigate between
   if (turns.length < 2) return null
 
+  // Which turn are the buttons anchored to?
+  //
+  // The anchor is derived from activeTurnId (the scroll-spy reading from
+  // TurnRail's IntersectionObserver), so the buttons stay in sync with manual
+  // scrolling and with tick/search navigation. The initial value is the newest
+  // (last) turn — matches the "reading at the bottom" pose when entering a chat.
+  //
+  // The hazard this guards against: entering a conversation auto-scrolls to the
+  // bottom, and that sweep passes earlier turns. Without care the spy would
+  // momentarily pin the anchor to turn[0], disabling prev and making "next" jump
+  // UP to turn[1]. That is handled upstream in TurnRail's pickBest(): the spy
+  // reading is debounced (PICK_DEBOUNCE_MS) and only committed once scrolling
+  // has been quiet, so transient sweep-throughs never reach `activeTurnId`.
+  // The clamp below is just belt-and-suspenders so the anchor can never end up
+  // out of range if turns shrinks (e.g. chat cleared) between renders.
+  const resolvedId = activeTurnId ?? null
+  const [anchorIndex, setAnchorIndex] = useState<number>(turns.length - 1)
+
+  useEffect(() => {
+    if (resolvedId) {
+      const idx = turns.findIndex(t => t.id === resolvedId)
+      if (idx >= 0) setAnchorIndex(idx)
+    } else if (anchorIndex > turns.length - 1) {
+      // turns shrank (e.g. cleared) — pull the anchor back in range, but don't
+      // otherwise move it: losing the spy reading shouldn't change navigation.
+      setAnchorIndex(turns.length - 1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedId, turns])
+
+  const clampedIndex = Math.max(0, Math.min(turns.length - 1, anchorIndex))
+  const isFirst = clampedIndex === 0
+  const isLast = clampedIndex === turns.length - 1
+
   const handlePrev = () => {
     if (clampedIndex > 0) {
+      const next = clampedIndex - 1
       haptic(10)
-      onNavigate(turns[clampedIndex - 1].id)
+      setAnchorIndex(next)
+      onNavigate(turns[next].id)
     }
   }
 
   const handleNext = () => {
     if (clampedIndex < turns.length - 1) {
+      const next = clampedIndex + 1
       haptic(10)
-      onNavigate(turns[clampedIndex + 1].id)
+      setAnchorIndex(next)
+      onNavigate(turns[next].id)
     }
   }
 
   return (
-    <div className="absolute bottom-3 left-3 z-[60] flex flex-col gap-1.5 select-none">
+    <div className="absolute bottom-1 left-3 z-[60] flex flex-col gap-1.5 select-none">
       <button
         onClick={handlePrev}
         disabled={isFirst}
@@ -185,6 +218,10 @@ export function TurnRail({ turns, onNavigate, activeTurnId }: TurnRailProps) {
     const turnIdSet = new Set(turns.map(t => t.id))
     const visibleMap = new Map<string, number>()
     const observed = new Set<Element>()
+    // Debounce bookkeeping for pickBest() — declared here so both pickBest and
+    // the cleanup closure can see them.
+    let pendingPickTimer: number | null = null
+    const pendingBestRef = { current: null as string | null }
 
     // Locate Virtuoso's scroll container (closest ancestor with overflow-y: auto)
     let scrollEl: HTMLElement | null = null
@@ -207,7 +244,19 @@ export function TurnRail({ turns, onNavigate, activeTurnId }: TurnRailProps) {
       for (const [id, ratio] of visibleMap) {
         if (ratio > bestRatio) { bestRatio = ratio; best = id }
       }
-      setVisibleTurnId(best)
+      // Debounce the commit so transient sweep-throughs (entering a chat that
+      // auto-scrolls to the bottom, inertia, etc.) can't momentarily pin the
+      // "visible" turn to an early one. We pick the best candidate on every IO
+      // tick but only publish it once scrolling has been quiet for a frame;
+      // each new IO callback cancels the pending publish.
+      if (pendingPickTimer != null) {
+        clearTimeout(pendingPickTimer)
+      }
+      pendingBestRef.current = best
+      pendingPickTimer = window.setTimeout(() => {
+        pendingPickTimer = null
+        setVisibleTurnId(pendingBestRef.current)
+      }, PICK_DEBOUNCE_MS)
     }
 
     const observer = new IntersectionObserver(
@@ -269,6 +318,7 @@ export function TurnRail({ turns, onNavigate, activeTurnId }: TurnRailProps) {
     mutationObs.observe(watchRoot, { childList: true, subtree: true })
 
     return () => {
+      if (pendingPickTimer != null) clearTimeout(pendingPickTimer)
       observer.disconnect()
       mutationObs.disconnect()
     }
