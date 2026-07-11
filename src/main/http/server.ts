@@ -399,13 +399,13 @@ function getRemoteLoginPage(): string {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #08101f 0%, #05080f 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: #f1f7fa;
     }
     .container {
       text-align: center;
@@ -415,16 +415,16 @@ function getRemoteLoginPage(): string {
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #22d3ee 0%, #0ea5b7 100%);
       margin: 0 auto 1.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 2rem;
-      box-shadow: 0 0 30px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 0 30px rgba(34, 211, 238, 0.4);
     }
     h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    p { color: #888; margin-bottom: 2rem; }
+    p { color: #8a9bb0; margin-bottom: 2rem; }
     .input-group {
       display: flex;
       gap: 0.5rem;
@@ -435,21 +435,21 @@ function getRemoteLoginPage(): string {
       width: 100%;
       min-width: 0;
       padding: 1rem;
-      border: 1px solid #333;
+      border: 1px solid #2a3a4a;
       border-radius: 12px;
       background: rgba(255,255,255,0.05);
-      color: #fff;
+      color: #f1f7fa;
       font-size: 1.5rem;
       text-align: center;
       letter-spacing: 0.5em;
     }
-    input:focus { outline: none; border-color: #667eea; }
+    input:focus { outline: none; border-color: #22d3ee; }
     button {
       padding: 1rem 2rem;
       border: none;
       border-radius: 12px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
+      background: linear-gradient(135deg, #22d3ee 0%, #0ea5b7 100%);
+      color: #08101f;
       font-size: 1rem;
       cursor: pointer;
       transition: transform 0.2s;

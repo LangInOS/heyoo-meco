@@ -630,8 +630,8 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
           className={`
             relative flex flex-col rounded-2xl transition-all duration-200
             ${isFocused
-              ? 'ring-1 ring-primary/30 bg-card shadow-sm'
-              : 'bg-secondary/50 hover:bg-secondary/70'
+              ? 'ring-1 ring-primary/40 bg-card shadow-sm shadow-primary/10'
+              : 'bg-secondary/60 hover:bg-secondary/80'
             }
             ${isDragOver ? 'ring-2 ring-primary/50 bg-primary/5' : ''}
           `}
@@ -851,8 +851,8 @@ function InputToolbar({
               className={`w-8 h-8 flex items-center justify-center rounded-lg
                 transition-all duration-150
                 ${showAttachMenu
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/50'
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                 }
                 ${isProcessingImages ? 'opacity-50 cursor-not-allowed' : ''}
               `}
@@ -903,8 +903,8 @@ function InputToolbar({
             className={`h-8 flex items-center gap-1.5 px-2.5 rounded-lg
               transition-colors duration-200 relative
               ${aiBrowserEnabled
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50'
+                ? 'bg-primary/20 text-primary font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
               }
             `}
             title={aiBrowserEnabled ? t('AI Browser enabled (click to disable)') : t('Enable AI Browser')}
@@ -925,8 +925,8 @@ function InputToolbar({
             className={`h-8 flex items-center gap-1.5 px-2.5 rounded-lg
               transition-colors duration-200
               ${thinkingEnabled
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50'
+                ? 'bg-primary/20 text-primary font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
               }
             `}
             title={thinkingEnabled ? t('Disable Deep Thinking') : t('Enable Deep Thinking')}
@@ -959,8 +959,8 @@ function InputToolbar({
             className={`
               w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200
               ${canSend
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
-                : 'bg-muted/50 text-muted-foreground/40 cursor-not-allowed'
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-sm shadow-primary/30'
+                : 'bg-muted/40 text-muted-foreground/50 cursor-not-allowed'
               }
             `}
             title={
