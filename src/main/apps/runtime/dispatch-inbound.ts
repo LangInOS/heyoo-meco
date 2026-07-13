@@ -442,6 +442,12 @@ export async function dispatchInboundMessage(
     reply = { ...reply, streaming: undefined }
   }
 
+  // Send immediate acknowledgment for non-streaming channels
+  // This lets users know their message was received while waiting for the final reply
+  if (!reply.streaming) {
+    reply.send('💭 思考中...').catch(() => {})
+  }
+
   // Build isolated session key
   const conversationId = buildImSessionKey(app.id, msg.channel, msg.chatType, msg.chatId)
 
