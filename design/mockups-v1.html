@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meco — UI Redesign v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ DESIGN TOKENS ============ */
+:root{
+  --bg-0:#070b14;       /* deepest */
+  --bg-1:#0b1120;       /* app background */
+  --bg-2:#111a2e;       /* surface */
+  --bg-3:#16223a;       /* elevated surface */
+  --bg-4:#1d2b47;       /* hover surface */
+  --border:#1e2a42;
+  --border-soft:#172236;
+  --border-strong:#2a3a57;
+  --text:#eaf0fb;
+  --text-mute:#9aa6bd;
+  --text-dim:#5e6a82;
+  --primary:#3b82f6;   /* blue */
+  --cyan:#22d3ee;
+  --green:#86efac;      /* life signal */
+  --green-soft:#34d399;
+  --amber:#fbbf24;
+  --rose:#fb7185;
+  --violet:#a78bfa;
+  --grad-primary:linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%);
+  --grad-life:linear-gradient(135deg,#86efac 0%,#22d3ee 100%);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow:0 4px 14px rgba(0,0,0,.35);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.45);
+  --shadow-glow:0 0 24px rgba(59,130,246,.18);
+  --r-sm:8px; --r:12px; --r-lg:16px; --r-xl:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',-apple-system,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 15% -5%, rgba(59,130,246,.10), transparent 60%),
+    radial-gradient(1000px 500px at 90% 10%, rgba(34,211,238,.07), transparent 55%),
+    var(--bg-0);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:-.01em;
+  padding:48px 32px 120px;
+}
+.wrap{max-width:1320px;margin:0 auto}
+.mono{font-family:'JetBrains Mono',monospace;letter-spacing:0}
+
+/* ============ PAGE HEADER ============ */
+.page-head{margin-bottom:48px}
+.page-head .brand{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.brand-mark{
+  width:40px;height:40px;border-radius:11px;
+  background:var(--grad-primary);
+  display:grid;place-items:center;
+  box-shadow:0 4px 18px rgba(59,130,246,.4);
+  position:relative;
+}
+.brand-mark::after{
+  content:"";position:absolute;inset:0;border-radius:11px;
+  background:linear-gradient(180deg,rgba(255,255,255,.25),transparent 50%);
+}
+.brand-mark svg{width:22px;height:22px;position:relative;z-index:1}
+.brand-name{font-size:21px;font-weight:600;letter-spacing:-.02em}
+.brand-name span{color:var(--text-mute);font-weight:400;font-size:14px;margin-left:10px}
+.page-head h1{font-size:30px;font-weight:600;letter-spacing:-.025em;margin-bottom:10px}
+.page-head p{color:var(--text-mute);font-size:15px;max-width:680px;line-height:1.6}
+.page-head .meta{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.tag{
+  font-size:12px;color:var(--text-mute);
+  background:var(--bg-2);border:1px solid var(--border);
+  padding:5px 11px;border-radius:99px;
+}
+.tag.live{color:var(--green);border-color:rgba(134,239,172,.25)}
+.tag.live::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px;box-shadow:0 0 8px var(--green)}
+
+/* ============ SECTION HEADERS ============ */
+.sec-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin:64px 0 20px;padding-bottom:14px;border-bottom:1px solid var(--border-soft);
+}
+.sec-head h2{font-size:18px;font-weight:600;letter-spacing:-.015em}
+.sec-head .idx{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);letter-spacing:.05em}
+
+/* ============ TOKENS PANEL ============ */
+.tokens{display:grid;grid-template-columns:1.1fr .9fr 1fr;gap:18px}
+.token-card{
+  background:var(--bg-1);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;
+}
+.token-card h3{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);margin-bottom:14px;font-weight:600}
+.swatches{display:flex;flex-direction:column;gap:9px}
+.swatch{display:flex;align-items:center;gap:11px;font-size:13px}
+.chip{width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.swatch .name{color:var(--text);font-weight:500;min-width:78px}
+.swatch .hex{color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:12px}
+.type-row{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border-soft)}
+.type-row:last-child{border:0;margin:0;padding:0}
+.type-row .label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);min-width:64px}
+.t-display{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.t-h1{font-size:19px;font-weight:600;letter-spacing:-.015em}
+.t-body{font-size:14px;color:var(--text)}
+.t-mute{font-size:13px;color:var(--text-mute)}
+.rad-row{display:flex;align-items:center;gap:16px}
+.rad-row .dot{background:var(--bg-3);border:1px solid var(--border)}
+.r-1{width:36px;height:36px;border-radius:6px}
+.r-2{width:36px;height:36px;border-radius:10px}
+.r-3{width:36px;height:36px;border-radius:14px}
+.r-4{width:36px;height:36px;border-radius:20px}
+.rad-row .lbl{font-size:12px;color:var(--text-mute)}
+
+/* ============ DEVICE FRAMES ============ */
+.frames{display:flex;flex-direction:column;gap:56px;align-items:center}
+.frame-row{display:flex;gap:48px;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%}
+
+/* Browser frame */
+.browser{
+  width:1180px;max-width:100%;
+  background:var(--bg-1);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:var(--shadow-lg);
+}
+.browser-bar{
+  height:38px;background:var(--bg-2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 14px;gap:10px;
+}
+.dots{display:flex;gap:7px}
+.dots i{width:11px;height:11px;border-radius:50%;display:block}
+.dots i:nth-child(1){background:#ff5f57}
+.dots i:nth-child(2){background:#febc2e}
+.dots i:nth-child(3){background:#28c840}
+.browser-bar .url{
+  flex:1;font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;
+  background:var(--bg-1);border:1px solid var(--border-soft);border-radius:7px;
+  padding:5px 12px;text-align:center;max-width:340px;margin:0 auto;
+}
+.browser-bar .url::before{content:"🔒 ";font-size:10px}
+.browser-screen{height:740px;overflow:hidden;position:relative}
+
+/* Phone frame */
+.phone{
+  width:390px;
+  background:var(--bg-1);
+  border:1px solid var(--border-strong);
+  border-radius:46px;
+  padding:9px;
+  box-shadow:var(--shadow-lg);
+  position:relative;
+}
+.phone::before{
+  content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);
+  width:108px;height:28px;background:#000;border-radius:16px;z-index:50;
+}
+.phone-screen{
+  background:var(--bg-1);border-radius:38px;overflow:hidden;
+  height:800px;position:relative;
+}
+.phone-notch-status{
+  height:46px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 26px 6px;font-size:13px;font-weight:600;color:var(--text);
+  position:relative;z-index:10;
+}
+.phone-notch-status .icons{display:flex;gap:5px;align-items:center;font-size:11px}
+.phone-home-bar{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;background:var(--text);opacity:.4;border-radius:3px;z-index:60;
+}
+
+/* ============ DESKTOP APP LAYOUT ============ */
+.app{display:flex;height:100%;width:100%}
+
+/* Slim icon rail */
+.rail{
+  width:64px;background:var(--bg-0);border-right:1px solid var(--border-soft);
+  display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:6px;flex-shrink:0;
+}
+.rail .logo-sm{
+  width:36px;height:36px;border-radius:10px;background:var(--grad-primary);
+  display:grid;place-items:center;margin-bottom:12px;
+  box-shadow:0 4px 14px rgba(59,130,246,.35);
+}
+.rail .logo-sm svg{width:18px;height:18px}
+.rail-item{
+  width:42px;height:42px;border-radius:11px;display:grid;place-items:center;
+  color:var(--text-dim);cursor:pointer;transition:.15s;position:relative;
+}
+.rail-item:hover{background:var(--bg-2);color:var(--text-mute)}
+.rail-item.active{background:var(--bg-3);color:var(--text)}
+.rail-item.active::before{
+  content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;background:var(--grad-primary);border-radius:0 3px 3px 0;
+}
+.rail-item svg{width:19px;height:19px}
+.rail .spacer{flex:1}
+.rail .avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);
+  border:2px solid var(--bg-0);display:grid;place-items:center;
+  font-size:13px;font-weight:600;color:#fff;
+}
+
+/* ============ DESKTOP HOME ============ */
+.home-main{flex:1;overflow-y:auto;padding:28px 36px 40px}
+.home-topbar{
+  display:flex;align-items:center;gap:14px;margin-bottom:32px;
+}
+.search{
+  flex:1;max-width:440px;display:flex;align-items:center;gap:10px;
+  background:var(--bg-2);border:1px solid var(--border);border-radius:11px;
+  padding:9px 14px;color:var(--text-dim);font-size:13px;
+}
+.search svg{width:16px;height:16px;flex-shrink:0}
+.search .kbd{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-3);padding:2px 6px;border-radius:5px;border:1px solid var(--border)}
+.home-topbar .btn-ghost{
+  display:flex;align-items:center;gap:8px;background:var(--bg-2);border:1px solid var(--border);
+  padding:9px 14px;border-radius:11px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;
+}
+.home-topbar .btn-ghost svg{width:15px;height:15px}
+.btn-primary{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-3);border:1px solid var(--border-strong);
+  padding:9px 16px;border-radius:11px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer;
+}
+.btn-primary.accent{
+  background:var(--grad-primary);border:0;color:#fff;
+  box-shadow:0 4px 16px rgba(59,130,246,.3);
+}
+.btn-primary svg{width:15px;height:15px}
+
+.greeting{margin-bottom:30px}
+.greeting h1{font-size:26px;font-weight:600;letter-spacing:-.02em;margin-bottom:6px}
+.greeting h1 .wave{display:inline-block;animation:wave 2.5s ease-in-out infinite;transform-origin:70% 70%}
+@keyframes wave{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(14deg)}20%{transform:rotate(-8deg)}30%{transform:rotate(14deg)}40%{transform:rotate(-4deg)}}
+.greeting p{color:var(--text-mute);font-size:14px}
+.greeting p b{color:var(--text);font-weight:500}
+
+.section-title{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+}
+.section-title h2{font-size:15px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.section-title h2 .count{font-size:12px;color:var(--text-dim);font-weight:400}
+.section-title .actions{display:flex;gap:8px}
+.section-title .actions button{
+  font-size:12px;color:var(--text-mute);background:transparent;border:1px solid transparent;
+  padding:5px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px;
+}
+.section-title .actions button:hover{background:var(--bg-2);color:var(--text)}
+.section-title .actions button svg{width:13px;height:13px}
+
+/* Space cards */
+.spaces-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:40px}
+.space-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px;cursor:pointer;transition:.18s;position:relative;overflow:hidden;
+}
+.space-card:hover{border-color:var(--border-strong);background:var(--bg-3);transform:translateY(-2px)}
+.space-card .head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.space-icon{
+  width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
+  font-size:18px;flex-shrink:0;
+}
+.si-1{background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff}
+.si-2{background:linear-gradient(135deg,#22d3ee,#0e7490);color:#fff}
+.si-3{background:linear-gradient(135deg,#86efac,#059669);color:#042f1e}
+.si-4{background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff}
+.si-5{background:linear-gradient(135deg,#fbbf24,#d97706);color:#3b1d04}
+.space-card .name{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.space-card .sub{font-size:12px;color:var(--text-dim);margin-top:2px}
+.space-card .desc{font-size:13px;color:var(--text-mute);line-height:1.5;margin-bottom:14px}
+.space-card .foot{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text-dim)}
+.space-card .foot .left{display:flex;align-items:center;gap:14px}
+.space-card .foot .left span{display:flex;align-items:center;gap:5px}
+.space-card .foot .left svg{width:13px;height:13px}
+.pulse-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.pulse-dot.green{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse-dot.amber{background:var(--amber)}
+.pulse-dot.gray{background:var(--text-dim)}
+.space-card .glow{
+  position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;
+  background:radial-gradient(circle,rgba(59,130,246,.12),transparent 70%);pointer-events:none;
+}
+
+/* Digital humans */
+.dh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:40px}
+.dh-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px;cursor:pointer;transition:.18s;display:flex;flex-direction:column;gap:14px;
+}
+.dh-card:hover{border-color:var(--border-strong);background:var(--bg-3)}
+.dh-head{display:flex;align-items:center;gap:12px}
+.dh-avatar{
+  width:42px;height:42px;border-radius:12px;flex-shrink:0;
+  display:grid;place-items:center;font-size:16px;
+  border:1px solid rgba(255,255,255,.08);
+}
+.dha-1{background:linear-gradient(135deg,#3b82f6,#8b5cf6)}
+.dha-2{background:linear-gradient(135deg,#22d3ee,#3b82f6)}
+.dha-3{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.dha-4{background:linear-gradient(135deg,#10b981,#22d3ee)}
+.dh-card .name{font-size:14px;font-weight:600}
+.dh-card .role{font-size:12px;color:var(--text-dim);margin-top:1px}
+.dh-status{
+  display:flex;align-items:center;gap:7px;font-size:12px;
+  padding:5px 10px;border-radius:7px;width:fit-content;
+}
+.dh-status.running{background:rgba(134,239,172,.1);color:var(--green)}
+.dh-status.scheduled{background:var(--bg-3);color:var(--text-mute)}
+.dh-desc{font-size:13px;color:var(--text-mute);line-height:1.5;flex:1}
+.dh-foot{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text-dim);padding-top:12px;border-top:1px solid var(--border-soft)}
+.dh-foot .next{display:flex;align-items:center;gap:5px}
+.dh-foot .next svg{width:13px;height:13px}
+
+/* Recent conversations */
+.recent-list{display:flex;flex-direction:column;gap:2px}
+.recent-item{
+  display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:11px;cursor:pointer;
+  transition:.15s;border:1px solid transparent;
+}
+.recent-item:hover{background:var(--bg-2);border-color:var(--border-soft)}
+.recent-icon{
+  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  background:var(--bg-3);color:var(--text-mute);flex-shrink:0;
+}
+.recent-icon svg{width:16px;height:16px}
+.recent-body{flex:1;min-width:0}
+.recent-title{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent-preview{font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.recent-meta{font-size:11px;color:var(--text-dim);text-align:right;flex-shrink:0}
+.recent-meta .when{font-family:'JetBrains Mono',monospace}
+.recent-meta .badge{margin-top:4px;display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--cyan)}
+
+/* ============ DESKTOP CHAT ============ */
+.chat-layout{display:flex;height:100%}
+.conv-list{
+  width:280px;background:var(--bg-1);border-right:1px solid var(--border-soft);
+  display:flex;flex-direction:column;flex-shrink:0;
+}
+.conv-head{padding:16px 16px 12px;border-bottom:1px solid var(--border-soft)}
+.conv-head .title{font-size:13px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.conv-head .title button{
+  background:var(--bg-3);border:1px solid var(--border);color:var(--text);
+  width:26px;height:26px;border-radius:7px;cursor:pointer;display:grid;place-items:center;
+}
+.conv-head .title button svg{width:14px;height:14px}
+.conv-search{
+  display:flex;align-items:center;gap:8px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:9px;padding:7px 11px;font-size:13px;color:var(--text-dim);
+}
+.conv-search svg{width:14px;height:14px}
+.conv-list-body{flex:1;overflow-y:auto;padding:8px}
+.conv-group{font-size:11px;color:var(--text-dim);font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:12px 10px 6px}
+.conv-item{
+  display:flex;flex-direction:column;gap:3px;padding:10px;border-radius:10px;cursor:pointer;
+  transition:.12s;border:1px solid transparent;
+}
+.conv-item:hover{background:var(--bg-2)}
+.conv-item.active{background:var(--bg-3);border-color:var(--border)}
+.conv-item .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.conv-item .ct{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.conv-item .ct .pin{color:var(--cyan);margin-right:5px;font-size:11px}
+.conv-item.active .ct{color:var(--text)}
+.conv-item .ts{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.conv-item .prev{font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-item .tags{display:flex;gap:5px;margin-top:3px}
+.conv-item .tags .t{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--bg-4);color:var(--text-mute)}
+
+/* Chat center */
+.chat-center{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg-1)}
+.chat-header{
+  height:56px;border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:center;gap:12px;padding:0 20px;flex-shrink:0;
+}
+.chat-header .space-tag{
+  display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;
+}
+.chat-header .space-tag .si{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px}
+.chat-header .crumb{color:var(--text-dim);font-size:13px}
+.chat-header .actions{margin-left:auto;display:flex;align-items:center;gap:6px}
+.model-pill{
+  display:flex;align-items:center;gap:8px;background:var(--bg-2);border:1px solid var(--border);
+  padding:6px 12px;border-radius:9px;font-size:13px;cursor:pointer;
+}
+.model-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.model-pill svg{width:13px;height:13px;color:var(--text-dim)}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  background:transparent;border:1px solid transparent;color:var(--text-mute);cursor:pointer;
+}
+.icon-btn:hover{background:var(--bg-2);border-color:var(--border)}
+.icon-btn svg{width:17px;height:17px}
+
+/* Messages */
+.messages{flex:1;overflow-y:auto;padding:28px 0}
+.msg-wrap{max-width:760px;margin:0 auto;padding:0 28px}
+.msg{margin-bottom:24px}
+.msg-user{
+  display:flex;justify-content:flex-end;margin-bottom:10px;
+}
+.msg-user .bubble{
+  background:var(--bg-3);border:1px solid var(--border-strong);
+  padding:11px 16px;border-radius:14px 14px 4px 14px;max-width:78%;
+  font-size:14px;line-height:1.6;
+}
+.msg-user .bubble img{display:block;margin-top:8px;border-radius:8px;max-width:260px}
+.msg-ai{display:flex;gap:14px}
+.msg-ai .av{
+  width:32px;height:32px;border-radius:9px;background:var(--grad-primary);flex-shrink:0;
+  display:grid;place-items:center;box-shadow:0 3px 10px rgba(59,130,246,.3);
+}
+.msg-ai .av svg{width:17px;height:17px}
+.msg-ai .body{flex:1;min-width:0;padding-top:4px}
+.msg-ai .body .who{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.msg-ai .body .who .tag-sm{font-size:10px;font-weight:500;color:var(--cyan);background:rgba(34,211,238,.1);padding:2px 7px;border-radius:5px}
+.msg-ai .body p{font-size:14px;line-height:1.7;color:var(--text)}
+.msg-ai .body p+p{margin-top:10px}
+.msg-ai .body code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--bg-3);padding:2px 6px;border-radius:5px;color:var(--cyan)}
+
+/* Tool call card */
+.tool-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:11px;
+  margin:12px 0;overflow:hidden;
+}
+.tool-head{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  font-size:13px;cursor:pointer;
+}
+.tool-head .ti{
+  width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;
+}
+.ti-browser{background:rgba(34,211,238,.12);color:var(--cyan)}
+.ti-code{background:rgba(167,139,250,.12);color:var(--violet)}
+.ti-file{background:rgba(134,239,172,.12);color:var(--green)}
+.tool-head .ti svg{width:13px;height:13px}
+.tool-head .label{font-weight:500;flex:1}
+.tool-head .label .step{color:var(--text-dim);font-size:12px;font-weight:400}
+.tool-head .status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px}
+.tool-head .chev{color:var(--text-dim);transition:.2s}
+.tool-head .chev svg{width:14px;height:14px}
+.tool-body{padding:0 14px 12px 48px;font-size:13px;color:var(--text-mute);line-height:1.6}
+.tool-body .step-line{display:flex;gap:8px;padding:3px 0;align-items:flex-start}
+.tool-body .step-line .dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin-top:7px;flex-shrink:0}
+.tool-body .step-line .dot.mute{background:var(--text-dim)}
+
+/* Diff/file footer */
+.file-foot{
+  margin-top:14px;border:1px solid var(--border);border-radius:11px;overflow:hidden;
+}
+.file-foot-head{
+  display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--bg-2);
+  font-size:12px;color:var(--text-mute);border-bottom:1px solid var(--border-soft);
+}
+.file-foot-head .add{color:var(--green);font-family:'JetBrains Mono',monospace}
+.file-foot-head .del{color:var(--rose);font-family:'JetBrains Mono',monospace}
+.file-foot-head .path{font-family:'JetBrains Mono',monospace;color:var(--text)}
+.file-foot-head .path .del-part{color:var(--rose)}
+.diff-body{font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;padding:8px 0;overflow-x:auto}
+.diff-line{padding:0 14px;white-space:pre}
+.diff-line.add{background:rgba(134,239,172,.06);color:#bbf7d0}
+.diff-line.del{background:rgba(251,113,133,.06);color:#fda4af}
+.diff-line.hunk{color:var(--text-dim);padding:4px 14px}
+
+/* Input area */
+.input-area{
+  border-top:1px solid var(--border-soft);padding:14px 28px 20px;
+  background:linear-gradient(180deg,transparent,rgba(7,11,20,.4));
+}
+.input-box{
+  max-width:760px;margin:0 auto;
+  background:var(--bg-2);border:1px solid var(--border-strong);border-radius:16px;
+  transition:.15s;
+}
+.input-box:focus-within{border-color:rgba(59,130,246,.4);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+.input-pre{display:flex;gap:8px;padding:8px 8px 0;flex-wrap:wrap}
+.img-chip{
+  position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border-strong);
+}
+.img-chip img{display:block;width:64px;height:64px;object-fit:cover}
+.img-chip .x{position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);display:grid;place-items:center;color:#fff;font-size:10px}
+.input-field{
+  padding:10px 14px 6px;min-height:52px;font-size:14px;line-height:1.6;color:var(--text);
+  display:flex;align-items:center;
+}
+.input-field .placeholder{color:var(--text-dim)}
+.input-bar{display:flex;align-items:center;gap:6px;padding:6px 10px 10px}
+.ib-btn{
+  display:flex;align-items:center;gap:6px;background:transparent;border:1px solid transparent;
+  padding:7px 10px;border-radius:9px;color:var(--text-mute);font-size:12.5px;cursor:pointer;
+}
+.ib-btn:hover{background:var(--bg-3);color:var(--text)}
+.ib-btn.active{background:rgba(59,130,246,.12);color:var(--cyan);border-color:rgba(34,211,238,.2)}
+.ib-btn svg{width:15px;height:15px}
+.ib-btn .lbl{font-size:12px}
+.send-btn{
+  margin-left:auto;width:36px;height:36px;border-radius:10px;
+  background:var(--grad-primary);border:0;cursor:pointer;color:#fff;
+  display:grid;place-items:center;box-shadow:0 4px 12px rgba(59,130,246,.35);
+}
+.send-btn svg{width:16px;height:16px}
+
+/* Canvas rail */
+.canvas-rail{
+  width:300px;border-left:1px solid var(--border-soft);background:var(--bg-1);
+  display:flex;flex-direction:column;flex-shrink:0;
+}
+.canvas-head{padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between}
+.canvas-head .t{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.canvas-head .t svg{width:14px;height:14px;color:var(--text-dim)}
+.canvas-head .cnt{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
+.art-list{flex:1;overflow-y:auto;padding:10px}
+.art-item{
+  display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;
+  transition:.12s;margin-bottom:4px;border:1px solid transparent;
+}
+.art-item:hover{background:var(--bg-2)}
+.art-item.active{background:var(--bg-3);border-color:var(--border)}
+.art-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.art-icon.html{background:rgba(251,146,60,.15);color:#fb923c}
+.art-icon.css{background:rgba(96,165,250,.15);color:#60a5fa}
+.art-icon.js{background:rgba(250,204,21,.15);color:#facc15}
+.art-icon.md{background:rgba(167,139,250,.15);color:var(--violet)}
+.art-icon.json{background:rgba(134,239,172,.15);color:var(--green)}
+.art-body{flex:1;min-width:0}
+.art-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'JetBrains Mono',monospace}
+.art-meta{font-size:11px;color:var(--text-dim);margin-top:1px}
+.canvas-foot{padding:10px 14px;border-top:1px solid var(--border-soft)}
+
+/* ============ MOBILE ============ */
+.m-app{display:flex;flex-direction:column;height:100%;background:var(--bg-1)}
+.m-header{
+  padding:8px 16px 12px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border-soft);
+}
+.m-header .back{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--text)}
+.m-header .back svg{width:18px;height:18px}
+.m-header .title{flex:1;font-size:17px;font-weight:600;letter-spacing:-.02em}
+.m-header .icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--text-mute)}
+.m-header .icon svg{width:18px;height:18px}
+
+.m-home{flex:1;overflow-y:auto;padding:16px}
+.m-greet{margin-bottom:22px}
+.m-greet h2{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.m-greet p{font-size:13px;color:var(--text-mute)}
+.m-quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.m-quick .qb{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:14px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.m-quick .qb .qi{width:30px;height:30px;border-radius:8px;display:grid;place-items:center}
+.m-quick .qb .qi svg{width:16px;height:16px}
+.m-quick .qb .ql{font-size:13px;font-weight:500}
+.m-quick .qb .qd{font-size:11px;color:var(--text-dim)}
+
+.m-sec-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin:22px 0 12px;display:flex;align-items:center;justify-content:space-between}
+.m-sec-title .more{font-size:12px;color:var(--cyan);text-transform:none;letter-spacing:0}
+
+.m-space-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;
+}
+.m-space-card .h{display:flex;align-items:center;gap:11px;margin-bottom:8px}
+.m-space-card .si{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+.m-space-card .n{font-size:14px;font-weight:600}
+.m-space-card .d{font-size:12px;color:var(--text-mute);line-height:1.5;margin-bottom:8px}
+.m-space-card .f{display:flex;gap:12px;font-size:11px;color:var(--text-dim)}
+
+.m-dh-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px;
+  display:flex;align-items:center;gap:11px;
+}
+.m-dh-card .av{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;font-size:14px}
+.m-dh-card .b{flex:1;min-width:0}
+.m-dh-card .n{font-size:13px;font-weight:600}
+.m-dh-card .r{font-size:11px;color:var(--text-dim);margin-top:1px}
+.m-dh-card .st{font-size:10px;padding:3px 8px;border-radius:6px;flex-shrink:0}
+
+.m-bottom-nav{
+  height:62px;border-top:1px solid var(--border-soft);background:var(--bg-0);
+  display:flex;align-items:center;justify-content:space-around;padding-bottom:8px;
+}
+.m-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text-dim);font-size:10px;cursor:pointer;padding:6px 10px;border-radius:10px}
+.m-nav-item.active{color:var(--cyan)}
+.m-nav-item svg{width:21px;height:21px}
+
+/* Mobile chat */
+.m-chat{flex:1;display:flex;flex-direction:column;min-height:0}
+.m-chat-head{
+  padding:6px 12px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-soft);
+}
+.m-chat-head .back{width:30px;height:30px;border-radius:8px;display:grid;place-items:center}
+.m-chat-head .back svg{width:18px;height:18px;color:var(--text-mute)}
+.m-chat-head .title{flex:1;min-width:0}
+.m-chat-head .title .t{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-chat-head .title .s{font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:4px}
+.m-chat-head .icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--text-mute)}
+.m-chat-head .icon svg{width:17px;height:17px}
+
+.m-msgs{flex:1;overflow-y:auto;padding:16px 14px}
+.m-msg{margin-bottom:16px}
+.m-msg-user{display:flex;justify-content:flex-end}
+.m-msg-user .b{
+  background:var(--bg-3);border:1px solid var(--border-strong);
+  padding:9px 13px;border-radius:13px 13px 4px 13px;max-width:82%;font-size:13.5px;line-height:1.55;
+}
+.m-msg-ai{display:flex;gap:9px}
+.m-msg-ai .av{width:26px;height:26px;border-radius:7px;background:var(--grad-primary);flex-shrink:0;display:grid;place-items:center}
+.m-msg-ai .av svg{width:14px;height:14px}
+.m-msg-ai .body{flex:1;min-width:0;padding-top:1px}
+.m-msg-ai .body p{font-size:13.5px;line-height:1.6;color:var(--text)}
+.m-msg-ai .body p+p{margin-top:8px}
+.m-msg-ai .body code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-3);padding:1px 5px;border-radius:4px;color:var(--cyan)}
+.m-tool-card{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;margin:9px 0;overflow:hidden}
+.m-tool-head{display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:12px}
+.m-tool-head .ti{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;flex-shrink:0}
+.m-tool-head .ti svg{width:11px;height:11px}
+.m-tool-head .l{flex:1;font-weight:500}
+.m-tool-head .s{font-size:10px;color:var(--green)}
+
+.m-input{border-top:1px solid var(--border-soft);padding:10px 12px 12px}
+.m-input-box{background:var(--bg-2);border:1px solid var(--border-strong);border-radius:16px;padding:8px}
+.m-input-field{min-height:24px;font-size:13.5px;padding:4px 8px;color:var(--text-dim)}
+.m-input-bar{display:flex;align-items:center;gap:4px;padding-top:6px}
+.m-input-bar .ib{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--text-mute);background:transparent;border:0}
+.m-input-bar .ib svg{width:16px;height:16px}
+.m-input-bar .send{margin-left:auto;width:32px;height:32px;border-radius:9px;background:var(--grad-primary);border:0;color:#fff;display:grid;place-items:center}
+.m-input-bar .send svg{width:14px;height:14px}
+
+/* helper icons */
+svg{display:block}
+.scroll-hint{
+  position:fixed;bottom:32px;right:32px;z-index:100;
+  background:var(--bg-3);border:1px solid var(--border-strong);
+  padding:9px 14px;border-radius:11px;font-size:12px;color:var(--text-mute);
+  box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;
+}
+.scroll-hint code{font-family:'JetBrains Mono',monospace;color:var(--cyan)}
+
+/* note callout */
+.note{
+  background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:12px;
+  padding:14px 18px;font-size:13px;color:var(--text-mute);line-height:1.6;margin:0 0 28px;max-width:760px;
+}
+.note b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ PAGE HEADER ============ -->
+<div class="page-head">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 3v18M3 8l9 5 9-5" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" opacity=".55"/></svg>
+    </div>
+    <div class="brand-name">Meco<span>UI Redesign · v1 · 2026-07-15</span></div>
+  </div>
+  <h1>多端 AI 工作空间伴侣 — 界面重设计</h1>
+  <p>覆盖桌面端 Home / Chat 工作台（精雕）与移动端对应屏幕。品牌色系遵循 rebrand 文档：green → cyan → blue，深色底 #0d1421。目标体验对标 Codex / WorkBuddy 级别：克制、精致、有呼吸感。</p>
+  <div class="meta">
+    <span class="tag live">Design tokens 已锁定</span>
+    <span class="tag">Desktop · 1180px</span>
+    <span class="tag">Mobile · 390px</span>
+    <span class="tag">Dark-first</span>
+  </div>
+</div>
+
+<!-- ============ DESIGN TOKENS ============ -->
+<div class="sec-head">
+  <h2>Design Tokens</h2>
+  <span class="idx">01 / FOUNDATION</span>
+</div>
+<div class="tokens">
+  <div class="token-card">
+    <h3>Color · Brand</h3>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#86efac"></div><span class="name">Life Green</span><span class="hex">#86efac</span></div>
+      <div class="swatch"><div class="chip" style="background:#22d3ee"></div><span class="name">Cyan</span><span class="hex">#22d3ee</span></div>
+      <div class="swatch"><div class="chip" style="background:#3b82f6"></div><span class="name">Blue</span><span class="hex">#3b82f6</span></div>
+      <div class="swatch"><div class="chip" style="background:linear-gradient(135deg,#22d3ee,#3b82f6)"></div><span class="name">Primary Grad</span><span class="hex">cyan→blue</span></div>
+    </div>
+    <h3 style="margin-top:18px">Color · Surface</h3>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#070b14"></div><span class="name">BG Deep</span><span class="hex">#070b14</span></div>
+      <div class="swatch"><div class="chip" style="background:#0b1120"></div><span class="name">BG App</span><span class="hex">#0b1120</span></div>
+      <div class="swatch"><div class="chip" style="background:#111a2e;border:1px solid #1e2a42"></div><span class="name">Surface</span><span class="hex">#111a2e</span></div>
+      <div class="swatch"><div class="chip" style="background:#16223a;border:1px solid #1e2a42"></div><span class="name">Elevated</span><span class="hex">#16223a</span></div>
+      <div class="swatch"><div class="chip" style="background:#1e2a42"></div><span class="name">Border</span><span class="hex">#1e2a42</span></div>
+    </div>
+  </div>
+  <div class="token-card">
+    <h3>Typography · Inter</h3>
+    <div class="type-row"><span class="label">display</span><span class="t-display">Always-on companion</span></div>
+    <div class="type-row"><span class="label">h1</span><span class="t-h1">Space overview</span></div>
+    <div class="type-row"><span class="label">body</span><span class="t-body">The quick brown fox jumps over the lazy dog.</span></div>
+    <div class="type-row"><span class="label">mute</span><span class="t-mute">Secondary information, metadata, timestamps.</span></div>
+    <div class="type-row"><span class="label">mono</span><span class="mono" style="font-size:13px;color:var(--cyan)">const meco = spawn('always-on')</span></div>
+  </div>
+  <div class="token-card">
+    <h3>Radius &amp; Depth</h3>
+    <div class="rad-row" style="margin-bottom:18px">
+      <div><div class="dot r-1"></div><div class="lbl">6 · chip</div></div>
+      <div><div class="dot r-2"></div><div class="lbl">10 · btn</div></div>
+      <div><div class="dot r-3"></div><div class="lbl">12 · card</div></div>
+      <div><div class="dot r-4"></div><div class="lbl">20 · sheet</div></div>
+    </div>
+    <h3>Motion concept</h3>
+    <div style="font-size:13px;color:var(--text-mute);line-height:1.7">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px;animation:pulse 2s ease-in-out infinite;vertical-align:1px"></span>
+      "呼吸" — 活跃元素以 2s pulse 表达 always-on 生命感，克制不喧宾夺主。
+    </div>
+    <div style="font-size:13px;color:var(--text-mute);line-height:1.7;margin-top:10px">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-right:6px;vertical-align:1px"></span>
+      聚焦反馈 — input border 由灰转 cyan + 3px 软光晕。
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <b>设计取舍说明</b>：当前线上主色是紫色 <code class="mono">hsl(262 83% 62%)</code>，但 rebrand 文档已把品牌色锁定为 green→cyan→blue（见 §4 Decision B.1）。本稿采用文档锁定的方向。若你更想保留紫色调，我可以基于同一布局快速换色——这点请优先反馈。
+</div>
+
+<!-- ============ DESKTOP HOME ============ -->
+<div class="sec-head">
+  <h2>Desktop · Home</h2>
+  <span class="idx">02 / HOME</span>
+</div>
+<div class="frames">
+<div class="browser">
+  <div class="browser-bar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="url">app.meco.dev / home</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="browser-screen">
+    <div class="app">
+      <!-- Icon rail -->
+      <div class="rail">
+        <div class="logo-sm">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="rail-item active" title="Home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="rail-item" title="Spaces">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </div>
+        <div class="rail-item" title="Digital Humans">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg>
+        </div>
+        <div class="rail-item" title="Apps">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </div>
+        <div class="rail-item" title="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="spacer"></div>
+        <div class="rail-item" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="avatar">Y</div>
+      </div>
+
+      <!-- Home main -->
+      <div class="home-main">
+        <div class="home-topbar">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg>
+            <span>Search spaces, conversations, files…</span>
+            <span class="kbd">⌘K</span>
+          </div>
+          <button class="btn-primary accent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+            New Space
+          </button>
+        </div>
+
+        <div class="greeting">
+          <h1>Good evening, Yang <span class="wave">👋</span></h1>
+          <p>You have <b>3 active tasks</b> across <b>4 spaces</b>. Meco has been running while you were away — <b>2 digital humans</b> sent updates.</p>
+        </div>
+
+        <!-- Spaces -->
+        <div class="section-title">
+          <h2>Spaces <span class="count">· 4</span></h2>
+          <div class="actions">
+            <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Grid</button>
+            <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>List</button>
+          </div>
+        </div>
+        <div class="spaces-grid">
+          <div class="space-card">
+            <div class="glow"></div>
+            <div class="head">
+              <div class="space-icon si-1">🚀</div>
+              <div>
+                <div class="name">Meco Core</div>
+                <div class="sub">Personal · 28 conversations</div>
+              </div>
+              <span class="pulse-dot green" style="margin-left:auto"></span>
+            </div>
+            <div class="desc">Main workspace — daily coding, architecture decisions, and project planning.</div>
+            <div class="foot">
+              <div class="left">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>2m ago</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>12 files</span>
+              </div>
+              <span>claude-sonnet</span>
+            </div>
+          </div>
+
+          <div class="space-card">
+            <div class="glow" style="background:radial-gradient(circle,rgba(34,211,238,.12),transparent 70%)"></div>
+            <div class="head">
+              <div class="space-icon si-2">🌐</div>
+              <div>
+                <div class="name">Web Research</div>
+                <div class="sub">Shared · 9 conversations</div>
+              </div>
+              <span class="pulse-dot amber" style="margin-left:auto"></span>
+            </div>
+            <div class="desc">Browser automation for competitive analysis and market intelligence gathering.</div>
+            <div class="foot">
+              <div class="left">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>1h ago</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>5 files</span>
+              </div>
+              <span>gpt-4o</span>
+            </div>
+          </div>
+
+          <div class="space-card">
+            <div class="glow" style="background:radial-gradient(circle,rgba(134,239,172,.12),transparent 70%)"></div>
+            <div class="head">
+              <div class="space-icon si-3">📊</div>
+              <div>
+                <div class="name">Investment Log</div>
+                <div class="sub">Personal · 16 conversations</div>
+              </div>
+              <span class="pulse-dot gray" style="margin-left:auto"></span>
+            </div>
+            <div class="desc">Stock research, portfolio tracking, and earnings analysis with automated daily reports.</div>
+            <div class="foot">
+              <div class="left">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>Yesterday</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>8 files</span>
+              </div>
+              <span>claude-sonnet</span>
+            </div>
+          </div>
+
+          <div class="space-card">
+            <div class="glow" style="background:radial-gradient(circle,rgba(167,139,250,.12),transparent 70%)"></div>
+            <div class="head">
+              <div class="space-icon si-4">✍️</div>
+              <div>
+                <div class="name">Content Studio</div>
+                <div class="sub">Shared · 7 conversations</div>
+              </div>
+              <span class="pulse-dot green" style="margin-left:auto"></span>
+            </div>
+            <div class="desc">Long-form writing, blog drafts, and social media content with brand voice consistency.</div>
+            <div class="foot">
+              <div class="left">
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>3h ago</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>21 files</span>
+              </div>
+              <span>gemini-1.5</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Digital Humans -->
+        <div class="section-title">
+          <h2>Digital Humans <span class="count">· 4 running</span></h2>
+          <div class="actions">
+            <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>New</button>
+            <button>Browse store →</button>
+          </div>
+        </div>
+        <div class="dh-grid">
+          <div class="dh-card">
+            <div class="dh-head">
+              <div class="dh-avatar dha-1">📈</div>
+              <div style="flex:1">
+                <div class="name">Market Watcher</div>
+                <div class="role">Stock board screener</div>
+              </div>
+            </div>
+            <div class="dh-status running"><span class="pulse-dot green"></span>Running · next 14:30</div>
+            <div class="dh-desc">Scans A-share limit-up candidates every 30min during market hours. Notifies via WeCom.</div>
+            <div class="dh-foot">
+              <span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>12 runs today</span>
+              <span>WeCom</span>
+            </div>
+          </div>
+
+          <div class="dh-card">
+            <div class="dh-head">
+              <div class="dh-avatar dha-2">🔍</div>
+              <div style="flex:1">
+                <div class="name">Research Scout</div>
+                <div class="role">Web research agent</div>
+              </div>
+            </div>
+            <div class="dh-status scheduled">Scheduled · daily 09:00</div>
+            <div class="dh-desc">Tracks LLM trends and produces a structured weekly report with citations.</div>
+            <div class="dh-foot">
+              <span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>Next run 09:00</span>
+              <span>Summary</span>
+            </div>
+          </div>
+
+          <div class="dh-card">
+            <div class="dh-head">
+              <div class="dh-avatar dha-3">📰</div>
+              <div style="flex:1">
+                <div class="name">News Digest</div>
+                <div class="role">Daily briefing</div>
+              </div>
+            </div>
+            <div class="dh-status running"><span class="pulse-dot green"></span>Running · in progress</div>
+            <div class="dh-desc">Compiles tech news from 12 sources into a morning digest delivered to your inbox.</div>
+            <div class="dh-foot">
+              <span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>5 min ago</span>
+              <span>Email</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent -->
+        <div class="section-title">
+          <h2>Recent Conversations <span class="count">· today</span></h2>
+          <div class="actions"><button>View all →</button></div>
+        </div>
+        <div class="recent-list">
+          <div class="recent-item">
+            <div class="recent-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="recent-body">
+              <div class="recent-title">Refactor config service for multi-tenant</div>
+              <div class="recent-preview">Let's extract the tenant resolution into a separate module…</div>
+            </div>
+            <div class="recent-meta"><div class="when">14:32</div><div class="badge">● 3 tools</div></div>
+          </div>
+          <div class="recent-item">
+            <div class="recent-icon" style="background:rgba(34,211,238,.1);color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke-linecap="round"/></svg></div>
+            <div class="recent-body">
+              <div class="recent-title">Scrape competitor pricing pages</div>
+              <div class="recent-preview">Navigated to 4 sites and extracted pricing tier tables into a comparison…</div>
+            </div>
+            <div class="recent-meta"><div class="when">13:18</div><div class="badge">● 8 tools</div></div>
+          </div>
+          <div class="recent-item">
+            <div class="recent-icon" style="background:rgba(134,239,172,.1);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z M8 9h8M8 13h8M8 17h5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="recent-body">
+              <div class="recent-title">Q3 earnings analysis — Tesla</div>
+              <div class="recent-preview">Summarized the transcript and compared gross margin trajectory to guidance…</div>
+            </div>
+            <div class="recent-meta"><div class="when">11:04</div><div class="badge">● 2 tools</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ DESKTOP CHAT ============ -->
+<div class="sec-head">
+  <h2>Desktop · Chat Workspace</h2>
+  <span class="idx">03 / CHAT</span>
+</div>
+<div class="frames">
+<div class="browser">
+  <div class="browser-bar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="url">app.meco.dev / space / meco-core</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="browser-screen">
+    <div class="chat-layout">
+      <!-- Conversation list -->
+      <div class="conv-list">
+        <div class="conv-head">
+          <div class="title">Meco Core <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button></div>
+          <div class="conv-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg>
+            <span>Search…</span>
+          </div>
+        </div>
+        <div class="conv-list-body">
+          <div class="conv-group">Pinned</div>
+          <div class="conv-item active">
+            <div class="row"><div class="ct"><span class="pin">📌</span>Refactor config service</div><div class="ts">14:32</div></div>
+            <div class="prev">Extract tenant resolution into a separate module…</div>
+            <div class="tags"><span class="t">claude-sonnet</span><span class="t">3 tools</span></div>
+          </div>
+          <div class="conv-item">
+            <div class="row"><div class="ct"><span class="pin">📌</span>API design — workspace API</div><div class="ts">Mon</div></div>
+            <div class="prev">Reviewed REST vs RPC tradeoffs for the…</div>
+          </div>
+          <div class="conv-group">Today</div>
+          <div class="conv-item">
+            <div class="row"><div class="ct">Scrape competitor pricing</div><div class="ts">13:18</div></div>
+            <div class="prev">Navigated to 4 sites and extracted pricing…</div>
+            <div class="tags"><span class="t">gpt-4o</span></div>
+          </div>
+          <div class="conv-item">
+            <div class="row"><div class="ct">Q3 earnings — Tesla</div><div class="ts">11:04</div></div>
+            <div class="prev">Summarized the transcript and compared…</div>
+          </div>
+          <div class="conv-item">
+            <div class="row"><div class="ct">i18n key collision check</div><div class="ts">09:50</div></div>
+            <div class="prev">Ran a script to find duplicate translation keys…</div>
+          </div>
+          <div class="conv-group">Yesterday</div>
+          <div class="conv-item">
+            <div class="row"><div class="ct">Database migration plan</div><div class="ts">Jul 14</div></div>
+            <div class="prev">Step 1: add nullable column, backfill…</div>
+          </div>
+          <div class="conv-item">
+            <div class="row"><div class="ct">Browser automation testing</div><div class="ts">Jul 14</div></div>
+            <div class="prev">Tested the new form-fill flow on the…</div>
+          </div>
+          <div class="conv-item">
+            <div class="row"><div class="ct">Mobile responsive audit</div><div class="ts">Jul 14</div></div>
+            <div class="prev">Found 12 components that break below 640px…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat center -->
+      <div class="chat-center">
+        <div class="chat-header">
+          <div class="space-tag">
+            <div class="si si-1">🚀</div>
+            <span>Meco Core</span>
+          </div>
+          <span class="crumb">/ Refactor config service</span>
+          <div class="actions">
+            <div class="model-pill">
+              <span class="dot"></span>
+              <span>Claude Sonnet 4.5</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <button class="icon-btn" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></button>
+            <button class="icon-btn" title="History"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="icon-btn" title="More"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+          </div>
+        </div>
+
+        <div class="messages">
+          <div class="msg-wrap">
+            <!-- User msg -->
+            <div class="msg msg-user">
+              <div class="bubble">I want to refactor <code class="mono" style="color:var(--cyan)">config.service.ts</code> to support multi-tenant workspaces. The current tenant resolution is scattered across 6 call sites. Can you propose a clean module boundary?</div>
+            </div>
+
+            <!-- AI msg -->
+            <div class="msg msg-ai">
+              <div class="av">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="body">
+                <div class="who">Meco <span class="tag-sm">claude-sonnet-4.5</span></div>
+                <p>Good call — the tenant resolution is genuinely tangled right now. I scanned the 6 call sites and the core issue is that <code>getTenantId()</code> is being derived from 3 different sources (URL, session, header) depending on entry point.</p>
+                <p>Here's a proposed boundary: extract a <code>TenantResolver</code> that centralizes resolution with a clear priority chain, and have <code>config.service</code> consume it as a dependency.</p>
+
+                <!-- Tool call -->
+                <div class="tool-card">
+                  <div class="tool-head">
+                    <div class="ti ti-code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="label">Read files <span class="step">· 4 files scanned</span></div>
+                    <div class="status"><span class="pulse-dot green"></span>done</div>
+                    <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  </div>
+                  <div class="tool-body">
+                    <div class="step-line"><div class="dot"></div><div>Read <code class="mono">src/main/services/config.service.ts</code> — found 6 tenant lookups</div></div>
+                    <div class="step-line"><div class="dot"></div><div>Read <code class="mono">src/main/services/ai-sources/auth-loader.ts</code> — tenant fallback logic</div></div>
+                    <div class="step-line"><div class="dot mute"></div><div class="mono" style="color:var(--text-dim)">+ 2 more (router.ts, ipc-handlers.ts)</div></div>
+                  </div>
+                </div>
+
+                <p>Now let me draft the <code>TenantResolver</code> interface and show you the diff:</p>
+
+                <!-- File diff -->
+                <div class="file-foot">
+                  <div class="file-foot-head">
+                    <span class="path">src/main/services/<span style="color:var(--green)">tenant-resolver.ts</span></span>
+                    <span class="add">+48</span>
+                    <span class="del">−0</span>
+                    <span style="margin-left:auto;color:var(--text-dim)">new file</span>
+                  </div>
+                  <div class="diff-body">
+                    <div class="diff-line hunk">@@ -0,0 +1,48 @@</div>
+                    <div class="diff-line add">+export interface TenantContext {</div>
+                    <div class="diff-line add">+  readonly id: string;</div>
+                    <div class="diff-line add">+  readonly source: 'url' | 'session' | 'header';</div>
+                    <div class="diff-line add">+}</div>
+                    <div class="diff-line add">+</div>
+                    <div class="diff-line add">+export class TenantResolver {</div>
+                    <div class="diff-line add">+  constructor(private readonly sources: TenantSource[]) {}</div>
+                    <div class="diff-line add">+</div>
+                    <div class="diff-line add">+  resolve(request: Request): TenantContext {</div>
+                    <div class="diff-line add">+    for (const source of this.sources) {</div>
+                    <div class="diff-line add">+      const ctx = source.extract(request);</div>
+                    <div class="diff-line add">+      if (ctx) return ctx;</div>
+                    <div class="diff-line add">+    }</div>
+                    <div class="diff-line add">+    throw new TenantResolutionError(request);</div>
+                    <div class="diff-line add">+  }</div>
+                    <div class="diff-line add">+}</div>
+                  </div>
+                </div>
+
+                <p>Want me to apply this and migrate the 6 call sites, or discuss the priority order first?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input area -->
+        <div class="input-area">
+          <div class="input-box">
+            <div class="input-pre">
+              <div class="img-chip"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=120&h=120&fit=crop" alt=""><div class="x">×</div></div>
+            </div>
+            <div class="input-field"><span class="placeholder">Reply to Meco…  <span style="color:var(--text-dim);font-size:12px;margin-left:8px">Enter to send · Shift+Enter for newline</span></span></div>
+            <div class="input-bar">
+              <button class="ib-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+              <button class="ib-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 3 2 5 2 7h10c0-2 2-4 2-7a7 7 0 00-7-7z" stroke-linejoin="round"/><path d="M9 21h6" stroke-linecap="round"/></svg><span class="lbl">Thinking</span></button>
+              <button class="ib-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke-linecap="round"/></svg><span class="lbl">Browser</span></button>
+              <button class="send-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas rail -->
+      <div class="canvas-rail">
+        <div class="canvas-head">
+          <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>Artifacts</div>
+          <div class="cnt">5</div>
+        </div>
+        <div class="art-list">
+          <div class="art-item active">
+            <div class="art-icon ts">TS</div>
+            <div class="art-body"><div class="art-name">tenant-resolver.ts</div><div class="art-meta">+48 · just now</div></div>
+          </div>
+          <div class="art-item">
+            <div class="art-icon md">MD</div>
+            <div class="art-body"><div class="art-name">refactor-plan.md</div><div class="art-meta">2KB · 5m ago</div></div>
+          </div>
+          <div class="art-item">
+            <div class="art-icon json">{} </div>
+            <div class="art-body"><div class="art-name">call-sites.json</div><div class="art-meta">6 entries · 8m ago</div></div>
+          </div>
+          <div class="art-item">
+            <div class="art-icon html">&lt;/&gt;</div>
+            <div class="art-body"><div class="art-name">diagram.html</div><div class="art-meta">3KB · 12m ago</div></div>
+          </div>
+          <div class="art-item">
+            <div class="art-icon css">#</div>
+            <div class="art-body"><div class="art-name">styles.css</div><div class="art-meta">1KB · 18m ago</div></div>
+          </div>
+        </div>
+        <div class="canvas-foot">
+          <button class="btn-primary" style="width:100%;justify-content:center;font-size:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>Open canvas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ MOBILE ============ -->
+<div class="sec-head">
+  <h2>Mobile · Home &amp; Chat</h2>
+  <span class="idx">04 / MOBILE</span>
+</div>
+<div class="frames">
+<div class="frame-row">
+
+  <!-- Mobile Home -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="phone-notch-status">
+        <span>9:41</span>
+        <span class="icons"><svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><path d="M1 7h2v2H1zM5 5h2v4H5zM9 3h2v6H9zM13 1h-2v8h2z" opacity=".4"/></svg> <svg width="14" height="10" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2C5 2 2.5 3 1 4.5L0 3.5C2 1.5 5 0 8 0s6 1.5 8 3.5L15 4.5C13.5 3 11 2 8 2z" opacity=".5"/><path d="M8 5C6 5 4.5 5.8 3.5 6.8L2.5 5.8C4 4.3 6 3.5 8 3.5s4 .8 5.5 2.3L12.5 6.8C11.5 5.8 10 5 8 5z" opacity=".8"/><circle cx="8" cy="9" r="1.5"/></svg> <span style="font-size:11px">86%</span></span>
+      </div>
+      <div class="m-app">
+        <div class="m-header">
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text-dim)">Tuesday, Jul 15</div>
+            <div class="title">Good evening, Yang</div>
+          </div>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="m-home">
+          <!-- Quick actions -->
+          <div class="m-quick">
+            <div class="qb">
+              <div class="qi" style="background:rgba(59,130,246,.15);color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></div>
+              <div class="ql">New chat</div>
+              <div class="qd">Start fresh</div>
+            </div>
+            <div class="qb">
+              <div class="qi" style="background:rgba(134,239,172,.15);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="ql">Ask Meco</div>
+              <div class="qd">Voice input</div>
+            </div>
+          </div>
+
+          <div class="m-sec-title">Digital Humans <span class="more">See all</span></div>
+          <div class="m-dh-card">
+            <div class="av dha-1">📈</div>
+            <div class="b"><div class="n">Market Watcher</div><div class="r">Next run 14:30 · WeCom</div></div>
+            <div class="st" style="background:rgba(134,239,172,.12);color:var(--green)"><span class="pulse-dot green" style="width:5px;height:5px"></span> Live</div>
+          </div>
+          <div class="m-dh-card">
+            <div class="av dha-2">🔍</div>
+            <div class="b"><div class="n">Research Scout</div><div class="r">Daily 09:00 · Summary</div></div>
+            <div class="st" style="background:var(--bg-3);color:var(--text-mute)">Idle</div>
+          </div>
+
+          <div class="m-sec-title">Spaces <span class="more">4</span></div>
+          <div class="m-space-card">
+            <div class="h">
+              <div class="si si-1">🚀</div>
+              <div style="flex:1"><div class="n">Meco Core</div><div style="font-size:11px;color:var(--text-dim)">28 conv · 12 files</div></div>
+              <span class="pulse-dot green"></span>
+            </div>
+            <div class="d">Main workspace — daily coding and project planning.</div>
+            <div class="f"><span>2m ago</span><span>·</span><span>claude-sonnet</span></div>
+          </div>
+          <div class="m-space-card">
+            <div class="h">
+              <div class="si si-2">🌐</div>
+              <div style="flex:1"><div class="n">Web Research</div><div style="font-size:11px;color:var(--text-dim)">9 conv · 5 files</div></div>
+              <span class="pulse-dot amber"></span>
+            </div>
+            <div class="d">Browser automation for market intelligence.</div>
+            <div class="f"><span>1h ago</span><span>·</span><span>gpt-4o</span></div>
+          </div>
+
+          <div class="m-sec-title">Recent <span class="more">Today</span></div>
+          <div class="recent-item" style="padding:8px 10px">
+            <div class="recent-body"><div class="recent-title" style="font-size:13px">Refactor config service</div><div class="recent-preview">Extract tenant resolution…</div></div>
+            <div class="recent-meta"><div class="when">14:32</div></div>
+          </div>
+          <div class="recent-item" style="padding:8px 10px">
+            <div class="recent-body"><div class="recent-title" style="font-size:13px">Scrape competitor pricing</div><div class="recent-preview">Navigated 4 sites…</div></div>
+            <div class="recent-meta"><div class="when">13:18</div></div>
+          </div>
+        </div>
+        <!-- Bottom nav -->
+        <div class="m-bottom-nav">
+          <div class="m-nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg>Home</div>
+          <div class="m-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Spaces</div>
+          <div class="m-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg>Humans</div>
+          <div class="m-nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.2 4.2l4.3 4.3M15.5 15.5l4.3 4.3M1 12h6M17 12h6M4.2 19.8l4.3-4.3M15.5 8.5l4.3-4.3" stroke-linecap="round"/></svg>Settings</div>
+        </div>
+      </div>
+      <div class="phone-home-bar"></div>
+    </div>
+  </div>
+
+  <!-- Mobile Chat -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="phone-notch-status">
+        <span>9:41</span>
+        <span class="icons"><svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><path d="M1 7h2v2H1zM5 5h2v4H5zM9 3h2v6H9zM13 1h-2v8h2z" opacity=".4"/></svg> <span style="font-size:11px">86%</span></span>
+      </div>
+      <div class="m-app">
+        <div class="m-chat-head">
+          <div class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="title">
+            <div class="t">Refactor config service</div>
+            <div class="s"><span class="pulse-dot green" style="width:5px;height:5px"></span> Meco Core · Sonnet 4.5</div>
+          </div>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></div>
+        </div>
+        <div class="m-chat">
+          <div class="m-msgs">
+            <div class="m-msg m-msg-user">
+              <div class="b">I want to refactor config.service.ts to support multi-tenant. Can you propose a module boundary?</div>
+            </div>
+            <div class="m-msg m-msg-ai">
+              <div class="av"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+              <div class="body">
+                <p>Scanned the 6 call sites — the core issue is <code>getTenantId()</code> derives from 3 sources depending on entry point.</p>
+                <div class="m-tool-card">
+                  <div class="m-tool-head">
+                    <div class="ti ti-code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="l">Read 4 files</div>
+                    <div class="s"><span class="pulse-dot green" style="width:4px;height:4px"></span> done</div>
+                  </div>
+                </div>
+                <p>Proposed: extract a <code>TenantResolver</code> with a clear priority chain. Want me to draft it?</p>
+              </div>
+            </div>
+            <div class="m-msg m-msg-user">
+              <div class="b">Yes, draft the interface and show the diff.</div>
+            </div>
+            <div class="m-msg m-msg-ai">
+              <div class="av"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+              <div class="body">
+                <p>Here's the new <code>tenant-resolver.ts</code>:</p>
+                <div class="file-foot" style="margin:8px 0">
+                  <div class="file-foot-head"><span class="path" style="font-size:11px">tenant-resolver.ts</span><span class="add">+48</span></div>
+                  <div class="diff-body" style="font-size:11px">
+                    <div class="diff-line hunk">@@ -0,0 +1,48 @@</div>
+                    <div class="diff-line add">+export interface TenantContext {</div>
+                    <div class="diff-line add">+  readonly id: string;</div>
+                    <div class="diff-line add">+  readonly source: 'url'|'session'|'header';</div>
+                    <div class="diff-line add">+}</div>
+                    <div class="diff-line add">+export class TenantResolver {</div>
+                    <div class="diff-line add">+  resolve(req: Request): TenantContext {</div>
+                    <div class="diff-line add">+    …</div>
+                    <div class="diff-line add">+  }</div>
+                    <div class="diff-line add">+}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="m-input">
+            <div class="m-input-box">
+              <div class="m-input-field">Reply to Meco…</div>
+              <div class="m-input-bar">
+                <button class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+                <button class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linejoin="round"/></svg></button>
+                <button class="ib" style="color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 3 2 5 2 7h10c0-2 2-4 2-7a7 7 0 00-7-7z" stroke-linejoin="round"/></svg></button>
+                <button class="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-home-bar"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="scroll-hint">设计稿 · <code>design/mockups-v1.html</code></div>
+
+</body>
+</html>
