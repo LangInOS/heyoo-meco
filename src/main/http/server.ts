@@ -19,7 +19,17 @@ import {
   handleLogin,
   CredentialRestoreError,
 } from './auth'
-import { initWebSocket, shutdownWebSocket, getClientCount } from './websocket'
+import {
+  initWebSocket,
+  shutdownWebSocket,
+  getClientCount,
+  handleWsUpgrade,
+} from './websocket'
+import {
+  initVoiceWebSocket,
+  shutdownVoiceWebSocket,
+  handleVoiceWsUpgrade,
+} from './voice-websocket'
 import { registerApiRoutes } from './routes'
 import { getMainWindow as getMainWindowFromService } from '../services/window.service'
 
@@ -66,6 +76,7 @@ async function findAvailablePort(startPort: number): Promise<number> {
 }
 
 function cleanupServerOnError(): void {
+  shutdownVoiceWebSocket()
   shutdownWebSocket()
   if (httpServer) {
     try {
@@ -232,21 +243,33 @@ export async function startHttpServer(
   // Create HTTP server
   httpServer = createServer(expressApp)
 
-  // Initialize WebSocket (for Halo communication on /ws path)
-  initWebSocket(httpServer)
+  // Initialize WebSocket servers (noServer mode - routing handled by the
+  // single upgrade handler below).
+  initWebSocket()
+  initVoiceWebSocket()
 
-  // In dev mode, proxy Vite HMR WebSocket connections
-  if (is.dev) {
-    httpServer.on('upgrade', (req, socket, head) => {
-      const url = new URL(req.url || '/', `http://${req.headers.host}`)
+  // Single upgrade handler that routes each WebSocket path to its owning
+  // WebSocketServer. Multiple WebSocketServer instances attached via the
+  // `server` option each register their own upgrade listener, and the ones
+  // whose `path` doesn't match call `abortHandshake`, destroying sockets the
+  // matching server already completed the handshake on. Routing here avoids
+  // that conflict.
+  httpServer.on('upgrade', (req, socket, head) => {
+    const url = new URL(req.url || '/', `http://${req.headers.host}`)
+    const pathname = url.pathname
 
-      // Don't intercept Halo's WebSocket connections
-      if (url.pathname === '/ws') {
-        // Let the wss server handle it (already done by initWebSocket)
-        return
-      }
+    if (pathname === '/ws') {
+      handleWsUpgrade(req, socket, head)
+      return
+    }
 
-      // Proxy other WebSocket connections to Vite dev server
+    if (pathname === '/voice/asr') {
+      handleVoiceWsUpgrade(req, socket, head)
+      return
+    }
+
+    if (is.dev) {
+      // Proxy other WebSocket connections (e.g. Vite HMR) to the dev server
       console.log(`[HTTP] Proxying WebSocket upgrade: ${url.pathname}`)
 
       const viteSocket = createConnection(VITE_DEV_PORT, VITE_DEV_HOST, () => {
@@ -279,8 +302,12 @@ export async function startHttpServer(
         console.error('[HTTP] Client WebSocket error:', err.message)
         viteSocket.end()
       })
-    })
-  }
+      return
+    }
+
+    // Unknown path in production - reject
+    socket.destroy()
+  })
 
   // Restore previously persisted token when available; otherwise generate a
   // fresh PIN. Persistence of newly generated tokens is owned by the caller
@@ -336,6 +363,7 @@ export async function startHttpServer(
  */
 export function stopHttpServer(): void {
   if (httpServer) {
+    shutdownVoiceWebSocket()
     shutdownWebSocket()
     httpServer.close()
     httpServer = null

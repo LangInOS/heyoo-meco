@@ -5,6 +5,7 @@
 
 import { WebSocket, WebSocketServer } from 'ws'
 import { IncomingMessage } from 'http'
+import { Duplex } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
 import { validateToken } from './auth/index'
 
@@ -23,9 +24,27 @@ let wss: WebSocketServer | null = null
 
 /**
  * Initialize WebSocket server
+ *
+ * Uses `noServer` mode so the HTTP server's 'upgrade' event is routed by
+ * `handleWsUpgrade` in server.ts. Multiple instances attached via `server`
+ * option cause abortHandshake conflicts.
  */
-export function initWebSocket(server: any): WebSocketServer {
-  wss = new WebSocketServer({ server, path: '/ws' })
+export function initWebSocket(): WebSocketServer {
+  wss = new WebSocketServer({
+    noServer: true,
+    // Send WebSocket-level ping every 30s and require pong within 10s.
+    // Keeps the TCP connection alive through NAT/firewall idle timeouts on
+    // mobile networks, and surfaces dead peers promptly.
+    pingInterval: 30000,
+    pingTimeout: 10000,
+  })
+
+  // An unhandled server-level error (e.g. protocol violation) crashes the
+  // Node.js process. Log it so we can diagnose without bringing everything
+  // down.
+  wss.on('error', (err) => {
+    console.error('[WS] Server error:', err)
+  })
 
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     const clientId = uuidv4()
@@ -64,6 +83,21 @@ export function initWebSocket(server: any): WebSocketServer {
 
   console.log('[WS] WebSocket server initialized')
   return wss
+}
+
+/**
+ * Route an HTTP 'upgrade' request to this WebSocket server.
+ * Called by the single upgrade handler in server.ts for `/ws` paths.
+ */
+export function handleWsUpgrade(
+  req: IncomingMessage,
+  socket: Duplex,
+  head: Buffer
+): void {
+  if (!wss) return
+  wss.handleUpgrade(req, socket, head, (ws, request) => {
+    wss?.emit('connection', ws, request)
+  })
 }
 
 /**

@@ -49,5 +49,7 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Halo needs camera access to scan QR codes for adding servers</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Halo needs microphone access for voice input</string>
 </dict>
 </plist>

@@ -252,6 +252,7 @@ When a conflict occurs:
    - conflicted files
    - short explanation of likely cause
 4. Ask the human whether to resolve, abort, or inspect further.
+5. If conflicted files are voice-related (`features/voice/`, `InputArea.tsx`, `preload/index.ts`, `bootstrap/extended.ts`), read `docs/operations/voice-merge-conflict-guide.md` before proposing a resolution.
 
 Useful read-only inspection commands:
 

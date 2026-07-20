@@ -305,6 +305,13 @@ body {
   }
 }
 
+/* Voice recording waveform - bars dance with staggered delays.
+   Each bar uses voice-wave-N so the height varies per bar. */
+@keyframes voice-wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50%      { transform: scaleY(1); }
+}
+
 @keyframes halo-spin {
   from {
     transform: rotate(0deg);

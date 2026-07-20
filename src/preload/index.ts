@@ -33,6 +33,9 @@ export interface HaloAPI {
   fetchModels: (apiKey: string, apiUrl: string) => Promise<IpcResponse>
   refreshAISourcesConfig: () => Promise<IpcResponse>
 
+  // Voice
+  voiceGetProxyPort: () => Promise<IpcResponse<{ port: number }>>
+
   // CLI Config (Skills + MCP migration, config dir mode)
   cliConfigGetPaths: () => Promise<IpcResponse>
   cliConfigScanSkills: () => Promise<IpcResponse>
@@ -516,6 +519,9 @@ const api: HaloAPI = {
   fetchModels: (apiKey, apiUrl) =>
     ipcRenderer.invoke('config:fetch-models', apiKey, apiUrl),
   refreshAISourcesConfig: () => ipcRenderer.invoke('config:refresh-ai-sources'),
+
+  // Voice
+  voiceGetProxyPort: () => ipcRenderer.invoke('voice:get-proxy-port'),
 
   // CLI Config
   cliConfigGetPaths: () => ipcRenderer.invoke('cli-config:get-paths'),

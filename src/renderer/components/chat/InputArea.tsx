@@ -19,8 +19,8 @@
  * - Bottom toolbar for future extensibility
  */
 
-import { useState, useRef, useEffect, useMemo, KeyboardEvent, ClipboardEvent, DragEvent } from 'react'
-import { Plus, ImagePlus, Loader2, AlertCircle, Atom, Globe } from 'lucide-react'
+import { useState, useRef, useEffect, useMemo, useCallback, KeyboardEvent, ClipboardEvent, DragEvent } from 'react'
+import { Plus, ImagePlus, Loader2, AlertCircle, Atom, Globe, Mic } from 'lucide-react'
 import { useAppStore } from '../../stores/app.store'
 import { useOnboardingStore } from '../../stores/onboarding.store'
 import { useAIBrowserStore } from '../../stores/ai-browser.store'
@@ -33,6 +33,8 @@ import { useTranslation } from '../../i18n'
 import { SlashCommandMenu, filterSlashCommands } from './SlashCommandMenu'
 import type { SlashCommandItem } from '../../types/slash-command'
 import { isCapacitor } from '../../api/transport'
+import { useVoiceSTT } from '../../features/voice'
+import type { STTState } from '../../features/voice'
 
 // ── @ mention helpers ──
 
@@ -132,6 +134,30 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
   // AI Browser state
   const { enabled: aiBrowserEnabled, setEnabled: setAIBrowserEnabled } = useAIBrowserStore()
 
+  // Voice input (STT) - transcript appends to textarea content
+  const handleTranscript = useCallback((text: string) => {
+    setContent(prev => {
+      const trimmed = prev.trimEnd()
+      return trimmed ? `${trimmed} ${text}` : text
+    })
+  }, [])
+  const {
+    state: micState,
+    error: micError,
+    partialText,
+    start: startMic,
+    stop: stopMic,
+    enabled: micEnabled
+  } = useVoiceSTT(handleTranscript)
+  const handleMicClick = useCallback(() => {
+    if (micState === 'recording') {
+      void stopMic()
+    } else if (micState === 'idle' || micState === 'error') {
+      void startMic()
+    }
+    // 'transcribing' is a no-op — the background transcription must finish.
+  }, [micState, startMic, stopMic])
+
   // Auto-clear error after 3 seconds
   useEffect(() => {
     if (imageError) {
@@ -165,7 +191,11 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
 
   // In onboarding send step, show prefilled prompt
   const onboardingPrompt = getOnboardingPrompt(t)
-  const displayContent = isOnboardingSendStep ? onboardingPrompt : content
+  const displayContent = isOnboardingSendStep
+    ? onboardingPrompt
+    : (micState === 'recording' || micState === 'transcribing') && partialText
+      ? content.trimEnd() + (content ? ' ' : '') + partialText
+      : content
 
   // Process file to ImageAttachment with professional compression
   const processFileWithCompression = async (file: File): Promise<ImageAttachment | null> => {
@@ -458,7 +488,20 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
 
   // Handle send — routes to inject path when generation is in progress
   const handleSend = () => {
-    const textToSend = isOnboardingSendStep ? onboardingPrompt : content.trim()
+    let textToSend = isOnboardingSendStep ? onboardingPrompt : content.trim()
+
+    // If recording or transcribing, fold the live partial transcription into the sent text.
+    // For recording, also stop the mic. For transcribing, let the background transcription
+    // finish naturally (its onFinal will append text after this send).
+    if (micState === 'recording' || micState === 'transcribing') {
+      const live = partialText.trim()
+      if (live) {
+        textToSend = textToSend ? `${textToSend} ${live}` : live
+      }
+      if (micState === 'recording') {
+        void stopMic()
+      }
+    }
 
     if (isGenerating) {
       // Mid-turn inject: text only (no images, no thinking toggle)
@@ -783,6 +826,10 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
             onStop={onStop}
             sendKeyMode={sendKeyMode}
             visionEnabled={visionEnabled}
+            micState={micState}
+            micError={micError}
+            micEnabled={micEnabled}
+            onMicClick={handleMicClick}
           />
         </div>
       </div>
@@ -815,6 +862,10 @@ interface InputToolbarProps {
   onStop: () => void
   sendKeyMode: 'enter' | 'ctrl-enter'
   visionEnabled: boolean
+  micState: STTState
+  micError: string | null
+  micEnabled: boolean
+  onMicClick: () => void
 }
 
 function InputToolbar({
@@ -835,7 +886,11 @@ function InputToolbar({
   onSend,
   onStop,
   sendKeyMode,
-  visionEnabled
+  visionEnabled,
+  micState,
+  micError,
+  micEnabled,
+  onMicClick
 }: InputToolbarProps) {
   const { t } = useTranslation()
   return (
@@ -937,7 +992,7 @@ function InputToolbar({
         )}
       </div>
 
-      {/* Right section: Stop (when generating) + Send */}
+      {/* Right section: Stop (when generating) + Mic + Send */}
       <div className="flex items-center gap-1">
         {isGenerating && (
           <button
@@ -949,6 +1004,49 @@ function InputToolbar({
             title={t('Stop generation (Esc)')}
           >
             <div className="w-3 h-3 border-2 border-current rounded-sm" />
+          </button>
+        )}
+        {!isOnboarding && micEnabled && (
+          <button
+            onClick={onMicClick}
+            disabled={isGenerating || micState === 'transcribing'}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150
+              ${micState === 'recording'
+                ? 'bg-red-500/15 text-red-500 hover:bg-red-500/25'
+                : micState === 'transcribing'
+                  ? 'bg-blue-500/15 text-blue-500'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+              }
+              ${(isGenerating || micState === 'transcribing') ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
+            title={
+              micState === 'recording'
+                ? t('Stop recording')
+                : micState === 'transcribing'
+                  ? t('Transcribing...')
+                  : micError ?? t('Voice input')
+            }
+          >
+            {micState === 'recording'
+              ? (
+                <div className="flex items-center justify-center gap-[2px] h-4">
+                  {[0, 1, 2, 3].map(i => (
+                    <span
+                      key={i}
+                      className="w-[2px] h-full bg-current rounded-full"
+                      style={{
+                        animation: `voice-wave 0.8s ease-in-out ${i * 0.15}s infinite alternate`,
+                      }}
+                    />
+                  ))}
+                </div>
+              )
+              : micState === 'transcribing'
+                ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                )
+                : <Mic size={16} />
+            }
           </button>
         )}
         {!isOnboarding && (

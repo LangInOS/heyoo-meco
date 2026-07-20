@@ -255,6 +255,22 @@ export interface NetworkConfig {
   browserUseProxy?: boolean;  // When true, AI Browser also uses the Settings proxy. Default false = system proxy.
 }
 
+// Voice configuration - references an existing AISource for credentials,
+// only stores voice-specific settings (selected source + STT model).
+export interface VoiceConfig {
+  sourceId: string | null  // references aiSources.sources[].id; null = not configured
+  sttModel: string         // Speech-to-text model id
+  // Keyboard shortcut to trigger voice input. Format: "Fn", "Ctrl+Alt+V", etc.
+  // Empty string = shortcut disabled. Defaults are platform-specific.
+  shortcutKey?: string
+  // hold = press-and-hold to record, release to stop.
+  // toggle = press to start, press again to stop.
+  shortcutMode?: 'hold' | 'toggle'
+  // Transport for StepFun ASR. 'websocket' = real-time streaming (API billing),
+  // 'sse' = record-then-transcribe (Step Plan subscription). Defaults to 'websocket'.
+  transport?: 'websocket' | 'sse'
+}
+
 export interface HaloConfig {
   api: ApiConfig;  // Legacy, kept for backward compatibility
   aiSources: AISourcesConfig;  // v2 format: { version: 2, currentId, sources: [] }
@@ -272,6 +288,7 @@ export interface HaloConfig {
   layout?: LayoutConfig;  // Global layout preferences (panel sizes and visibility)
   chat?: ChatConfig;  // Chat behavior preferences
   network?: NetworkConfig;  // Network settings (proxy, etc.)
+  voice?: VoiceConfig;  // Voice input/output backend (STT/TTS)
   isFirstLaunch: boolean;
 }
 

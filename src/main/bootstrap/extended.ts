@@ -64,6 +64,8 @@ import { registerModelCapabilitiesHandlers } from '../ipc/model-capabilities'
 import { registerWeixinIlinkHandlers } from '../ipc/weixin-ilink'
 import { initRegistryService, shutdownRegistryService } from '../store'
 import { cleanupImChannelTempFiles } from '../apps/runtime/im-channels'
+import { registerVoiceHandlers } from '../ipc/voice'
+import { initVoiceProxy, shutdownVoiceProxy } from '../services/voice-proxy.service'
 import { registerIdleTask, startIdleDrain } from './idle-queue'
 import { seedDefaultAppIfNeeded } from '../apps/manager/seed'
 import { loadBuiltinApps } from '../apps/manager/builtin-loader'
@@ -276,6 +278,12 @@ export function initializeExtendedServices(): void {
   // WeChat iLink Bot: QR code login + token management IPC handlers
   registerWeixinIlinkHandlers()
 
+  // Voice: local WebSocket proxy for providers that require auth headers
+  registerVoiceHandlers()
+  
+  // Voice: initVoiceProxy for WebSocket upgrade requests
+  initVoiceProxy()
+
   // Windows-specific: Initialize Git Bash in background
   if (process.platform === 'win32') {
     initializeGitBashOnStartup()
@@ -368,6 +376,9 @@ export async function cleanupExtendedServices(): Promise<void> {
 
   // Search: Cancel any ongoing searches
   cleanupSearchHandlers()
+
+  // Voice: shut down local WebSocket proxy
+  shutdownVoiceProxy()
 
   // Artifact Cache: Close file watchers and clear caches
   await cleanupAllCaches()
