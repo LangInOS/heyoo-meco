@@ -79,7 +79,7 @@ button{font-family:inherit}
 .screen{display:none;height:100%;width:100%;position:relative}
 .screen.active{display:flex}
 /* mobile screens stack vertically */
-#m-home.screen,#m-space-chat.screen,#m-dh-chat.screen,#m-settings.screen,#m-store.screen{flex-direction:column}
+#m-home.screen,#m-spaces.screen,#m-humans.screen,#m-space-chat.screen,#m-dh-chat.screen,#m-settings.screen,#m-store.screen,#m-apps.screen{flex-direction:column}
 .m-app>.screen.active{flex:1;min-height:0}
 
 /* ============ APP LAYOUT ============ */
@@ -304,6 +304,9 @@ button{font-family:inherit}
 .vt-btn:hover{color:var(--text)}
 .vt-btn.active{background:var(--bg-0);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .vt-btn svg{width:12px;height:12px}
+.collapse-btn{padding:4px;border-radius:6px;border:0;background:transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;transition:.12s}
+.collapse-btn:hover{background:var(--bg-3);color:var(--text)}
+.collapse-btn svg{width:16px;height:16px}
 .rail-actions{display:flex;gap:4px;margin-left:auto}
 .ra-btn{padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-0);color:var(--text-mute);cursor:pointer;font-size:11px;display:flex;align-items:center;gap:4px;transition:.12s;white-space:nowrap}
 .ra-btn:hover{background:var(--bg-2);color:var(--text);border-color:var(--border-strong)}
@@ -356,7 +359,8 @@ button{font-family:inherit}
 .escalation .choice:hover .rb{border-color:var(--cyan)}
 
 /* Session panel (IM panel on right) */
-.dh-sessions{width:280px;border-left:1px solid var(--border-soft);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;background:var(--bg-0)}
+.dh-sessions{width:280px;border-left:1px solid var(--border-soft);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;background:var(--bg-0);transition:width .2s ease}
+.dh-sessions.hidden{display:none}
 .dh-sessions .sess-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border-soft);font-size:13px;font-weight:600;color:var(--text)}
 .dh-sessions .sess-head .close-btn{padding:2px;border-radius:4px;color:var(--text-dim);cursor:pointer}
 .dh-sessions .sess-head .close-btn:hover{background:var(--bg-3);color:var(--text)}
@@ -543,6 +547,25 @@ button{font-family:inherit}
 .store-card .sc-tag{font-size:10px;padding:2px 7px;border-radius:5px;background:var(--bg-4);color:var(--text-mute)}
 .store-card .sc-btn{padding:5px 12px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;background:var(--bg-3);border:1px solid var(--border);color:var(--text);transition:.12s}
 .store-card .sc-btn:hover{background:var(--bg-4);border-color:var(--border-strong)}
+.store-card .sc-btn.installed{background:var(--bg-3);color:var(--green);border-color:rgba(134,239,172,.3)}
+.store-detail-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:20;opacity:0;pointer-events:none;transition:.2s}
+.store-detail-overlay.open{opacity:1;pointer-events:auto}
+.store-detail{position:absolute;inset:0;background:var(--bg-0);z-index:21;display:flex;flex-direction:column;transform:translateY(20px);opacity:0;transition:.25s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.store-detail.open{transform:translateY(0);opacity:1;pointer-events:auto}
+.store-detail-head{display:flex;align-items:flex-start;gap:18px;padding:28px 32px 20px;border-bottom:1px solid var(--border-soft)}
+.store-detail-icon{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:32px;flex-shrink:0}
+.store-detail-info{flex:1;min-width:0}
+.store-detail-info h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.store-detail-info .ver{font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.store-detail-info .author{font-size:13px;color:var(--text-mute)}
+.store-detail-body{padding:20px 32px;flex:1;overflow-y:auto}
+.store-detail-desc{font-size:14px;line-height:1.7;color:var(--text);max-width:640px;margin-bottom:28px}
+.store-detail-section{margin-bottom:28px}
+.store-detail-section h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-mute);margin-bottom:10px}
+.store-detail-perm{display:flex;flex-direction:column;gap:8px}
+.store-detail-perm-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-2);border-radius:9px;font-size:13px}
+.store-detail-perm-row .pi{width:20px;text-align:center}
+.store-detail-foot{padding:16px 32px;border-top:1px solid var(--border-soft);display:flex;gap:10px}
 .store-card .sc-btn.installed{background:rgba(134,239,172,.1);color:var(--green);border-color:rgba(134,239,172,.25)}
 
 /* mobile settings */
@@ -572,6 +595,18 @@ button{font-family:inherit}
 .m-store-tabs::-webkit-scrollbar{display:none}
 .m-stab{padding:5px 10px;border-radius:8px;font-size:12px;font-weight:500;color:var(--text-mute);background:var(--bg-2);border:1px solid var(--border);cursor:pointer;white-space:nowrap;transition:.12s;flex-shrink:0}
 .m-stab.active{background:var(--bg-3);color:var(--text);border-color:var(--cyan)}
+.m-apps-tabs{display:flex;gap:6px;padding:8px 14px;overflow-x:auto;flex-shrink:0;-ms-overflow-style:none;scrollbar-width:none}
+.m-apps-tabs::-webkit-scrollbar{display:none}
+.m-apps-tab{padding:5px 10px;border-radius:8px;font-size:12px;font-weight:500;color:var(--text-mute);background:var(--bg-2);border:1px solid var(--border);cursor:pointer;white-space:nowrap;transition:.12s;flex-shrink:0}
+.m-apps-tab.active{background:var(--bg-3);color:var(--text);border-color:var(--cyan)}
+.m-apps-list{flex:1;overflow-y:auto;padding:0 14px 14px}
+.m-apps-group{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-mute);padding:12px 0 6px}
+.m-apps-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:.12s}
+.m-apps-item:active{background:var(--bg-2)}
+.m-apps-item .ai-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.m-apps-item .ai-body{flex:1;min-width:0}
+.m-apps-item .ai-name{font-size:13px;font-weight:500;color:var(--text)}
+.m-apps-item .ai-sub{font-size:11px;color:var(--text-dim);margin-top:1px}
 
 /* mobile overlay panels (artifacts / sessions) */
 .m-fab{position:absolute;bottom:16px;right:16px;width:44px;height:44px;border-radius:50%;background:var(--cyan);color:#fff;border:0;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px rgba(34,211,238,.35);z-index:40;transition:.15s}
@@ -622,16 +657,6 @@ button{font-family:inherit}
   <div class="screen-ind">screen: <b id="screenInd">home</b></div>
 </div>
 
-<!-- Legend / nav hints -->
-<div class="legend">
-  <div class="l" onclick="go('home')">→ Home</div>
-  <div class="l" onclick="go('space-chat')">→ Space Chat</div>
-  <div class="l" onclick="go('dh-chat')">→ Digital Human Chat</div>
-  <div class="l" onclick="go('settings')">→ Settings</div>
-  <div class="l" onclick="go('store')">→ Store</div>
-  <div class="l">点击卡片/列表项可导航 · 试试发消息</div>
-</div>
-
 <!-- ============ DESKTOP / WEB STAGE ============ -->
 <div class="stage">
 <div id="host-desktop" class="frame-host show">
@@ -649,8 +674,8 @@ button{font-family:inherit}
         <div class="rail">
           <div class="logo-sm" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
           <button class="rail-item active" onclick="go('home')">Home<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="rail-item" onclick="go('space-chat')">Spaces<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
-          <button class="rail-item" onclick="go('dh-chat')">Humans<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg></button>
+          <button class="rail-item" onclick="go('spaces')">Spaces<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+          <button class="rail-item" onclick="go('humans')">Humans<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg></button>
           <button class="rail-item" onclick="toast('Global search (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></button>
           <div class="spacer"></div>
           <button class="rail-item" onclick="go('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.5-2.5l2-1.5-2-3.5-2.5 1a7 7 0 00-4-2L11.5 1h-4L7 3.5a7 7 0 00-4 2l-2.5-1-2 3.5 2 1.5A7 7 0 003 12c0 .9.2 1.7.5 2.5l-2 1.5 2 3.5 2.5-1a7 7 0 004 2l.5 2.5h4l.5-2.5a7 7 0 004-2l2.5 1 2-3.5-2-1.5c.3-.8.5-1.6.5-2.5z" stroke-linejoin="round"/></svg></button>
@@ -694,7 +719,7 @@ button{font-family:inherit}
               <div class="foot"><div class="left"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>3h ago</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>21 files</span></div><span>gemini-1.5</span></div>
             </div>
           </div>
-          <div class="sec-title"><h2>Digital Humans <span class="count">· 4 running</span></h2><div class="actions"><button onclick="toast('New digital human (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>New</button><button>Browse store →</button></div></div>
+          <div class="sec-title"><h2>Digital Humans <span class="count">· 4 running</span></h2><div class="actions"><button onclick="toast('New digital human (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>New</button><button onclick="go('store')">Browse store →</button></div></div>
           <div class="dh-grid">
             <div class="dh-card" onclick="go('dh-chat')">
               <div class="dh-head"><div class="dh-avatar dha-1">📈</div><div style="flex:1"><div class="name">Market Watcher</div><div class="role">Stock board screener</div></div></div>
@@ -715,11 +740,113 @@ button{font-family:inherit}
               <div class="dh-foot"><span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>5 min ago</span><span>Email</span></div>
             </div>
           </div>
-          <div class="sec-title"><h2>Recent Conversations <span class="count">· today</span></h2><div class="actions"><button>View all →</button></div></div>
+          <div class="sec-title"><h2>Recent Conversations <span class="count">· today</span></h2><div class="actions"><button onclick="go('spaces')">View all →</button></div></div>
           <div class="recent-list">
             <div class="recent-item" onclick="go('space-chat')"><div class="recent-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="recent-body"><div class="recent-title">Refactor config service for multi-tenant</div><div class="recent-preview">Let's extract the tenant resolution into a separate module…</div></div><div class="recent-meta"><div class="when">14:32</div><div class="badge">● 3 tools</div></div></div>
             <div class="recent-item" onclick="go('space-chat')"><div class="recent-icon" style="background:rgba(34,211,238,.1);color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke-linecap="round"/></svg></div><div class="recent-body"><div class="recent-title">Scrape competitor pricing pages</div><div class="recent-preview">Navigated to 4 sites and extracted pricing tier tables…</div></div><div class="recent-meta"><div class="when">13:18</div><div class="badge">● 8 tools</div></div></div>
             <div class="recent-item" onclick="go('space-chat')"><div class="recent-icon" style="background:rgba(134,239,172,.1);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z M8 9h8M8 13h8M8 17h5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="recent-body"><div class="recent-title">Q3 earnings analysis - Tesla</div><div class="recent-preview">Summarized the transcript and compared gross margin…</div></div><div class="recent-meta"><div class="when">11:04</div><div class="badge">● 2 tools</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DESKTOP SPACES LIST ===== -->
+    <div class="screen" id="d-spaces">
+      <div class="app">
+        <div class="rail">
+          <div class="logo-sm" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+          <button class="rail-item" onclick="go('home')">Home<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="rail-item active" onclick="go('spaces')">Spaces<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+          <button class="rail-item" onclick="go('humans')">Humans<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg></button>
+          <button class="rail-item" onclick="toast('Global search (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></button>
+          <div class="spacer"></div>
+          <button class="rail-item" onclick="go('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.5-2.5l2-1.5-2-3.5-2.5 1a7 7 0 00-4-2L11.5 1h-4L7 3.5a7 7 0 00-4 2l-2.5-1-2 3.5 2 1.5A7 7 0 003 12c0 .9.2 1.7.5 2.5l-2 1.5 2 3.5 2.5-1a7 7 0 004 2l.5 2.5h4l.5-2.5a7 7 0 004-2l2.5 1 2-3.5-2-1.5c.3-.8.5-1.6.5-2.5z" stroke-linejoin="round"/></svg></button>
+          <button class="rail-item" onclick="go('store')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+          <div class="avatar">Y</div>
+        </div>
+        <div class="home-main">
+          <div class="home-topbar">
+            <div class="search" onclick="toast('Search panel (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg><span>Search spaces, conversations, files…</span><span class="kbd">⌘K</span></div>
+            <button class="btn ghost" onclick="toast('Import (demo)')">← Import</button>
+            <button class="btn accent" onclick="toast('New space created (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>New Space</button>
+          </div>
+          <div class="sec-title"><h2>Spaces <span class="count">· 4</span></h2><div class="actions"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Grid</button></div></div>
+          <div class="spaces-grid">
+            <div class="space-card" onclick="go('space-chat')">
+              <div class="glow" style="background:radial-gradient(circle,rgba(59,130,246,.12),transparent 70%)"></div>
+              <div class="head"><div class="space-icon si-1">🚀</div><div><div class="name">Meco Core</div><div class="sub">Personal · 28 conversations</div></div><span class="pulse-dot green" style="margin-left:auto"></span></div>
+              <div class="desc">Main workspace - daily coding, architecture decisions, and project planning.</div>
+              <div class="foot"><div class="left"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>2m ago</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>12 files</span></div><span>claude-sonnet</span></div>
+            </div>
+            <div class="space-card" onclick="go('space-chat')">
+              <div class="glow" style="background:radial-gradient(circle,rgba(34,211,238,.12),transparent 70%)"></div>
+              <div class="head"><div class="space-icon si-2">🌐</div><div><div class="name">Web Research</div><div class="sub">Shared · 9 conversations</div></div><span class="pulse-dot amber" style="margin-left:auto"></span></div>
+              <div class="desc">Browser automation for competitive analysis and market intelligence gathering.</div>
+              <div class="foot"><div class="left"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>1h ago</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>5 files</span></div><span>gpt-4o</span></div>
+            </div>
+            <div class="space-card" onclick="go('space-chat')">
+              <div class="glow" style="background:radial-gradient(circle,rgba(134,239,172,.12),transparent 70%)"></div>
+              <div class="head"><div class="space-icon si-3">📊</div><div><div class="name">Investment Log</div><div class="sub">Personal · 16 conversations</div></div><span class="pulse-dot gray" style="margin-left:auto"></span></div>
+              <div class="desc">Stock research, portfolio tracking, and earnings analysis with automated daily reports.</div>
+              <div class="foot"><div class="left"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>Yesterday</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>8 files</span></div><span>claude-sonnet</span></div>
+            </div>
+            <div class="space-card" onclick="go('space-chat')">
+              <div class="glow" style="background:radial-gradient(circle,rgba(167,139,250,.12),transparent 70%)"></div>
+              <div class="head"><div class="space-icon si-4">✍️</div><div><div class="name">Content Studio</div><div class="sub">Shared · 7 conversations</div></div><span class="pulse-dot green" style="margin-left:auto"></span></div>
+              <div class="desc">Long-form writing, blog drafts, and social media content with brand voice consistency.</div>
+              <div class="foot"><div class="left"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>3h ago</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>21 files</span></div><span>gemini-1.5</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DESKTOP HUMANS LIST ===== -->
+    <div class="screen" id="d-humans">
+      <div class="app">
+        <div class="rail">
+          <div class="logo-sm" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 8v8l-9 5-9-5V8l9-5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+          <button class="rail-item" onclick="go('home')">Home<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="rail-item" onclick="go('spaces')">Spaces<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+          <button class="rail-item active" onclick="go('humans')">Humans<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg></button>
+          <button class="rail-item" onclick="toast('Global search (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></button>
+          <div class="spacer"></div>
+          <button class="rail-item" onclick="go('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.5-2.5l2-1.5-2-3.5-2.5 1a7 7 0 00-4-2L11.5 1h-4L7 3.5a7 7 0 00-4 2l-2.5-1-2 3.5 2 1.5A7 7 0 003 12c0 .9.2 1.7.5 2.5l-2 1.5 2 3.5 2.5-1a7 7 0 004 2l.5 2.5h4l.5-2.5a7 7 0 004-2l2.5 1 2-3.5-2-1.5c.3-.8.5-1.6.5-2.5z" stroke-linejoin="round"/></svg></button>
+          <button class="rail-item" onclick="go('store')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+          <div class="avatar">Y</div>
+        </div>
+        <div class="home-main">
+          <div class="home-topbar">
+            <div class="search" onclick="toast('Search panel (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg><span>Search digital humans…</span><span class="kbd">⌘K</span></div>
+            <button class="btn ghost" onclick="go('store')">Browse store →</button>
+            <button class="btn accent" onclick="toast('New digital human (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>New Human</button>
+          </div>
+          <div class="sec-title"><h2>Digital Humans <span class="count">· 4 running</span></h2><div class="actions"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Grid</button></div></div>
+          <div class="dh-grid">
+            <div class="dh-card" onclick="go('dh-chat')">
+              <div class="dh-head"><div class="dh-avatar dha-1">📈</div><div style="flex:1"><div class="name">Market Watcher</div><div class="role">Stock board screener</div></div></div>
+              <div class="dh-status running"><span class="pulse-dot green"></span>Running · next 14:30</div>
+              <div class="dh-desc">Scans A-share limit-up candidates every 30min during market hours. Notifies via WeCom.</div>
+              <div class="dh-foot"><span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>12 runs today</span><span>WeCom</span></div>
+            </div>
+            <div class="dh-card" onclick="go('dh-chat')">
+              <div class="dh-head"><div class="dh-avatar dha-2">🔍</div><div style="flex:1"><div class="name">Research Scout</div><div class="role">Web research agent</div></div></div>
+              <div class="dh-status scheduled">Scheduled · daily 09:00</div>
+              <div class="dh-desc">Tracks LLM trends and produces a structured weekly report with citations.</div>
+              <div class="dh-foot"><span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>Next run 09:00</span><span>Summary</span></div>
+            </div>
+            <div class="dh-card" onclick="go('dh-chat')">
+              <div class="dh-head"><div class="dh-avatar dha-3">📰</div><div style="flex:1"><div class="name">News Digest</div><div class="role">Daily briefing</div></div></div>
+              <div class="dh-status running"><span class="pulse-dot green"></span>Running · in progress</div>
+              <div class="dh-desc">Compiles tech news from 12 sources into a morning digest delivered to your inbox.</div>
+              <div class="dh-foot"><span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>5 min ago</span><span>Email</span></div>
+            </div>
+            <div class="dh-card" onclick="go('dh-chat')">
+              <div class="dh-head"><div class="dh-avatar dha-4">🤖</div><div style="flex:1"><div class="name">Support Triage</div><div class="role">Customer support agent</div></div></div>
+              <div class="dh-status scheduled">Scheduled · hourly</div>
+              <div class="dh-desc">Reads incoming support tickets, categorizes by urgency, and drafts initial responses.</div>
+              <div class="dh-foot"><span class="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>3 min ago</span><span>Tickets</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -749,7 +876,7 @@ button{font-family:inherit}
         </div>
         <div class="chat-center">
           <div class="chat-header">
-            <button class="icon-btn" onclick="go('home')" title="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="icon-btn" onclick="go('spaces')" title="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <div class="space-tag"><div class="si si-1">🚀</div><span>Meco Core</span></div>
             <span class="crumb">/ Refactor config service</span>
             <div class="actions">
@@ -796,11 +923,7 @@ button{font-family:inherit}
                 <button class="vt-btn" onclick="toast('Tree view (demo)')" title="Tree view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h6M4 12h6M4 19h6M14 5h6M14 12h6M14 19h6" stroke-linecap="round"/></svg></button>
               </div>
             </div>
-            <div class="rail-actions">
-              <button class="ra-btn" onclick="toast('Open folder (demo)')" title="Open in folder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke-linejoin="round"/></svg>Folder</button>
-              <button class="ra-btn" onclick="toast('Open in browser (demo)')" title="Open in browser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke-linecap="round"/></svg>Browser</button>
-            </div>
-            <div class="cnt">5</div>
+            <button class="collapse-btn" onclick="toast('Collapse panel (demo)')" title="Collapse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
           <div class="art-list">
             <div class="art-item active" onclick="pickArt(this)"><div class="art-icon ts">TS</div><div class="art-body"><div class="art-name">tenant-resolver.ts</div><div class="art-meta">+48 · just now</div></div></div>
@@ -811,7 +934,7 @@ button{font-family:inherit}
           </div>
           <div class="canvas-foot" style="display:flex;gap:8px">
             <button class="btn" style="flex:1;justify-content:center;font-size:12px" onclick="toast('Open folder (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke-linejoin="round"/></svg>Open folder</button>
-            <button class="btn" style="flex:1;justify-content:center;font-size:12px" onclick="toast('Open in browser (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke-linecap="round"/></svg>Browser</button>
+            <button class="btn" style="flex:1;justify-content:center;font-size:12px" onclick="toast('Open in browser (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke-linecap="round"/></svg>Open browser</button>
           </div>
         </div>
       </div>
@@ -844,7 +967,8 @@ button{font-family:inherit}
             <div class="dh-tab" onclick="pickTab(this,'d')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z M12 7v5l3 2" stroke-linecap="round"/></svg>Activity <span class="badge">6</span></div>
             <div class="dh-tab" onclick="pickTab(this,'d')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4 4l4 4M16 16l4 4M1 12h6M17 12h6" stroke-linecap="round"/></svg>Config</div>
             <div class="actions">
-              <button class="icon-btn" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="icon-btn" onclick="go('humans')" title="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="icon-btn active" id="dhSessToggle" onclick="toggleDhSessions()" title="Toggle conversations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2zM15 5v14" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <button class="icon-btn" onclick="toast('Pause (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
               <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
             </div>
@@ -874,7 +998,7 @@ button{font-family:inherit}
         </div>
         <!-- Session panel -->
         <div class="dh-sessions">
-          <div class="sess-head"><span>Conversations</span><button class="close-btn" onclick="toast('Close sessions panel (demo)')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button></div>
+          <div class="sess-head"><span>Conversations</span><button class="close-btn" onclick="toggleDhSessions()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button></div>
           <div class="sess-item active">
             <div class="sess-icon" style="background:rgba(34,211,238,.12);color:var(--cyan)">💬</div>
             <div class="sess-body"><div class="sess-name">Halo Chat</div><div class="sess-sub">Native conversation</div></div>
@@ -1016,12 +1140,122 @@ button{font-family:inherit}
             <button class="btn ghost" onclick="toast('Refresh (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2-6.3M21 3v6h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>Refresh</button>
           </div>
           <div class="store-grid">
-            <div class="store-card" onclick="toast('Open detail (demo)')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff">📈</div><div class="sc-name">Market Watcher</div><div class="sc-ver">v2.1.0</div></div><div class="sc-author">by Meco Team</div><div class="sc-desc">Scans A-share limit-up candidates every 30min during market hours. Notifies via WeCom.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">automation</span><span class="sc-tag">finance</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
-            <div class="store-card" onclick="toast('Open detail (demo)')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#22d3ee,#0e7490);color:#fff">🔍</div><div class="sc-name">Research Scout</div><div class="sc-ver">v1.4.2</div></div><div class="sc-author">by Meco Team</div><div class="sc-desc">Tracks LLM trends and produces a structured weekly report with citations.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">automation</span><span class="sc-tag">research</span></div><button class="sc-btn installed">Installed</button></div></div>
-            <div class="store-card" onclick="toast('Open detail (demo)')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#86efac,#059669);color:#fff">📰</div><div class="sc-name">News Digest</div><div class="sc-ver">v3.0.1</div></div><div class="sc-author">by Community</div><div class="sc-desc">Compiles tech news from 12 sources into a morning digest delivered to your inbox.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">automation</span><span class="sc-tag">news</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
-            <div class="store-card" onclick="toast('Open detail (demo)')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">🌐</div><div class="sc-name">Web Scraper</div><div class="sc-ver">v1.2.0</div></div><div class="sc-author">by Community</div><div class="sc-desc">Extract structured data from any website with visual browser automation.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">browser</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
-            <div class="store-card" onclick="toast('Open detail (demo)')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff">📝</div><div class="sc-name">Doc Writer</div><div class="sc-ver">v1.0.0</div></div><div class="sc-author">by Meco Team</div><div class="sc-desc">Generate markdown docs from code comments and README templates.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">skill</span><span class="sc-tag">docs</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
-            <div class="store-card" onclick="toast('Open detail (demo)')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#10b981,#22d3ee);color:#fff">📊</div><div class="sc-name">Data Viz</div><div class="sc-ver">v2.3.0</div></div><div class="sc-author">by Community</div><div class="sc-desc">Render charts and tables from CSV/JSON data with zero config.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">skill</span><span class="sc-tag">data</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
+            <div class="store-card" onclick="openStoreDetail('market-watcher')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff">📈</div><div class="sc-name">Market Watcher</div><div class="sc-ver">v2.1.0</div></div><div class="sc-author">by Meco Team</div><div class="sc-desc">Scans A-share limit-up candidates every 30min during market hours. Notifies via WeCom.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">automation</span><span class="sc-tag">finance</span></div><button class="sc-btn installed" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Installed</button></div></div>
+            <div class="store-card" onclick="openStoreDetail('research-scout')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#22d3ee,#0e7490);color:#fff">🔍</div><div class="sc-name">Research Scout</div><div class="sc-ver">v1.4.2</div></div><div class="sc-author">by Meco Team</div><div class="sc-desc">Tracks LLM trends and produces a structured weekly report with citations.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">automation</span><span class="sc-tag">research</span></div><button class="sc-btn installed" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Installed</button></div></div>
+            <div class="store-card" onclick="openStoreDetail('news-digest')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#86efac,#059669);color:#fff">📰</div><div class="sc-name">News Digest</div><div class="sc-ver">v3.0.1</div></div><div class="sc-author">by Community</div><div class="sc-desc">Compiles tech news from 12 sources into a morning digest delivered to your inbox.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">automation</span><span class="sc-tag">news</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
+            <div class="store-card" onclick="openStoreDetail('web-scraper')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">🌐</div><div class="sc-name">Web Scraper</div><div class="sc-ver">v1.2.0</div></div><div class="sc-author">by Community</div><div class="sc-desc">Extract structured data from any website with visual browser automation.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">browser</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
+            <div class="store-card" onclick="openStoreDetail('doc-writer')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff">📝</div><div class="sc-name">Doc Writer</div><div class="sc-ver">v1.0.0</div></div><div class="sc-author">by Meco Team</div><div class="sc-desc">Generate markdown docs from code comments and README templates.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">skill</span><span class="sc-tag">docs</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
+            <div class="store-card" onclick="openStoreDetail('data-viz')"><div class="sc-head"><div class="sc-icon" style="background:linear-gradient(135deg,#10b981,#22d3ee);color:#fff">📊</div><div class="sc-name">Data Viz</div><div class="sc-ver">v2.3.0</div></div><div class="sc-author">by Community</div><div class="sc-desc">Render charts and tables from CSV/JSON data with zero config.</div><div class="sc-foot"><div class="sc-tags"><span class="sc-tag">skill</span><span class="sc-tag">data</span></div><button class="sc-btn" onclick="event.stopPropagation();this.classList.toggle('installed');this.textContent=this.classList.contains('installed')?'Installed':'Install'">Install</button></div></div>
+          </div>
+        </div>
+        <!-- Store detail overlay -->
+        <div class="store-detail-overlay" id="storeDetailOverlay" onclick="closeStoreDetail()"></div>
+        <div class="store-detail" id="storeDetail">
+          <div class="store-detail-head">
+            <div class="store-detail-icon" style="background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff">📈</div>
+            <div class="store-detail-info">
+              <h2>Market Watcher</h2>
+              <div class="ver">v2.1.0 · by Meco Team</div>
+              <div class="author">Automation · Finance · WeCom integration</div>
+            </div>
+            <button class="icon-btn" onclick="closeStoreDetail()" style="flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button>
+          </div>
+          <div class="store-detail-body">
+            <div class="store-detail-desc">Scans A-share limit-up candidates every 30 minutes during market hours. Automatically pushes high-confidence picks to your WeCom group with context and charts. Runs entirely in your browser via Meco's automation engine.</div>
+            <div class="store-detail-section">
+              <h3>Permissions</h3>
+              <div class="store-detail-perm">
+                <div class="store-detail-perm-row"><span class="pi">🌐</span> Browser automation — read exchange pages</div>
+                <div class="store-detail-perm-row"><span class="pi">💬</span> WeCom push — send alerts to group</div>
+                <div class="store-detail-perm-row"><span class="pi">📊</span> File read — access local watchlists</div>
+                <div class="store-detail-perm-row"><span class="pi">🧠</span> Memory — store scan history</div>
+              </div>
+            </div>
+            <div class="store-detail-section">
+              <h3>Screenshots</h3>
+              <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px">
+                <div style="width:180px;height:110px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;font-size:11px;color:var(--text-dim)">Screenshot 1</div>
+                <div style="width:180px;height:110px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;font-size:11px;color:var(--text-dim)">Screenshot 2</div>
+                <div style="width:180px;height:110px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;font-size:11px;color:var(--text-dim)">Screenshot 3</div>
+              </div>
+            </div>
+            <div class="store-detail-section">
+              <h3>Details</h3>
+              <div class="store-detail-perm">
+                <div class="store-detail-perm-row"><span class="pi">⬇</span> Installs: 1,247</div>
+                <div class="store-detail-perm-row"><span class="pi">⭐</span> Rating: 4.8 / 5</div>
+                <div class="store-detail-perm-row"><span class="pi">📅</span> Updated: Jul 18, 2025</div>
+                <div class="store-detail-perm-row"><span class="pi">📏</span> Size: 2.1 MB</div>
+              </div>
+            </div>
+          </div>
+          <div class="store-detail-foot">
+            <button class="btn primary" style="flex:1;justify-content:center" onclick="toast('Installed (demo)');closeStoreDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>Install</button>
+            <button class="btn ghost" onclick="closeStoreDetail()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DESKTOP APPS PAGE ===== -->
+    <div class="screen" id="d-apps">
+      <div class="apps-layout">
+        <div class="apps-sidebar">
+          <div class="as-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Apps</div>
+          <div class="apps-tabs">
+            <button class="apps-tab active" onclick="pickAppsTab(this,'my-humans')">My Digital Humans</button>
+            <button class="apps-tab" onclick="pickAppsTab(this,'my-skills')">My Skills</button>
+            <button class="apps-tab" onclick="pickAppsTab(this,'my-mcp')">My MCP</button>
+            <button class="apps-tab" onclick="pickAppsTab(this,'marketplace')">Marketplace</button>
+          </div>
+          <div class="apps-list" id="appsList">
+            <div class="apps-group" data-tab="my-humans">Running</div>
+            <div class="apps-item active" data-tab="my-humans" onclick="showAppDetail(this,'market-watcher')"><div class="ai-icon" style="background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff">📈</div><div class="ai-body"><div class="ai-name">Market Watcher</div><div class="ai-sub">12 runs today · WeCom</div></div></div>
+            <div class="apps-item" data-tab="my-humans" onclick="showAppDetail(this,'news-digest')"><div class="ai-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">📰</div><div class="ai-body"><div class="ai-name">News Digest</div><div class="ai-sub">Running · Email</div></div></div>
+            <div class="apps-item" data-tab="my-humans" onclick="showAppDetail(this,'support-triage')"><div class="ai-icon" style="background:linear-gradient(135deg,#10b981,#22d3ee);color:#fff">🤖</div><div class="ai-body"><div class="ai-name">Support Triage</div><div class="ai-sub">Scheduled · Tickets</div></div></div>
+            <div class="apps-group" data-tab="my-humans">Installed</div>
+            <div class="apps-item" data-tab="my-humans" onclick="showAppDetail(this,'research-scout')"><div class="ai-icon" style="background:linear-gradient(135deg,#22d3ee,#0e7490);color:#fff">🔍</div><div class="ai-body"><div class="ai-name">Research Scout</div><div class="ai-sub">v1.4.2 · weekly report</div></div></div>
+            <div class="apps-item" data-tab="my-skills" onclick="showAppDetail(this,'doc-writer')"><div class="ai-icon" style="background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff">📝</div><div class="ai-body"><div class="ai-name">Doc Writer</div><div class="ai-sub">Markdown docs from code</div></div></div>
+            <div class="apps-item" data-tab="my-skills" onclick="showAppDetail(this,'data-viz')"><div class="ai-icon" style="background:linear-gradient(135deg,#10b981,#22d3ee);color:#fff">📊</div><div class="ai-body"><div class="ai-name">Data Viz</div><div class="ai-sub">CSV/JSON charts</div></div></div>
+            <div class="apps-item" data-tab="my-mcp" onclick="showAppDetail(this,'web-scraper')"><div class="ai-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">🌐</div><div class="ai-body"><div class="ai-name">Web Scraper</div><div class="ai-sub">Browser automation MCP</div></div></div>
+            <div class="apps-group" data-tab="marketplace">Discover</div>
+            <div class="apps-item" data-tab="marketplace" onclick="showAppDetail(this,'code-reviewer')"><div class="ai-icon" style="background:linear-gradient(135deg,#22d3ee,#3b82f6);color:#fff">🔎</div><div class="ai-body"><div class="ai-name">Code Reviewer</div><div class="ai-sub">Automated PR reviews</div></div></div>
+            <div class="apps-item" data-tab="marketplace" onclick="showAppDetail(this,'translation')"><div class="ai-icon" style="background:linear-gradient(135deg,#86efac,#059669);color:#fff">🌍</div><div class="ai-body"><div class="ai-name">Translation Pack</div><div class="ai-sub">50+ locales</div></div></div>
+          </div>
+        </div>
+        <div class="apps-main">
+          <div class="apps-detail" id="appsDetail">
+            <div class="apps-detail-head">
+              <div class="apps-detail-icon" style="background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff">📈</div>
+              <div class="apps-detail-info">
+                <h2>Market Watcher</h2>
+                <div class="ver">v2.1.0 · by Meco Team</div>
+                <div class="author">Automation · Finance · WeCom integration</div>
+              </div>
+            </div>
+            <div class="apps-detail-desc">Scans A-share limit-up candidates every 30 minutes during market hours. Automatically pushes high-confidence picks to your WeCom group with context and charts.</div>
+            <div class="apps-detail-section">
+              <h3>Permissions</h3>
+              <div class="apps-perm">
+                <div class="apps-perm-row"><span class="perm-icon">🌐</span> Browser automation — read exchange pages</div>
+                <div class="apps-perm-row"><span class="perm-icon">💬</span> WeCom push — send alerts to group</div>
+                <div class="apps-perm-row"><span class="perm-icon">📊</span> File read — access local watchlists</div>
+                <div class="apps-perm-row"><span class="perm-icon">🧠</span> Memory — store scan history</div>
+              </div>
+            </div>
+            <div class="apps-detail-section">
+              <h3>Schedule</h3>
+              <div class="apps-perm">
+                <div class="apps-perm-row"><span class="perm-icon">⏰</span> Frequency: every 30m</div>
+                <div class="apps-perm-row"><span class="perm-icon">🏙️</span> Timezone: Asia/Shanghai</div>
+                <div class="apps-perm-row"><span class="perm-icon">📈</span> Next run: 14:30 today</div>
+              </div>
+            </div>
+            <div class="apps-actions">
+              <button class="sm primary" onclick="go('dh-chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linejoin="round"/></svg>Open Chat</button>
+              <button class="sm" onclick="toast('Configure (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.5 4.5l4 4M15.5 15.5l4 4M1 12h6M17 12h6" stroke-linecap="round"/></svg>Configure</button>
+              <button class="sm danger" onclick="toast('Uninstall (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>Uninstall</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1049,7 +1283,7 @@ button{font-family:inherit}
             <div class="qb" onclick="go('space-chat')"><div class="qi" style="background:rgba(59,130,246,.15);color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></div><div class="ql">New chat</div><div class="qd">Start fresh</div></div>
             <div class="qb" onclick="go('dh-chat')"><div class="qi" style="background:rgba(134,239,172,.15);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 3 2 5 2 7h10c0-2 2-4 2-7a7 7 0 00-7-7z" stroke-linejoin="round"/><path d="M9 21h6" stroke-linecap="round"/></svg></div><div class="ql">Ask Meco</div><div class="qd">Voice input</div></div>
           </div>
-          <div class="m-sec-title">Digital Humans <span class="more" onclick="go('dh-chat')">See all</span></div>
+          <div class="m-sec-title">Digital Humans <span class="more" onclick="go('humans')">See all</span></div>
           <div class="m-dh-card" onclick="go('dh-chat')"><div class="av dha-1">📈</div><div class="b"><div class="n">Market Watcher</div><div class="r">Next run 14:30 · WeCom</div></div><div class="st" style="background:rgba(134,239,172,.12);color:var(--green)"><span class="pulse-dot green" style="width:5px;height:5px"></span> Live</div></div>
           <div class="m-dh-card" onclick="go('dh-chat')"><div class="av dha-2">🔍</div><div class="b"><div class="n">Research Scout</div><div class="r">Daily 09:00 · Summary</div></div><div class="st" style="background:var(--bg-3);color:var(--text-mute)">Idle</div></div>
           <div class="m-sec-title">Spaces <span class="more">4</span></div>
@@ -1062,8 +1296,52 @@ button{font-family:inherit}
         </div>
         <div class="m-bottom-nav">
           <button class="m-nav-item" onclick="mNav(this,'home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg>Home</button>
-          <button class="m-nav-item" onclick="mNav(this,'space-chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Spaces</button>
-          <button class="m-nav-item" onclick="mNav(this,'dh-chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg>Humans</button>
+          <button class="m-nav-item" onclick="mNav(this,'spaces')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Spaces</button>
+          <button class="m-nav-item" onclick="mNav(this,'humans')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg>Humans</button>
+          <button class="m-nav-item" onclick="mNav(this,'store')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Store</button>
+          <button class="m-nav-item" onclick="mNav(this,'settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4 4l4 4M16 16l4 4M1 12h6M17 12h6" stroke-linecap="round"/></svg></button>
+        </div>
+      </div>
+
+      <!-- ===== MOBILE SPACES LIST ===== -->
+      <div class="screen" id="m-spaces">
+        <div class="m-header">
+          <div style="flex:1"><div class="title">Spaces</div></div>
+          <button class="icon" onclick="toast('Search (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></button>
+          <button class="icon" onclick="toast('New space (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="m-home">
+          <div class="m-space-card" onclick="go('space-chat')"><div class="h"><div class="si si-1">🚀</div><div style="flex:1"><div class="n">Meco Core</div><div style="font-size:11px;color:var(--text-dim)">28 conv · 12 files</div></div><span class="pulse-dot green"></span></div><div class="d">Main workspace - daily coding and project planning.</div><div class="f"><span>2m ago</span><span>·</span><span>claude-sonnet</span></div></div>
+          <div class="m-space-card" onclick="go('space-chat')"><div class="h"><div class="si si-2">🌐</div><div style="flex:1"><div class="n">Web Research</div><div style="font-size:11px;color:var(--text-dim)">9 conv · 5 files</div></div><span class="pulse-dot amber"></span></div><div class="d">Browser automation for market intelligence.</div><div class="f"><span>1h ago</span><span>·</span><span>gpt-4o</span></div></div>
+          <div class="m-space-card" onclick="go('space-chat')"><div class="h"><div class="si si-3">📊</div><div style="flex:1"><div class="n">Investment Log</div><div style="font-size:11px;color:var(--text-dim)">16 conv · 8 files</div></div><span class="pulse-dot gray"></span></div><div class="d">Stock research and portfolio tracking.</div><div class="f"><span>Yesterday</span><span>·</span><span>claude-sonnet</span></div></div>
+          <div class="m-space-card" onclick="go('space-chat')"><div class="h"><div class="si si-4">✍️</div><div style="flex:1"><div class="n">Content Studio</div><div style="font-size:11px;color:var(--text-dim)">7 conv · 21 files</div></div><span class="pulse-dot green"></span></div><div class="d">Long-form writing and brand voice content.</div><div class="f"><span>3h ago</span><span>·</span><span>gemini-1.5</span></div></div>
+        </div>
+        <div class="m-bottom-nav">
+          <button class="m-nav-item" onclick="mNav(this,'home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg>Home</button>
+          <button class="m-nav-item active" onclick="mNav(this,'spaces')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Spaces</button>
+          <button class="m-nav-item" onclick="mNav(this,'humans')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg>Humans</button>
+          <button class="m-nav-item" onclick="mNav(this,'store')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Store</button>
+          <button class="m-nav-item" onclick="mNav(this,'settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4 4l4 4M16 16l4 4M1 12h6M17 12h6" stroke-linecap="round"/></svg></button>
+        </div>
+      </div>
+
+      <!-- ===== MOBILE HUMANS LIST ===== -->
+      <div class="screen" id="m-humans">
+        <div class="m-header">
+          <div style="flex:1"><div class="title">Digital Humans</div></div>
+          <button class="icon" onclick="toast('Search (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></button>
+          <button class="icon" onclick="go('store')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="m-home">
+          <div class="m-dh-card" onclick="go('dh-chat')"><div class="av dha-1">📈</div><div class="b"><div class="n">Market Watcher</div><div class="r">Next run 14:30 · WeCom</div></div><div class="st" style="background:rgba(134,239,172,.12);color:var(--green)"><span class="pulse-dot green" style="width:5px;height:5px"></span> Live</div></div>
+          <div class="m-dh-card" onclick="go('dh-chat')"><div class="av dha-2">🔍</div><div class="b"><div class="n">Research Scout</div><div class="r">Daily 09:00 · Summary</div></div><div class="st" style="background:var(--bg-3);color:var(--text-mute)">Idle</div></div>
+          <div class="m-dh-card" onclick="go('dh-chat')"><div class="av dha-3">📰</div><div class="b"><div class="n">News Digest</div><div class="r">Hourly · Email</div></div><div class="st" style="background:rgba(134,239,172,.12);color:var(--green)"><span class="pulse-dot green" style="width:5px;height:5px"></span> Live</div></div>
+          <div class="m-dh-card" onclick="go('dh-chat')"><div class="av dha-4">🤖</div><div class="b"><div class="n">Support Triage</div><div class="r">Hourly · Tickets</div></div><div class="st" style="background:var(--bg-3);color:var(--text-mute)">Idle</div></div>
+        </div>
+        <div class="m-bottom-nav">
+          <button class="m-nav-item" onclick="mNav(this,'home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg>Home</button>
+          <button class="m-nav-item" onclick="mNav(this,'spaces')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Spaces</button>
+          <button class="m-nav-item active" onclick="mNav(this,'humans')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" stroke-linecap="round"/></svg>Humans</button>
           <button class="m-nav-item" onclick="mNav(this,'store')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Store</button>
           <button class="m-nav-item" onclick="mNav(this,'settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4 4l4 4M16 16l4 4M1 12h6M17 12h6" stroke-linecap="round"/></svg></button>
         </div>
@@ -1072,7 +1350,7 @@ button{font-family:inherit}
       <!-- ===== MOBILE SPACE CHAT ===== -->
       <div class="screen" id="m-space-chat">
         <div class="m-chat-head">
-          <button class="back" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="back" onclick="go('spaces')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="title"><div class="t">Refactor config service</div><div class="s"><span class="pulse-dot green" style="width:5px;height:5px"></span> Meco Core · Sonnet 4.5</div></div>
           <button class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z M12 7v5l3 2" stroke-linecap="round"/></svg></button>
           <button class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
@@ -1112,7 +1390,7 @@ button{font-family:inherit}
       <!-- ===== MOBILE DH CHAT ===== -->
       <div class="screen" id="m-dh-chat">
         <div class="m-chat-head">
-          <button class="back" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="back" onclick="go('humans')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="title"><div class="t">📈 Market Watcher</div><div class="s"><span class="pulse-dot green" style="width:5px;height:5px"></span> running · next 14:30</div></div>
           <button class="icon" onclick="togglePanel('sessPanel')" title="Conversations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linejoin="round"/></svg></button>
           <button class="icon" onclick="toast('Pause (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
@@ -1132,7 +1410,12 @@ button{font-family:inherit}
           <div class="m-input">
             <div class="m-input-box">
               <div class="m-input-field" id="mDhInput" contenteditable="true" data-ph="Message Market Watcher…"></div>
-              <div class="m-input-bar"><button class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button><button class="send" onclick="sendDh('m')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+              <div class="m-input-bar">
+                <button class="ib" onclick="toast('Attach (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+                <button class="ib" style="color:var(--cyan)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 3 2 5 2 7h10c0-2 2-4 2-7a7 7 0 00-7-7z" stroke-linejoin="round"/></svg></button>
+                <button class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18" stroke-linecap="round"/></svg></button>
+                <button class="send" onclick="sendDh('m')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              </div>
             </div>
           </div>
         </div>
@@ -1217,20 +1500,44 @@ button{font-family:inherit}
         </div>
       </div>
 
+      <!-- ===== MOBILE APPS ===== -->
+      <div class="screen" id="m-apps">
+        <div class="m-header">
+          <div style="flex:1"><div class="title">Apps</div></div>
+          <button class="icon" onclick="toast('Search apps (demo)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="m-apps-tabs">
+          <button class="m-apps-tab active" onclick="pickAppsTab(this,'my-humans')">My Humans</button>
+          <button class="m-apps-tab" onclick="pickAppsTab(this,'my-skills')">Skills</button>
+          <button class="m-apps-tab" onclick="pickAppsTab(this,'my-mcp')">MCP</button>
+          <button class="m-apps-tab" onclick="pickAppsTab(this,'marketplace')">Market</button>
+        </div>
+        <div class="m-apps-list" id="mAppsList">
+          <div class="m-apps-group">Running</div>
+          <div class="m-apps-item" data-tab="my-humans" onclick="showAppDetail(this,'market-watcher')"><div class="ai-icon" style="background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff">📈</div><div class="ai-body"><div class="ai-name">Market Watcher</div><div class="ai-sub">12 runs today · WeCom</div></div></div>
+          <div class="m-apps-item" data-tab="my-humans" onclick="showAppDetail(this,'news-digest')"><div class="ai-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">📰</div><div class="ai-body"><div class="ai-name">News Digest</div><div class="ai-sub">Running · Email</div></div></div>
+          <div class="m-apps-group">Installed</div>
+          <div class="m-apps-item" data-tab="my-humans" onclick="showAppDetail(this,'research-scout')"><div class="ai-icon" style="background:linear-gradient(135deg,#22d3ee,#0e7490);color:#fff">🔍</div><div class="ai-body"><div class="ai-name">Research Scout</div><div class="ai-sub">v1.4.2 · weekly report</div></div></div>
+          <div class="m-apps-item" data-tab="my-skills" onclick="showAppDetail(this,'doc-writer')"><div class="ai-icon" style="background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff">📝</div><div class="ai-body"><div class="ai-name">Doc Writer</div><div class="ai-sub">Markdown docs</div></div></div>
+          <div class="m-apps-item" data-tab="my-skills" onclick="showAppDetail(this,'data-viz')"><div class="ai-icon" style="background:linear-gradient(135deg,#10b981,#22d3ee);color:#fff">📊</div><div class="ai-body"><div class="ai-name">Data Viz</div><div class="ai-sub">CSV/JSON charts</div></div></div>
+          <div class="m-apps-item" data-tab="my-mcp" onclick="showAppDetail(this,'web-scraper')"><div class="ai-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">🌐</div><div class="ai-body"><div class="ai-name">Web Scraper</div><div class="ai-sub">Browser MCP</div></div></div>
+          <div class="m-apps-group">Discover</div>
+          <div class="m-apps-item" data-tab="marketplace" onclick="showAppDetail(this,'code-reviewer')"><div class="ai-icon" style="background:linear-gradient(135deg,#22d3ee,#3b82f6);color:#fff">🔎</div><div class="ai-body"><div class="ai-name">Code Reviewer</div><div class="ai-sub">Automated PR reviews</div></div></div>
+          <div class="m-apps-item" data-tab="marketplace" onclick="showAppDetail(this,'translation')"><div class="ai-icon" style="background:linear-gradient(135deg,#86efac,#059669);color:#fff">🌍</div><div class="ai-body"><div class="ai-name">Translation Pack</div><div class="ai-sub">50+ locales</div></div></div>
+        </div>
+      </div>
+
     </div>
     <div class="phone-home-bar"></div>
   </div>
 </div>
-</div>
-
-</div><!-- /stage -->
 
 <div class="toast" id="toast"><div class="td"></div><span id="toastMsg"></span></div>
 
 <script>
 /* ============ NAVIGATION ============ */
 let curDevice='desktop', curScreen='home';
-const urlMap={home:'app.meco.dev / home', 'space-chat':'app.meco.dev / space / meco-core', 'dh-chat':'app.meco.dev / apps / market-watcher', 'settings':'app.meco.dev / settings', 'store':'app.meco.dev / store'};
+const urlMap={home:'app.meco.dev / home', spaces:'app.meco.dev / spaces', humans:'app.meco.dev / humans', 'space-chat':'app.meco.dev / space / meco-core', 'dh-chat':'app.meco.dev / apps / market-watcher', settings:'app.meco.dev / settings', store:'app.meco.dev / store', apps:'app.meco.dev / apps'};
 
 function switchDevice(d){
   curDevice=d;
@@ -1249,7 +1556,7 @@ function go(screen){
   document.getElementById('screenInd').textContent=screen;
   if(curDevice!=='mobile'){
     const base = curDevice==='web' ? 'https://remote.meco.dev / ' : 'app.meco.dev / ';
-    document.getElementById('desktopUrl').textContent = base + (screen==='home'?'home':screen==='space-chat'?'space / meco-core':screen==='settings'?'settings':screen==='store'?'store':'apps / market-watcher');
+    document.getElementById('desktopUrl').textContent = base + (screen==='home'?'home':screen==='spaces'?'spaces':screen==='humans'?'humans':screen==='space-chat'?'space / meco-core':screen==='dh-chat'?'humans / market-watcher':screen==='settings'?'settings':screen==='store'?'store':screen==='apps'?'apps':'unknown');
   }
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1270,6 +1577,7 @@ function pickMtab(el){ el.parentNode.querySelectorAll('.m-dh-tab').forEach(t=>t.
 function mNav(el,screen){ el.parentNode.querySelectorAll('.m-nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); go(screen); }
 function toggleBtn(el){ el.classList.toggle('active'); }
 function togglePanel(name){ const panel=document.getElementById(name); const overlay=document.getElementById(name+'Overlay'); const open=panel.classList.contains('open'); if(open){ panel.classList.remove('open'); overlay.classList.remove('open'); } else { panel.classList.add('open'); overlay.classList.add('open'); } }
+function toggleDhSessions(){ const panel=document.querySelector('#d-dh-chat .dh-sessions'); const btn=document.getElementById('dhSessToggle'); if(!panel) return; const hidden=panel.classList.toggle('hidden'); if(btn) btn.classList.toggle('active', !hidden); }
 
 /* ============ TOAST ============ */
 let toastT;
@@ -1313,6 +1621,10 @@ function pickStoreCat(el){ el.parentNode.querySelectorAll('.st-item').forEach(i=
 function pickStoreTab(el){ el.parentNode.querySelectorAll('.st-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); toast('Tab: '+el.textContent.trim().split(' ')[0]+' (demo)'); }
 function pickMSet(el,sec){ el.parentNode.querySelectorAll('.m-seg-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('#m-settings .settings-section').forEach(s=>s.style.display='none'); document.getElementById('mset-'+sec).style.display='block'; }
 function pickMStoreTab(el,sec){ el.parentNode.querySelectorAll('.m-stab').forEach(b=>b.classList.remove('active')); el.classList.add('active'); toast('Filter: '+el.textContent.trim()+' (demo)'); }
+function pickAppsTab(el,tab){ el.parentNode.querySelectorAll('.apps-tab,.m-apps-tab').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('#appsList .apps-item,#mAppsList .m-apps-item').forEach(i=>i.style.display=(i.dataset.tab===tab||(!i.dataset.tab&&tab==='marketplace'))?'flex':'none'); document.querySelectorAll('#appsList .apps-group,#mAppsList .m-apps-group').forEach(g=>g.style.display=g.dataset.tab===tab?'block':'none'); }
+function showAppDetail(el,app){ document.querySelectorAll('#appsList .apps-item,#mAppsList .m-apps-item').forEach(i=>i.classList.remove('active')); el.classList.add('active'); toast('App: '+el.querySelector('.ai-name').textContent+' (demo)'); }
+function openStoreDetail(app){ const o=document.getElementById('storeDetailOverlay'), d=document.getElementById('storeDetail'); o.classList.add('open'); d.classList.add('open'); toast('Detail: '+app+' (demo)'); }
+function closeStoreDetail(){ document.getElementById('storeDetailOverlay').classList.remove('open'); document.getElementById('storeDetail').classList.remove('open'); }
 </script>
 </body>
 </html>
