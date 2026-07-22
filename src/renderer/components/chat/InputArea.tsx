@@ -32,7 +32,7 @@ import { getCurrentSource, supportsVision } from '../../types'
 import { useTranslation } from '../../i18n'
 import { SlashCommandMenu, filterSlashCommands } from './SlashCommandMenu'
 import type { SlashCommandItem } from '../../types/slash-command'
-import { isCapacitor } from '../../api/transport'
+import { isCapacitor, isRemoteClient } from '../../api/transport'
 import { useVoiceSTT } from '../../features/voice'
 import type { STTState } from '../../features/voice'
 
@@ -1009,7 +1009,7 @@ function InputToolbar({
             <div className="w-3 h-3 border-2 border-current rounded-sm" />
           </button>
         )}
-        {!isOnboarding && micEnabled && (
+        {!isOnboarding && micEnabled && !isRemoteClient() && (
           <button
             onClick={onMicClick}
             disabled={isGenerating || micState === 'transcribing'}
