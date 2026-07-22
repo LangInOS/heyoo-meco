@@ -115,9 +115,6 @@ export default defineConfig({
     },
     define: buildMetaDefine,
     plugins: [react()],
-    optimizeDeps: {
-      include: ['streamdown', '@streamdown/code']
-    },
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src/renderer')
