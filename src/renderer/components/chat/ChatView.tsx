@@ -49,7 +49,9 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
     stopGeneration,
     injectMessage,
     continueAfterInterrupt,
-    answerQuestion
+    answerQuestion,
+    loadMessageThoughts,
+    currentSpaceId
   } = useChatStore()
 
   // Onboarding state
@@ -203,6 +205,16 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
   // Get current conversation and its session state
   const currentConversation = getCurrentConversation()
   const { isLoadingConversation } = useChatStore()
+
+  // Lazy loader for a message's separated thoughts, bound to the active
+  // space + conversation ids. Passed to MessageList's thoughtsLoader prop.
+  const thoughtsLoader = useCallback(
+    (messageId: string) =>
+      currentSpaceId && currentConversation?.id
+        ? loadMessageThoughts(currentSpaceId, currentConversation.id, messageId)
+        : Promise.resolve([]),
+    [loadMessageThoughts, currentSpaceId, currentConversation?.id]
+  )
   const session = getCurrentSession()
   const { isGenerating, streamingContent, isStreaming, thoughts, isThinking, compactInfo, error, errorType, textBlockVersion, pendingQuestion } = session
 
@@ -397,6 +409,8 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
             <MessageList
               key={currentConversation?.id ?? 'empty'}
               ref={messageListRef}
+              conversationId={currentConversation?.id}
+              thoughtsLoader={thoughtsLoader}
               messages={displayMessages}
               streamingContent={displayStreamingContent}
               isGenerating={displayIsGenerating}

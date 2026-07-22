@@ -79,7 +79,10 @@ interface InputAreaProps {
   onSend: (content: string, images?: ImageAttachment[], thinkingEnabled?: boolean) => void
   /** Called when user submits a message while generation is in progress (mid-turn inject) */
   onInject?: (content: string) => void
-  onStop: () => void
+  /** Stop the current generation. Omit for inject-only inputs that cannot stop the
+   *  underlying process (e.g. the automation run-detail supplement input); the Stop
+   *  button is then hidden. */
+  onStop?: () => void
   isGenerating: boolean
   placeholder?: string
   isCompact?: boolean
@@ -625,7 +628,7 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
       }
     }
     // Esc to stop
-    if (e.key === 'Escape' && isGenerating) {
+    if (e.key === 'Escape' && isGenerating && onStop) {
       e.preventDefault()
       onStop()
     }
@@ -859,7 +862,7 @@ interface InputToolbarProps {
   attachMenuRef: React.RefObject<HTMLDivElement | null>
   canSend: boolean
   onSend: () => void
-  onStop: () => void
+  onStop?: () => void
   sendKeyMode: 'enter' | 'ctrl-enter'
   visionEnabled: boolean
   micState: STTState
@@ -994,7 +997,7 @@ function InputToolbar({
 
       {/* Right section: Stop (when generating) + Mic + Send */}
       <div className="flex items-center gap-1">
-        {isGenerating && (
+        {isGenerating && onStop && (
           <button
             onClick={onStop}
             className="w-8 h-8 flex items-center justify-center

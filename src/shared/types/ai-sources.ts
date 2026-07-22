@@ -73,12 +73,14 @@ export type BuiltinProviderId =
   | 'yi'
   | 'stepfun'
   | 'openrouter'
+  | 'requesty'
   | 'groq'
   | 'mistral'
   | 'deepinfra'
   | 'together'
   | 'fireworks'
   | 'xai'
+  | 'litellm'
   | 'github-copilot'
   | 'claude'
 
@@ -120,6 +122,11 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     id: 'claude-mythos-preview',
     name: 'Claude Mythos (Preview)',
     description: 'Next-generation frontier model, preview access'
+  },
+  {
+    id: 'claude-fable-5',
+    name: 'Claude Fable 5',
+    description: 'Frontier model with native 1M context, strongest coding and agentic performance'
   },
   {
     id: 'claude-opus-4-7',
@@ -315,6 +322,12 @@ export interface BackendRequestConfig {
   profileArn?: string
   /** Provider adapter ID — selects a registered adapter for request/response transformations */
   adapterId?: string
+  /**
+   * Provider-declared vision capability for the target model. When present,
+   * the OpenAI-compat router uses this instead of inferring from the model id;
+   * undefined falls back to supportsVisionById. See issue #139.
+   */
+  supportsVision?: boolean
 }
 
 // ============================================================================

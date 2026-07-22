@@ -77,7 +77,7 @@ Object.assign(console, log.functions)
 
 // Logging subsystem: subscribe to config changes and control log level + transports.
 // Must load after console replacement so its initial log calls go through electron-log.
-import './services/logging'
+import './foundation/logging'
 
 // Fix PATH for macOS GUI apps
 // GUI apps don't inherit shell environment variables (.zshrc, .bash_profile, etc.)
@@ -104,7 +104,8 @@ app.commandLine.appendSwitch('disable-blink-features', 'AutomationControlled')
 // Must be called before app.whenReady() and requestSingleInstanceLock() so that
 // each build variant (e.g. Halo vs Halo-Enterprise) uses its own userData directory.
 // This isolates cookies, sessions, localStorage, Claude SDK config, etc.
-import { getDataFolderName, DEFAULT_DATA_FOLDER_NAME, loadProductConfig } from './services/ai-sources/auth-loader'
+import { getDataFolderName, DEFAULT_DATA_FOLDER_NAME } from './foundation/product-config'
+import { isHostnameTrustedForCertificates } from './services/browser-policy.service'
 import { join as joinPath } from 'path'
 const dataFolderName = getDataFolderName()
 if (dataFolderName !== DEFAULT_DATA_FOLDER_NAME) {
@@ -152,30 +153,16 @@ app.on('second-instance', () => {
   }
 })
 
-// Trust certificates for domains explicitly listed in browserPolicy.allowlist.
-// Only fires when Chromium has already rejected a certificate (self-signed, private CA, etc.).
-// Normal HTTPS requests with valid certificates are unaffected (zero overhead).
+// Trust certificates for hosts covered by built-in browser allowlist domain
+// patterns (never user custom entries or CIDR ranges — see
+// isHostnameTrustedForCertificates). Only fires when Chromium has already
+// rejected a certificate (self-signed, private CA, etc.). Normal HTTPS
+// requests with valid certificates are unaffected (zero overhead).
 app.on('certificate-error', (event, _webContents, url, _error, _certificate, callback) => {
-  const policy = loadProductConfig().browserPolicy
-  if (policy?.mode === 'allowlist' && policy.allowlist) {
-    try {
-      const h = new URL(url).hostname.toLowerCase()
-      const trusted = policy.allowlist.some(p => {
-        const lp = p.toLowerCase()
-        if (lp.startsWith('*.')) {
-          const base = lp.slice(2)
-          return h === base || h.endsWith('.' + base)
-        }
-        return h === lp
-      })
-      if (trusted) {
-        event.preventDefault()
-        callback(true)
-        return
-      }
-    } catch {
-      // Malformed URL — reject
-    }
+  if (isHostnameTrustedForCertificates(url)) {
+    event.preventDefault()
+    callback(true)
+    return
   }
   callback(false)
 })
@@ -187,19 +174,21 @@ import {
   initializeExtendedServices,
   cleanupExtendedServices
 } from './bootstrap'
-import { initializeApp } from './services/config.service'
+import { initializeApp } from './foundation/config.service'
+import { applyDisplayScale, currentDisplayScale, nudgeDisplayScale, setDisplayScale, DISPLAY_STEP, registerDisplayHandlers } from './services/display.service'
 import { flushAllPendingIndexWrites } from './services/conversation.service'
 import { shutdownRemoteAccess } from './services/remote.service'
 import { stopOpenAICompatRouter } from './openai-compat-router'
 import { manualCheckForUpdates } from './services/updater.service'
 import { initAnalytics } from './services/analytics'
-import { registerProtocols } from './services/protocol.service'
-import { setMainWindow } from './services/window.service'
+import { registerProtocols } from './foundation/protocol.service'
+import { setMainWindow } from './foundation/window.service'
 import { initInstanceId, shutdownHealthSystem, onRendererCrash, onRendererUnresponsive } from './services/health'
 import { reconcileAllSpaces } from './services/artifact-cache.service'
 import { initSdk } from './services/agent/resolved-sdk'
 
 let mainWindow: BrowserWindow | null = null
+let displayHandlersRegistered = false
 let isAppQuitting = false
 let recentRecoveryWindowStart = 0
 let recoveryAttempts = 0
@@ -307,9 +296,13 @@ function createAppMenu(): void {
         { role: 'forceReload' as const },
         { role: 'toggleDevTools' as const },
         { type: 'separator' as const },
-        { role: 'resetZoom' as const },
-        { role: 'zoomIn' as const },
-        { role: 'zoomOut' as const },
+        // Persistent zoom. The keyboard shortcuts are handled by a webContents
+        // before-input-event (see createWindow) rather than menu accelerators,
+        // because the zoomOut role's Cmd+- is unreliable on macOS; the menu items
+        // stay for discoverability.
+        { label: 'Actual Size', click: () => { setDisplayScale(mainWindow, 1) } },
+        { label: 'Zoom In', click: () => { nudgeDisplayScale(mainWindow, DISPLAY_STEP) } },
+        { label: 'Zoom Out', click: () => { nudgeDisplayScale(mainWindow, -DISPLAY_STEP) } },
         { type: 'separator' as const },
         { role: 'togglefullscreen' as const }
       ]
@@ -350,6 +343,11 @@ function createAppMenu(): void {
 
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
+
+  if (!displayHandlersRegistered) {
+    registerDisplayHandlers(() => mainWindow)
+    displayHandlersRegistered = true
+  }
 }
 
 function createWindow(): void {
@@ -380,7 +378,12 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      // Seed the persistent display scale before first paint: zoomFactor applies
+      // the zoom natively, and the CLI arg lets the preload set --display-scale
+      // synchronously, so chrome-inset compensation is correct on frame one.
+      zoomFactor: currentDisplayScale(),
+      additionalArguments: [`--halo-display-scale=${currentDisplayScale()}`]
     }
   })
 
@@ -392,10 +395,27 @@ function createWindow(): void {
 
   // Fix PATH after page loads (avoid blocking startup)
   mainWindow.webContents.on('did-finish-load', async () => {
+    if (mainWindow) applyDisplayScale(mainWindow)
     if (process.platform !== 'win32') {
       // Dynamic import for ESM-only fix-path module
       const { default: fixPath } = await import('fix-path')
       fixPath()
+    }
+  })
+
+  // Reliable keyboard zoom: Cmd/Ctrl + = / - / 0 adjust the persistent display
+  // scale. Handled here at the input layer because the zoomOut menu accelerator
+  // (Cmd+-) is unreliable on macOS.
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') return
+    const mod = process.platform === 'darwin' ? input.meta : input.control
+    if (!mod || input.alt) return
+    if (input.key === '-' || input.key === '_') {
+      nudgeDisplayScale(mainWindow, -DISPLAY_STEP); event.preventDefault()
+    } else if (input.key === '=' || input.key === '+') {
+      nudgeDisplayScale(mainWindow, DISPLAY_STEP); event.preventDefault()
+    } else if (input.key === '0') {
+      setDisplayScale(mainWindow, 1); event.preventDefault()
     }
   })
 

@@ -68,6 +68,7 @@ export const BUILTIN_PROVIDERS: BuiltinProvider[] = [
     apiUrl: 'https://api.anthropic.com',
     models: [
       { id: 'claude-mythos-preview', name: 'Claude Mythos (Preview)' },
+      { id: 'claude-fable-5', name: 'Claude Fable 5' },
       { id: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
       { id: 'claude-opus-4-7', name: 'Claude Opus 4.7' },
       { id: 'claude-opus-4-6', name: 'Claude Opus 4.6' },
@@ -331,6 +332,25 @@ export const BUILTIN_PROVIDERS: BuiltinProvider[] = [
     notes: 'Requires HTTP-Referer and X-Title headers. Supports model array for failover'
   },
   {
+    id: 'requesty',
+    name: 'Requesty',
+    authType: 'api-key',
+    apiUrl: 'https://router.requesty.ai/v1',
+    modelsUrl: 'https://router.requesty.ai/v1/models',
+    models: [
+      { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
+      { id: 'openai/gpt-4o', name: 'GPT-4o' },
+      { id: 'anthropic/claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },
+      { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+      { id: 'deepseek/deepseek-chat', name: 'DeepSeek Chat' }
+    ],
+    description: 'Requesty router with 400+ models across providers',
+    website: 'https://requesty.ai/',
+    region: 'global',
+    icon: 'route',
+    notes: 'OpenAI-compatible. Supports optional HTTP-Referer and X-Title headers'
+  },
+  {
     id: 'groq',
     name: 'Groq',
     authType: 'api-key',
@@ -433,6 +453,20 @@ export const BUILTIN_PROVIDERS: BuiltinProvider[] = [
     notes: 'Grok-4.1 Fast has 2M context window for agentic tasks'
   },
 
+  {
+    id: 'litellm',
+    name: 'LiteLLM',
+    authType: 'api-key',
+    apiUrl: 'http://localhost:4000',
+    modelsUrl: 'http://localhost:4000/v1/models',
+    models: [],
+    description: 'AI gateway proxy for 100+ LLM providers',
+    website: 'https://github.com/BerriAI/litellm',
+    region: 'global',
+    icon: 'network',
+    notes: 'Models are auto-discovered from the proxy. Set your proxy URL and optional API key'
+  },
+
   // ============================================================================
   // OAuth Providers
   // ============================================================================
@@ -454,6 +488,7 @@ export const BUILTIN_PROVIDERS: BuiltinProvider[] = [
     apiUrl: 'https://api.anthropic.com',
     models: [
       { id: 'claude-mythos-preview', name: 'Claude Mythos (Preview)' },
+      { id: 'claude-fable-5', name: 'Claude Fable 5' },
       { id: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
       { id: 'claude-opus-4-7', name: 'Claude Opus 4.7' },
       { id: 'claude-opus-4-6', name: 'Claude Opus 4.6' },

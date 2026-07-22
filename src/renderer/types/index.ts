@@ -260,15 +260,14 @@ export interface NetworkConfig {
 export interface VoiceConfig {
   sourceId: string | null  // references aiSources.sources[].id; null = not configured
   sttModel: string         // Speech-to-text model id
-  // Keyboard shortcut to trigger voice input. Format: "Fn", "Ctrl+Alt+V", etc.
-  // Empty string = shortcut disabled. Defaults are platform-specific.
-  shortcutKey?: string
-  // hold = press-and-hold to record, release to stop.
-  // toggle = press to start, press again to stop.
-  shortcutMode?: 'hold' | 'toggle'
-  // Transport for StepFun ASR. 'websocket' = real-time streaming (API billing),
-  // 'sse' = record-then-transcribe (Step Plan subscription). Defaults to 'websocket'.
-  transport?: 'websocket' | 'sse'
+  shortcutKey?: string     // Keyboard shortcut to trigger voice input. Format: "Fn", "Ctrl+Alt+V", etc. Empty string = shortcut disabled.
+  shortcutMode?: 'hold' | 'toggle'  // hold = press-and-hold to record, release to stop. toggle = press to start, press again to stop.
+  transport?: 'websocket' | 'sse'  // Transport for StepFun ASR. 'websocket' = real-time streaming, 'sse' = record-then-transcribe. Defaults to 'websocket'.
+}
+
+export interface BrowserConfig {
+  customAllowlist?: string[];
+  userAgent?: string;
 }
 
 export interface HaloConfig {
@@ -289,7 +288,11 @@ export interface HaloConfig {
   chat?: ChatConfig;  // Chat behavior preferences
   network?: NetworkConfig;  // Network settings (proxy, etc.)
   voice?: VoiceConfig;  // Voice input/output backend (STT/TTS)
+  browser?: BrowserConfig;  // Browser settings (user custom allowlist)
   isFirstLaunch: boolean;
+  // True when the user deferred model configuration in the first-run wizard.
+  // Suppresses the setup re-entry guard so they can reach Home and configure later.
+  modelConfigSkipped?: boolean;
 }
 
 // ============================================
@@ -319,6 +322,7 @@ export interface Space {
   preferences?: SpacePreferences;  // User preferences for this space
   workingDir?: string;  // Project directory for custom spaces (agent cwd, artifacts, file explorer)
   isMissing?: boolean;  // True when the space data path is currently unavailable
+  sortOrder?: number;  // User-defined display order (lower = earlier); absent on legacy spaces
 }
 
 export interface CreateSpaceInput {
@@ -802,7 +806,8 @@ export const DEFAULT_CONFIG: HaloConfig = {
   },
   mcpServers: {},  // Empty by default
   agent: { maxTurns: 999 },  // Agent defaults
-  isFirstLaunch: true
+  isFirstLaunch: true,
+  modelConfigSkipped: false
 };
 
 // Helper functions hasAnyAISource and getCurrentModelName are now imported from shared module

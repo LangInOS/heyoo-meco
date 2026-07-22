@@ -8,10 +8,10 @@
 
 import { join, dirname, basename } from 'path'
 import { existsSync, mkdirSync } from 'fs'
-import { getConfig, getTempSpacePath } from '../config.service'
+import { getConfig, getTempSpacePath } from '../../foundation/config.service'
 import { getSpace } from '../space.service'
 import { getAISourceManager } from '../ai-sources'
-import { getAppManager } from '../../apps/manager'
+import { getAppManager } from '../app-bridge'
 import type { McpSpec } from '../../apps/spec/schema'
 import type { BackendRequestConfig, AISource } from '../../../shared/types/ai-sources'
 import { modelCapabilitiesService } from '../model-capabilities.service'
@@ -279,6 +279,7 @@ export async function getApiCredentials(config: ReturnType<typeof getConfig>): P
     filterContent: backendConfig.filterContent,
     adapterId: backendConfig.adapterId,
     capabilities,
+    supportsVision: modelOption?.supportsVision,
   }
 }
 
@@ -352,6 +353,7 @@ export async function getApiCredentialsForSource(
     filterContent: backendConfig.filterContent,
     adapterId: backendConfig.adapterId,
     capabilities,
+    supportsVision: modelOption?.supportsVision,
   }
 }
 
@@ -399,6 +401,7 @@ export function credentialsToBackendConfig(
     forceStream: credentials.forceStream,
     filterContent: credentials.filterContent,
     adapterId: credentials.adapterId,
+    supportsVision: credentials.supportsVision,
     ...overrides
   }
 }
