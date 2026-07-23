@@ -423,7 +423,7 @@ export const createAgentEventsSlice: ChatSlice<'handleAgentMessage' | 'handleAge
   // Handle autonomous turn start — CC produced output without user send
   // (e.g., Agent Team sub-agent message triggered a new turn)
   handleAgentTurnStart: (data) => {
-    const { conversationId } = data as AgentEventBase & { autonomous?: boolean }
+    const { conversationId, spaceId } = data as AgentEventBase & { autonomous?: boolean }
     console.log(`[ChatStore] handleAgentTurnStart [${conversationId}]: autonomous turn detected`)
 
     set((state) => {
@@ -446,6 +446,24 @@ export const createAgentEventsSlice: ChatSlice<'handleAgentMessage' | 'handleAge
       })
       return { sessions: newSessions }
     })
+
+    // Remote clients don't have the user message in local state - reload so
+    // they see it immediately. Backend persists the user message before
+    // emitting agent:turn-start, so this is safe.
+    if (spaceId) {
+      api.getConversation(spaceId, conversationId)
+        .then(response => {
+          if (response.success && response.data) {
+            const updatedConversation = response.data as Conversation
+            set((state) => {
+              const newCache = new Map(state.conversationCache)
+              newCache.set(conversationId, updatedConversation)
+              return { conversationCache: newCache }
+            })
+          }
+        })
+        .catch(() => {})
+    }
   },
 
   // Handle AskUserQuestion - set pending question on session
