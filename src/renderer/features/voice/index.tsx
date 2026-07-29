@@ -18,6 +18,7 @@ import type { VoiceConfig } from '../../types'
 import type { AISourcesConfig } from '../../types'
 import { isCapacitor, getRemoteServerUrl, getAuthToken } from '../../api/transport'
 import { matchesShortcut, formatShortcut, describeShortcut } from '../../utils/keyboard-shortcut'
+import { playMicFeedback } from './sound'
 
 // ── Voice-capable provider registry ────────────────────────────────────
 //
@@ -651,6 +652,7 @@ export function useVoiceSTT(
 
     setError(null)
     setState('recording')
+    playMicFeedback('start')
 
     try {
       let session: STTSession
@@ -762,6 +764,7 @@ export function useVoiceSTT(
       if (isSSE) {
         setState('transcribing')
       }
+      playMicFeedback('stop')
       await sessionRef.current.stop()
       sessionRef.current = null
       if (!isSSE) {
