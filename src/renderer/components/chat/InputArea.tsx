@@ -35,6 +35,7 @@ import type { SlashCommandItem } from '../../types/slash-command'
 import { isCapacitor, isRemoteClient } from '../../api/transport'
 import { useVoiceSTT } from '../../features/voice'
 import type { STTState } from '../../features/voice'
+import { playMicFeedback } from '../../features/voice/sound'
 
 // ── @ mention helpers ──
 
@@ -154,8 +155,10 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
   } = useVoiceSTT(handleTranscript)
   const handleMicClick = useCallback(() => {
     if (micState === 'recording') {
+      playMicFeedback('stop')
       void stopMic()
     } else if (micState === 'idle' || micState === 'error') {
+      playMicFeedback('start')
       void startMic()
     }
     // 'transcribing' is a no-op — the background transcription must finish.
