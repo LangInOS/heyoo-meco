@@ -5,6 +5,7 @@ import type { ChatSlice } from './internal'
 import { api, createEmptySessionState } from './internal'
 import type { AgentEventBase, Conversation, ConversationMeta, Thought, ToolCall } from './internal'
 import { isAppChatKey } from '../../../shared/apps/im-keys'
+import { emitTTSAutoPlay } from '../../features/tts/auto-play'
 
 /**
  * Virtual conversation ids never represent a real user conversation and must
@@ -253,6 +254,26 @@ export const createAgentEventsSlice: ChatSlice<'handleAgentMessage' | 'handleAge
           }
         })
         console.log(`[ChatStore] Conversation reloaded from backend [${conversationId}]`)
+
+        // TTS auto-play: notify subscribers that a message has completed.
+        // The React layer (ChatView) reads TTSConfig from appStore and decides
+        // whether to actually speak. This keeps the chat store free of TTS concerns.
+        try {
+          if (updatedConversation.messages) {
+            const lastAssistant = [...updatedConversation.messages]
+              .reverse()
+              .find(m => m.role === 'assistant' && m.content)
+            if (lastAssistant) {
+              emitTTSAutoPlay({
+                conversationId,
+                messageId: lastAssistant.id,
+                content: lastAssistant.content,
+              })
+            }
+          }
+        } catch {
+          // TTS auto-play is best-effort — never block message completion
+        }
       } else {
         // Conversation not found in backend (e.g. virtual conversationIds like "app-chat:*")
         // Still must clear generating state to unblock UI.

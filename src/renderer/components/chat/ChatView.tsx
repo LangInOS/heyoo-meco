@@ -17,6 +17,7 @@ import { useAIBrowserStore } from '../../stores/ai-browser.store'
 import { MessageList } from './MessageList'
 import type { MessageListHandle } from './MessageList'
 import { TurnRail } from './TurnRail'
+import { TTSAutoPlayer } from '../../features/tts'
 import type { TurnItem } from './TurnRail'
 import { InputArea } from './InputArea'
 import { ScrollToBottomButton } from './ScrollToBottomButton'
@@ -391,6 +392,9 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
         ${isCompact ? 'bg-background/50' : 'bg-background'}
       `}
     >
+      {/* TTS auto-play subscriber — no UI, mounts in ChatView lifecycle */}
+      <TTSAutoPlayer />
+
       {/* Messages area wrapper - relative for button positioning */}
       <div className="flex-1 relative overflow-hidden">
         {/* Virtuoso manages its own scroll container */}

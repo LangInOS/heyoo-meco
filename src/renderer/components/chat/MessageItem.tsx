@@ -33,6 +33,7 @@ import { truncateText, getToolFriendlyFormat } from './thought-utils'
 import type { Message, Thought, ThoughtsSummary } from '../../types'
 import { useTranslation } from '../../i18n'
 import { useChatStore } from '../../stores/chat.store'
+import { TTSButton } from '../../features/tts'
 
 interface MessageItemProps {
   message: Message
@@ -406,6 +407,9 @@ export const MessageItem = memo(function MessageItem({ message, previousCost = 0
         <div className="flex justify-end items-center gap-2 mt-2 pt-1">
           {/* Token usage indicator */}
           <TokenUsageIndicator tokenUsage={message.tokenUsage} previousCost={previousCost} />
+
+          {/* TTS play button */}
+          <TTSButton messageId={message.id} content={message.content} />
 
           {/* Copy button */}
           <button

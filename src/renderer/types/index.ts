@@ -265,6 +265,17 @@ export interface VoiceConfig {
   transport?: 'websocket' | 'sse'  // Transport for StepFun ASR. 'websocket' = real-time streaming, 'sse' = record-then-transcribe. Defaults to 'websocket'.
 }
 
+// TTS configuration - text-to-speech for reply broadcast.
+// Mirrors VoiceConfig structure: references an existing AISource for credentials,
+// only stores TTS-specific settings (selected source + TTS model + voice).
+export interface TTSConfig {
+  sourceId: string | null  // references aiSources.sources[].id; null = not configured
+  ttsModel: string         // Text-to-speech model id
+  voice?: string           // Voice character id (provider-specific, e.g. 'female-warm')
+  autoPlay?: boolean       // Auto-play assistant reply after completion. Default false.
+  speed?: number           // Speech rate multiplier (0.5 - 2.0). Default 1.0.
+}
+
 export interface BrowserConfig {
   customAllowlist?: string[];
   userAgent?: string;
@@ -287,7 +298,8 @@ export interface HaloConfig {
   layout?: LayoutConfig;  // Global layout preferences (panel sizes and visibility)
   chat?: ChatConfig;  // Chat behavior preferences
   network?: NetworkConfig;  // Network settings (proxy, etc.)
-  voice?: VoiceConfig;  // Voice input/output backend (STT/TTS)
+  voice?: VoiceConfig;  // Voice input backend (STT)
+  tts?: TTSConfig;      // Voice output backend (TTS, reply broadcast)
   browser?: BrowserConfig;  // Browser settings (user custom allowlist)
   isFirstLaunch: boolean;
   // True when the user deferred model configuration in the first-run wizard.
