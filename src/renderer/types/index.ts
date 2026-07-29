@@ -265,6 +265,16 @@ export interface VoiceConfig {
   transport?: 'websocket' | 'sse'  // Transport for StepFun ASR. 'websocket' = real-time streaming, 'sse' = record-then-transcribe. Defaults to 'websocket'.
 }
 
+// Realtime voice conversation - end-to-end voice model (StepFun Realtime API).
+// Unlike VoiceConfig (STT input only), this drives the "speak button"
+// experience: bidirectional voice conversation with a digital human.
+export interface RealtimeConfig {
+  sourceId: string | null              // references aiSources.sources[].id; null = not configured
+  realtimeModel: string                // Realtime model id, e.g. 'step-audio-2'
+  persona: 'default' | 'friendly'      // Preset AI persona (MVP: 2 options)
+  mode: 'audio-chat' | 'voice-chat'    // audio-chat = standalone voice model; voice-chat = transcript → LLM → TTS
+}
+
 export interface BrowserConfig {
   customAllowlist?: string[];
   userAgent?: string;
@@ -288,6 +298,7 @@ export interface HaloConfig {
   chat?: ChatConfig;  // Chat behavior preferences
   network?: NetworkConfig;  // Network settings (proxy, etc.)
   voice?: VoiceConfig;  // Voice input/output backend (STT/TTS)
+  realtime?: RealtimeConfig;  // Realtime voice conversation backend (end-to-end)
   browser?: BrowserConfig;  // Browser settings (user custom allowlist)
   isFirstLaunch: boolean;
   // True when the user deferred model configuration in the first-run wizard.

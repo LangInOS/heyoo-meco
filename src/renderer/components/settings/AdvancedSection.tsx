@@ -7,12 +7,13 @@ import { useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronUp, Cpu, Mic, Puzzle, RefreshCw, Terminal } from 'lucide-react'
 import { useTranslation } from '../../i18n'
 import { api } from '../../api'
-import type { HaloConfig, VoiceConfig } from '../../types'
+import type { HaloConfig, VoiceConfig, RealtimeConfig } from '../../types'
 import { CLIConfigSection } from './CLIConfigSection'
 import { Switch } from '../ui/Switch'
 import { useConfirmDialog } from '../../hooks/useConfirmDialog'
 import { DEFAULT_DISABLED_TOOLS } from '../../../shared/constants/disabled-tools'
 import { VoicePanel } from '../../features/voice'
+import { RealtimePanel } from '../../features/realtime-voice'
 
 // ─── Built-in MCP Extensions ────────────────────────────────────────────────────
 
@@ -232,6 +233,16 @@ export function AdvancedSection({ config, setConfig }: AdvancedSectionProps) {
       setConfig(updatedConfig)
     } catch (error) {
       console.error('[AdvancedSection] Failed to update voice config:', error)
+    }
+  }
+
+  const handleRealtimeChange = async (realtime: RealtimeConfig) => {
+    const updatedConfig = { ...config, realtime } as HaloConfig
+    try {
+      await api.setConfig({ realtime })
+      setConfig(updatedConfig)
+    } catch (error) {
+      console.error('[AdvancedSection] Failed to update realtime config:', error)
     }
   }
 
@@ -462,6 +473,15 @@ export function AdvancedSection({ config, setConfig }: AdvancedSectionProps) {
           <h3 className="font-medium text-sm">{t('Voice')}</h3>
         </div>
         <VoicePanel voice={config?.voice} onChange={handleVoiceChange} />
+      </div>
+
+      {/* Realtime Voice - 独立区域 */}
+      <div className="mt-6 pt-6 border-t border-border">
+        <div className="flex items-center gap-2 mb-4">
+          <Mic className="w-4 h-4 text-muted-foreground" />
+          <h3 className="font-medium text-sm">{t('Realtime Voice Conversation')}</h3>
+        </div>
+        <RealtimePanel realtime={config?.realtime} onChange={handleRealtimeChange} />
       </div>
 
       {/* Confirm dialog portal */}

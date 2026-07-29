@@ -14,6 +14,7 @@ import { useSpaceStore } from '../../stores/space.store'
 import { useChatStore } from '../../stores/chat.store'
 import { useOnboardingStore } from '../../stores/onboarding.store'
 import { useAIBrowserStore } from '../../stores/ai-browser.store'
+import { useAppStore } from '../../stores/app.store'
 import { MessageList } from './MessageList'
 import type { MessageListHandle } from './MessageList'
 import { TurnRail } from './TurnRail'
@@ -29,9 +30,11 @@ import {
 } from '../onboarding/onboardingData'
 import { api } from '../../api'
 import type { ImageAttachment, Artifact } from '../../types'
+import { getSourceById } from '../../types'
 import type { SlashCommandItem } from '../../types/slash-command'
 import { useTranslation } from '../../i18n'
 import { useEngineCapabilities } from '../../stores/engine.store'
+import { useRealtimeConversation, RealtimeOverlay } from '../../features/realtime-voice'
 
 interface ChatViewProps {
   isCompact?: boolean
@@ -71,6 +74,50 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
   const [mockStreamingContent, setMockStreamingContent] = useState<string>('')
   // Artifact list for @ mention suggestions in InputArea
   const [mentionArtifacts, setMentionArtifacts] = useState<Artifact[]>([])
+
+  // ── Realtime voice conversation ────────────────────────────────────────────
+  // The orchestrator owns the WS session, mic, playback, and digital human
+  // state. ChatView is the common parent of InputArea (renders the Speak/End
+  // button) and RealtimeOverlay (renders the digital human above the input),
+  // so it is the natural owner of the hook.
+  const realtimeConfig = useAppStore((state) => state.config?.realtime ?? null)
+  const aiSources = useAppStore((state) => state.config?.aiSources)
+  const resolvedRealtimeSource = useMemo(
+    () => (realtimeConfig?.sourceId && aiSources ? getSourceById(aiSources, realtimeConfig.sourceId) : null),
+    [realtimeConfig?.sourceId, aiSources],
+  )
+  // Fetch the local voice proxy URL once. The port is allocated by the main
+  // process during extended bootstrap and stays constant for the app's life.
+  const [proxyUrl, setProxyUrl] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    const w = window as unknown as {
+      halo?: { voiceGetProxyPort?: () => Promise<{ success: boolean; data?: { port: number }; error?: string }> }
+    }
+    w.halo?.voiceGetProxyPort?.().then((resp) => {
+      if (cancelled) return
+      if (resp.success && resp.data?.port) {
+        const url = `ws://127.0.0.1:${resp.data.port}/`
+        console.log('[Realtime] Voice proxy ready:', url)
+        setProxyUrl(url)
+      } else {
+        console.warn('[Realtime] Voice proxy not available:', resp)
+      }
+    }).catch((err) => {
+      console.warn('[Realtime] Voice proxy fetch failed:', err)
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  const realtime = useRealtimeConversation({
+    config: realtimeConfig,
+    resolvedSource: resolvedRealtimeSource,
+    proxyUrl,
+    onVoiceTranscript: (text) => {
+      console.log('[ChatView] onVoiceTranscript called with text:', text)
+      handleSend(text)
+    },
+  })
 
   // Load artifacts for @ mention suggestions (depth=5 for deeper file references)
   useEffect(() => {
@@ -218,6 +265,44 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
   const session = getCurrentSession()
   const { isGenerating, streamingContent, isStreaming, thoughts, isThinking, compactInfo, error, errorType, textBlockVersion, pendingQuestion } = session
 
+  // Voice-chat TTS: when the normal chat reply finishes, feed the assistant
+  // text back into the realtime session so the digital human reads it aloud.
+  const prevIsGeneratingRef = useRef(isGenerating)
+  const speakTextRef = useRef(realtime.speakText)
+  speakTextRef.current = realtime.speakText
+
+  useEffect(() => {
+    const wasGenerating = prevIsGeneratingRef.current
+    prevIsGeneratingRef.current = isGenerating
+
+    console.log('[ChatView] TTS effect check:', {
+      isGenerating,
+      wasGenerating,
+      mode: realtimeConfig?.mode,
+      hasSpeakText: typeof realtime.speakText === 'function',
+    })
+
+    if (!isGenerating && wasGenerating && realtimeConfig?.mode === 'voice-chat') {
+      const timer = setTimeout(() => {
+        const msgs = currentConversation?.messages ?? []
+        const lastAssistant = [...msgs].reverse().find(m => m.role === 'assistant')
+        console.log('[ChatView] TTS effect fired, lastAssistant:', lastAssistant?.content?.slice(0, 100))
+        if (lastAssistant?.content && speakTextRef.current) {
+          const text = lastAssistant.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+          if (text) {
+            console.log('[ChatView] Voice-chat reply ready, injecting for TTS:', text.slice(0, 100))
+            speakTextRef.current(text)
+          } else {
+            console.log('[ChatView] Voice-chat reply empty after stripping think tags')
+          }
+        } else {
+          console.log('[ChatView] No assistant message found or speakText missing')
+        }
+      }, 250)
+      return () => clearTimeout(timer)
+    }
+  }, [isGenerating, realtimeConfig, currentConversation])
+
   // Build the slash-command list for the autocomplete menu.
   // Only reads from SDK slash_commands array.
   // Commands are categorized as 'skill' if they appear in the skills array, otherwise 'builtin'.
@@ -310,14 +395,17 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
 
   // Handle send (with optional images for multi-modal messages, optional thinking mode)
   const handleSend = async (content: string, images?: ImageAttachment[], thinkingEnabled?: boolean) => {
+    console.log('[ChatView] handleSend called, content:', content, 'isGenerating:', isGenerating)
     // In onboarding mode, intercept and play mock response
     if (isOnboarding && currentStep === 'send-message') {
       handleOnboardingSend()
       return
     }
 
-    // Can send if has text OR has images
-    if ((!content.trim() && (!images || images.length === 0)) || isGenerating) return
+    const isVoiceChat = realtimeConfig?.mode === 'voice-chat'
+    if (!content.trim() && (!images || images.length === 0)) return
+    // voice-chat: never block the user's speech. Other modes keep the guard.
+    if (!isVoiceChat && isGenerating) return
 
     // Pass both AI Browser and thinking state to sendMessage
     await sendMessage(content, images, aiBrowserEnabled, thinkingEnabled)
@@ -441,20 +529,33 @@ export function ChatView({ isCompact = false }: ChatViewProps) {
         <TurnRail turns={userTurns} onNavigate={handleNavigateTurn} />
       </div>
 
-      {/* Input area */}
-      <InputArea
-        onSend={handleSend}
-        onInject={(content) => {
-          const conversationId = getCurrentConversationId()
-          if (conversationId) injectMessage(conversationId, content)
-        }}
-        onStop={handleStop}
-        isGenerating={isGenerating}
-        placeholder={isCompact ? t('Continue conversation...') : (currentSpace?.isTemp ? t('Say something to Halo...') : t('Continue conversation...'))}
-        isCompact={isCompact}
-        slashCommands={slashCommands}
-        mentionArtifacts={mentionArtifacts}
-      />
+      {/* Input area + Realtime overlay.
+          The wrapper is relative so the overlay can float above the input
+          (bottom-full positions it relative to this container). */}
+      <div className="relative">
+        <RealtimeOverlay
+          state={realtime.conversationState}
+          micAmplitude={realtime.micAmplitude}
+          speakerAmplitude={realtime.speakerAmplitude}
+          streamingText={realtime.streamingText}
+        />
+        <InputArea
+          onSend={handleSend}
+          onInject={(content) => {
+            const conversationId = getCurrentConversationId()
+            if (conversationId) injectMessage(conversationId, content)
+          }}
+          onStop={handleStop}
+          isGenerating={isGenerating}
+          placeholder={isCompact ? t('Continue conversation...') : (currentSpace?.isTemp ? t('Say something to Halo...') : t('Continue conversation...'))}
+          isCompact={isCompact}
+          slashCommands={slashCommands}
+          mentionArtifacts={mentionArtifacts}
+          realtimeState={realtimeConfig && resolvedRealtimeSource ? realtime.conversationState : null}
+          onRealtimeStart={() => { void realtime.start() }}
+          onRealtimeStop={() => { realtime.stop() }}
+        />
+      </div>
     </div>
   )
 }

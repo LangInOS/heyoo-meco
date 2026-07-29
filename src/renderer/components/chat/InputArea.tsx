@@ -35,6 +35,8 @@ import type { SlashCommandItem } from '../../types/slash-command'
 import { isCapacitor, isRemoteClient } from '../../api/transport'
 import { useVoiceSTT } from '../../features/voice'
 import type { STTState } from '../../features/voice'
+import { RealtimeButton } from '../../features/realtime-voice'
+import type { RealtimeConversationState } from '../../features/realtime-voice'
 
 // ── @ mention helpers ──
 
@@ -90,6 +92,12 @@ interface InputAreaProps {
   slashCommands?: SlashCommandItem[]
   /** Artifacts available for @ mention suggestions */
   mentionArtifacts?: Artifact[]
+  /** Realtime conversation state. null = feature not configured. */
+  realtimeState?: RealtimeConversationState | null
+  /** Start the realtime conversation. Required when realtimeState is non-null. */
+  onRealtimeStart?: () => void
+  /** Stop the realtime conversation. Required when realtimeState is non-null. */
+  onRealtimeStop?: () => void
 }
 
 // Image constraints
@@ -102,7 +110,7 @@ interface ImageError {
   message: string
 }
 
-export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder, isCompact = false, slashCommands = [], mentionArtifacts = [] }: InputAreaProps) {
+export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder, isCompact = false, slashCommands = [], mentionArtifacts = [], realtimeState = null, onRealtimeStart, onRealtimeStop }: InputAreaProps) {
   const { t } = useTranslation()
   const sendKeyMode = useAppStore(state => state.config?.chat?.sendKeyMode ?? 'enter')
 
@@ -825,6 +833,7 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
             maxImages={MAX_IMAGES}
             attachMenuRef={attachMenuRef}
             canSend={canSend}
+            hasContent={content.trim().length > 0 || images.length > 0}
             onSend={handleSend}
             onStop={onStop}
             sendKeyMode={sendKeyMode}
@@ -833,6 +842,9 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
             micError={micError}
             micEnabled={micEnabled}
             onMicClick={handleMicClick}
+            realtimeState={realtimeState}
+            onRealtimeStart={onRealtimeStart}
+            onRealtimeStop={onRealtimeStop}
           />
         </div>
       </div>
@@ -861,6 +873,7 @@ interface InputToolbarProps {
   maxImages: number
   attachMenuRef: React.RefObject<HTMLDivElement | null>
   canSend: boolean
+  hasContent: boolean
   onSend: () => void
   onStop?: () => void
   sendKeyMode: 'enter' | 'ctrl-enter'
@@ -869,6 +882,10 @@ interface InputToolbarProps {
   micError: string | null
   micEnabled: boolean
   onMicClick: () => void
+  /** Realtime conversation state. null = feature not configured. */
+  realtimeState: RealtimeConversationState | null
+  onRealtimeStart?: () => void
+  onRealtimeStop?: () => void
 }
 
 function InputToolbar({
@@ -886,6 +903,7 @@ function InputToolbar({
   maxImages,
   attachMenuRef,
   canSend,
+  hasContent,
   onSend,
   onStop,
   sendKeyMode,
@@ -893,7 +911,10 @@ function InputToolbar({
   micState,
   micError,
   micEnabled,
-  onMicClick
+  onMicClick,
+  realtimeState,
+  onRealtimeStart,
+  onRealtimeStop
 }: InputToolbarProps) {
   const { t } = useTranslation()
   return (
@@ -1052,31 +1073,59 @@ function InputToolbar({
             }
           </button>
         )}
-        {!isOnboarding && (
-          <button
-            data-onboarding="send-button"
-            onClick={onSend}
-            disabled={!canSend}
-            className={`
-              w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200
-              ${canSend
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-sm shadow-primary/30'
-                : 'bg-muted/40 text-muted-foreground/50 cursor-not-allowed'
+        {!isOnboarding && (() => {
+          // Three-way button selection:
+          //   1. Realtime active -> End button (hide Send regardless of input content)
+          //   2. Realtime configured + input empty + not generating -> Speak button (replaces Send)
+          //   3. Otherwise -> normal Send button
+          const realtimeActive = realtimeState !== null
+            && realtimeState !== 'idle'
+            && realtimeState !== 'disconnected'
+            && realtimeState !== 'error'
+          const showSpeakButton = !!realtimeState && !realtimeActive
+            && !hasContent && !isGenerating
+
+          if (realtimeActive || showSpeakButton) {
+            return (
+              <RealtimeButton
+                state={realtimeState}
+                onClick={() => {
+                  if (realtimeActive) {
+                    onRealtimeStop?.()
+                  } else {
+                    onRealtimeStart?.()
+                  }
+                }}
+              />
+            )
+          }
+
+          return (
+            <button
+              data-onboarding="send-button"
+              onClick={onSend}
+              disabled={!canSend}
+              className={`
+                w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200
+                ${canSend
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-sm shadow-primary/30'
+                  : 'bg-muted/40 text-muted-foreground/50 cursor-not-allowed'
+                }
+              `}
+              title={
+                isGenerating
+                  ? t('Add to queue')
+                  : sendKeyMode === 'ctrl-enter'
+                    ? (thinkingEnabled ? t('Send (Deep Thinking) — Ctrl+Enter') : t('Send — Ctrl+Enter'))
+                    : (thinkingEnabled ? t('Send (Deep Thinking) — Enter') : t('Send — Enter'))
               }
-            `}
-            title={
-              isGenerating
-                ? t('Add to queue')
-                : sendKeyMode === 'ctrl-enter'
-                  ? (thinkingEnabled ? t('Send (Deep Thinking) — Ctrl+Enter') : t('Send — Ctrl+Enter'))
-                  : (thinkingEnabled ? t('Send (Deep Thinking) — Enter') : t('Send — Enter'))
-            }
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-            </svg>
-          </button>
-        )}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+              </svg>
+            </button>
+          )
+        })()}
       </div>
     </div>
   )
