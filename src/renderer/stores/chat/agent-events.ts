@@ -4,8 +4,10 @@
 import type { ChatSlice } from './internal'
 import { api, createEmptySessionState } from './internal'
 import type { AgentEventBase, Conversation, ConversationMeta, Thought, ToolCall } from './internal'
-import { isAppChatKey } from '../../../shared/apps/im-keys'
+import { isAppChatKey, isImSessionKey } from '../../../shared/apps/im-keys'
 import { emitTTSAutoPlay } from '../../features/tts/auto-play'
+import { notifyReplyComplete } from '../../features/notification'
+import { useAppStore } from '../app.store'
 
 /**
  * Virtual conversation ids never represent a real user conversation and must
@@ -122,9 +124,61 @@ export const createAgentEventsSlice: ChatSlice<'handleAgentMessage' | 'handleAge
     // Check if user is currently viewing this conversation
     const state = get()
     const currentSpaceState = state.currentSpaceId ? state.spaceStates.get(state.currentSpaceId) : null
+    // 用户必须当前在 space 页面且选中该会话，才算"正在查看"。
+    // 回到首页/设置等页面时，即使 store 里 currentConversationId 仍指向该会话，
+    // 用户实际已不在查看，应触发 toast/通知。
+    const appView = useAppStore.getState().view
     const isUserViewingThisConversation =
+      appView === 'space' &&
       state.currentSpaceId === spaceId &&
       currentSpaceState?.currentConversationId === conversationId
+
+    // 数字人聊天（native app-chat）使用虚拟 conversationId，不设置 currentConversationId，
+    // 因此 isUserViewingThisConversation 对它恒为 false。这里改用窗口实际可见性判断：
+    // 窗口可见且聚焦时视为"正在查看"（只响提示音）；窗口最小化/失焦时触发完整系统通知
+    // （Dock badge、任务栏闪烁、Web Notification），符合"微信回复"体验。
+    // IM 会话（5段 key）是自动化消息，不触发任何通知。
+    const isNativeAppChat = isAppChatKey(conversationId) && !isImSessionKey(conversationId)
+    const isNativeAppChatVisible = isNativeAppChat &&
+      typeof document !== 'undefined' &&
+      document.visibilityState === 'visible' &&
+      document.hasFocus()
+
+    // ── 回复完成提示音与通知 ──
+    // 普通会话与数字人聊天（native app-chat）触发；IM 会话不触发，避免打扰。
+    if (!isImSessionKey(conversationId)) {
+      try {
+        const appConfig = useAppStore.getState().config
+        const notifyEnabled = appConfig?.notifications?.taskComplete ?? false
+        if (notifyEnabled) {
+          if (isUserViewingThisConversation) {
+            // 普通会话：用户正在查看，只响提示音
+            notifyReplyComplete({
+              title: '',
+              isUserViewing: true,
+              enabled: true,
+            })
+          } else if (isNativeAppChat) {
+            // 数字人聊天：根据窗口可见性决定是否触发系统通知
+            notifyReplyComplete({
+              title: '',
+              isUserViewing: isNativeAppChatVisible,
+              enabled: true,
+            })
+          } else {
+            // 普通会话 + 没看该会话（如在首页、或看别的会话）：
+            // 只响提示音，带标题的 toast 由第二处统一弹（避免重复 toast）
+            notifyReplyComplete({
+              title: '',
+              isUserViewing: true,  // 借用 isUserViewing=true 跳过 toast，只响提示音
+              enabled: true,
+            })
+          }
+        }
+      } catch {
+        // 通知失败不影响主功能
+      }
+    }
 
     // Track unseen completion if user is not viewing this conversation.
     // Skip virtual sessions (digital-human chat, IM, automation runs): they are
@@ -147,6 +201,38 @@ export const createAgentEventsSlice: ChatSlice<'handleAgentMessage' | 'handleAge
           const meta = ss.conversations.find(c => c.id === conversationId)
           if (meta) { title = meta.title; break }
         }
+      }
+
+      // ── 回复完成通知（in-app toast 带回复预览） ──
+      // 提示音已在上方第一处统一触发，此处只负责：
+      // 1. 弹带标题+回复预览的 in-app toast
+      // 2. 追加到 unseenCompletions（sidebar 未读计数）
+      // 注意：playSound=false 避免重复响提示音，enabled 仍为 true 以便弹 toast
+      try {
+        const appConfig = useAppStore.getState().config
+        const notifyEnabled = appConfig?.notifications?.taskComplete ?? false
+        if (notifyEnabled) {
+          // 从 session.streamingContent 提取回复预览（此时还未被清空）
+          const session = get().sessions.get(conversationId)
+          const rawContent = session?.streamingContent || ''
+          // 去除 markdown 标记，截断到 80 字
+          const preview = rawContent
+            .replace(/[#*`_~\[\]()!>|-]/g, '')
+            .replace(/\n+/g, ' ')
+            .trim()
+            .slice(0, 80)
+
+          notifyReplyComplete({
+            title,
+            preview,
+            conversationId,
+            isUserViewing: false,
+            enabled: true,
+            playSound: false,  // 提示音已在第一处响过，此处只补 toast
+          })
+        }
+      } catch {
+        // 通知失败不影响主功能
       }
 
       set((s) => {

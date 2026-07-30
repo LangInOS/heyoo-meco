@@ -16,6 +16,8 @@ import { Switch } from '../ui/Switch'
 import { useConfirmDialog } from '../../hooks/useConfirmDialog'
 import { useSecurityPolicy } from '../../hooks/useSecurityPolicy'
 import { BrowserAllowlistCard } from './BrowserAllowlistCard'
+import { isRemoteClient } from '../../api/transport'
+import { requestWebNotificationPermission } from '../../features/notification'
 
 interface SystemSectionProps {
   config: HaloConfig | null
@@ -94,6 +96,14 @@ export function SystemSection({ config, setConfig }: SystemSectionProps) {
   const handleTaskNotifyChange = async (enabled: boolean) => {
     setTaskCompleteNotify(enabled)
     try {
+      // Web 端开启通知时请求浏览器通知权限（需用户手势上下文，按钮点击符合）
+      if (enabled && isRemoteClient()) {
+        const granted = await requestWebNotificationPermission()
+        if (!granted) {
+          // 权限被拒：提示音仍有效，但系统通知无法弹出
+          console.warn('[SystemSection] Web notification permission denied')
+        }
+      }
       const updatedConfig = {
         ...config,
         notifications: { ...config?.notifications, taskComplete: enabled }

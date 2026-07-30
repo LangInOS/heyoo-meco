@@ -407,6 +407,9 @@ export interface HaloAPI {
   testNotificationChannel: (channelType: string) => Promise<IpcResponse>
   clearNotificationChannelCache: () => Promise<IpcResponse>
 
+  // Notification Badge (macOS Dock / Windows taskbar)
+  clearNotificationBadge: () => Promise<IpcResponse>
+
   // WeCom Bot (企业微信智能机器人) — legacy compat
   getWecomBotStatus: () => Promise<IpcResponse>
   reconnectWecomBot: () => Promise<IpcResponse>
@@ -608,6 +611,9 @@ const api: HaloAPI = {
 
   // Voice
   voiceGetProxyPort: () => ipcRenderer.invoke('voice:get-proxy-port'),
+
+  // Notification Badge (macOS Dock / Windows taskbar)
+  clearNotificationBadge: () => ipcRenderer.invoke('notification:clear-badge'),
 
   // CLI Config
   ...bindRpc(cliConfigRpc),

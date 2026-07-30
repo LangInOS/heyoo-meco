@@ -16,10 +16,33 @@
  * - Automation app completion with output.notify.system enabled
  */
 
-import { Notification } from 'electron'
+import { Notification, app, ipcMain } from 'electron'
 import { getConfig } from '../foundation/config.service'
 import { getMainWindow, sendToRenderer } from '../foundation/window.service'
 import { broadcastToAll } from '../http/websocket'
+
+// ── Badge / FlashFrame IPC ────────────────────────────────────────────
+//
+// renderer 通过 window.halo.clearNotificationBadge() 调用此 handler，
+// 在窗口聚焦时清除 macOS Dock 角标和停止 Windows 任务栏闪烁。
+
+let badgeIpcRegistered = false
+function registerBadgeIpc(): void {
+  if (badgeIpcRegistered) return
+  badgeIpcRegistered = true
+  ipcMain.handle('notification:clear-badge', () => {
+    try {
+      if (process.platform === 'darwin') {
+        app.dock?.setBadge('')
+      }
+      const mw = getMainWindow()
+      if (mw && !mw.isDestroyed()) {
+        mw.flashFrame(false)
+      }
+    } catch {}
+    return { success: true }
+  })
+}
 
 // ── Helpers ────────────────────────────────────────────
 
@@ -70,6 +93,9 @@ function sendInAppToast(
  * 3. The Electron Notification API is supported
  */
 export function notifyTaskComplete(conversationTitle: string): void {
+  // 确保 badge 清除 IPC 已注册
+  registerBadgeIpc()
+
   // Skip if notifications aren't supported
   if (!Notification.isSupported()) return
 
@@ -101,6 +127,16 @@ export function notifyTaskComplete(conversationTitle: string): void {
     })
 
     notification.show()
+
+    // ── 视觉增强：Dock badge（macOS）+ 任务栏闪烁（Windows） ──
+    // macOS：Dock 角标显示"•"提示有未读；窗口聚焦时由 renderer 调用 clearNotificationBadge 清除
+    if (process.platform === 'darwin') {
+      try { app.dock?.setBadge('•') } catch {}
+    }
+    // Windows：任务栏图标闪烁直到窗口聚焦
+    if (mainWindow && !mainWindow.isDestroyed() && process.platform === 'win32') {
+      try { mainWindow.flashFrame(true) } catch {}
+    }
   } catch (error) {
     console.error('[Notification] Failed to show notification:', error)
   }

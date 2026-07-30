@@ -8,6 +8,7 @@ import { useChatStore } from './stores/chat.store'
 import { useOnboardingStore } from './stores/onboarding.store'
 import { initAIBrowserStoreListeners } from './stores/ai-browser.store'
 import { initPerfStoreListeners } from './stores/perf.store'
+import { setupNotificationBadgeClear } from './features/notification'
 import { useSpaceStore } from './stores/space.store'
 import { useSearchStore } from './stores/search.store'
 import { useAppsStore } from './stores/apps.store'
@@ -131,6 +132,11 @@ export default function App() {
       if (r?.success && typeof r.data === 'number') apply(r.data)
     })
     return window.halo?.onDisplayScale?.((s) => apply(s))
+  }, [])
+
+  // 回复完成通知：窗口聚焦时自动清除 Dock badge / 停止任务栏闪烁（Electron 端）
+  useEffect(() => {
+    setupNotificationBadgeClear()
   }, [])
 
   // Initialize app on mount - wait for backend extended services to be ready

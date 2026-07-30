@@ -81,3 +81,63 @@ export function playMicFeedback(type: MicFeedbackType): void {
   playMicBeep(type)
   playMicHaptic(type)
 }
+
+// ── 消息到达提示音（区别于语音输入反馈音） ──────────────────────────────
+//
+// 大模型回复完成时播放，三声上升琶音（C5 → E5 → G5），比 mic beep 更柔和悦耳，
+// 类似即时通讯应用的"新消息"提示音。
+//
+// 设计与 playMicBeep 的区别：
+// - 三音琶音（而非双音滑动），听感更像"通知"而非"操作反馈"
+// - 使用三角波（triangle）而非正弦波，音色更温暖
+// - 音量更低（0.08 峰值），避免在专注工作时造成惊吓
+// - 总时长约 0.3s，足够引起注意但不冗长
+
+/**
+ * 播放消息到达提示音（三声上升琶音）
+ */
+export function playCompleteChime(): void {
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+
+    // C5=523.25, E5=659.25, G5=783.99 — C 大调主和弦琶音，明亮正向
+    const notes = [
+      { freq: 523.25, start: 0.00, dur: 0.10 },
+      { freq: 659.25, start: 0.08, dur: 0.10 },
+      { freq: 783.99, start: 0.16, dur: 0.14 },
+    ]
+
+    const now = ctx.currentTime
+    let lastEnd = 0
+
+    notes.forEach(({ freq, start, dur }) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'triangle'  // 三角波，比 sine 更温暖
+      osc.frequency.value = freq
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      const t = now + start
+      // 简单 ADSR：快速起音 + 指数衰减
+      gain.gain.setValueAtTime(0.001, t)
+      gain.gain.exponentialRampToValueAtTime(0.08, t + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur)
+
+      osc.start(t)
+      osc.stop(t + dur)
+      lastEnd = Math.max(lastEnd, t + dur)
+    })
+
+    // 在最后一个音结束后释放 AudioContext
+    setTimeout(() => {
+      ctx.close().catch(() => {})
+    }, Math.max(0, (lastEnd - now) * 1000 + 100))
+  } catch {
+    // 提示音失败不影响主功能，静默处理
+  }
+}
