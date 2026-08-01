@@ -7,12 +7,14 @@ import { WebSocket, WebSocketServer } from 'ws'
 import { IncomingMessage } from 'http'
 import { Duplex } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
-import { validateToken } from './auth/index'
+import { authenticateWebSocket } from './auth/index'
 
 interface WebSocketClient {
   id: string
   ws: WebSocket
   authenticated: boolean
+  /** Socket address captured at upgrade time — feeds the auth lockout counters */
+  ip: string
   subscriptions: Set<string> // conversationIds this client is subscribed to
 }
 
@@ -52,6 +54,7 @@ export function initWebSocket(): WebSocketServer {
       id: clientId,
       ws,
       authenticated: false,
+      ip: req.socket.remoteAddress || 'unknown',
       subscriptions: new Set()
     }
 
@@ -71,6 +74,7 @@ export function initWebSocket(): WebSocketServer {
     // Handle disconnection
     ws.on('close', () => {
       clients.delete(clientId)
+      releaseTerminalAttachments(clientId)
       console.log(`[WS] Client disconnected: ${clientId}`)
     })
 
@@ -78,6 +82,7 @@ export function initWebSocket(): WebSocketServer {
     ws.on('error', (error) => {
       console.error(`[WS] Client error ${clientId}:`, error)
       clients.delete(clientId)
+      releaseTerminalAttachments(clientId)
     })
   })
 
@@ -101,6 +106,16 @@ export function handleWsUpgrade(
 }
 
 /**
+ * A vanished client must stop gating terminal flow control, or its unacked
+ * backlog would pause a pty forever (see ai-terminal/flow-control.ts).
+ */
+function releaseTerminalAttachments(clientId: string): void {
+  void import('../services/ai-terminal').then(({ terminalViewerDisconnected }) => {
+    terminalViewerDisconnected(clientId)
+  }).catch(() => { /* terminal module unavailable on this platform */ })
+}
+
+/**
  * Handle incoming message from client
  */
 function handleClientMessage(
@@ -109,8 +124,9 @@ function handleClientMessage(
 ): void {
   switch (message.type) {
     case 'auth':
-      // Validate the token before marking as authenticated
-      if (message.payload?.token && validateToken(message.payload.token)) {
+      // Validate the token before marking as authenticated. Shares the HTTP
+      // login's lockout counters — see authenticateWebSocket.
+      if (message.payload?.token && authenticateWebSocket(message.payload.token, client.ip)) {
         client.authenticated = true
         sendToClient(client, { type: 'auth:success' })
         console.log(`[WS] Client ${client.id} authenticated successfully`)
@@ -144,6 +160,72 @@ function handleClientMessage(
     case 'ping':
       sendToClient(client, { type: 'pong' })
       break
+
+    case 'terminal-input':
+      // Low-latency remote keyboard → pty. Authenticated clients only.
+      if (!client.authenticated) {
+        sendToClient(client, { type: 'error', error: 'Not authenticated' })
+        break
+      }
+      if (message.payload?.sessionId && typeof message.payload.data === 'string') {
+        void import('../services/ai-terminal').then(({ terminalInput }) => {
+          terminalInput(message.payload.sessionId, message.payload.data)
+        })
+      }
+      break
+
+    case 'terminal-resize': {
+      if (!client.authenticated) {
+        sendToClient(client, { type: 'error', error: 'Not authenticated' })
+        break
+      }
+      const cols = Number(message.payload?.cols)
+      const rows = Number(message.payload?.rows)
+      if (
+        typeof message.payload?.sessionId === 'string' &&
+        Number.isInteger(cols) && Number.isInteger(rows) && cols > 0 && rows > 0
+      ) {
+        void import('../services/ai-terminal').then(({ terminalResize }) => {
+          terminalResize(message.payload.sessionId, cols, rows)
+        })
+      }
+      break
+    }
+
+    // Remote viewer flow control: an attached viewer's rendered-char acks gate
+    // the pty's output rate (see ai-terminal/flow-control.ts). The client id is
+    // the viewer id, so a dropped connection detaches everything it gated.
+    case 'terminal-attach':
+      if (!client.authenticated) {
+        sendToClient(client, { type: 'error', error: 'Not authenticated' })
+        break
+      }
+      if (typeof message.payload?.sessionId === 'string') {
+        void import('../services/ai-terminal').then(({ terminalViewerAttach }) => {
+          terminalViewerAttach(message.payload.sessionId, client.id)
+        })
+      }
+      break
+
+    case 'terminal-detach':
+      if (!client.authenticated) break
+      if (typeof message.payload?.sessionId === 'string') {
+        void import('../services/ai-terminal').then(({ terminalViewerDetach }) => {
+          terminalViewerDetach(message.payload.sessionId, client.id)
+        })
+      }
+      break
+
+    case 'terminal-ack': {
+      if (!client.authenticated) break
+      const charCount = Number(message.payload?.charCount)
+      if (typeof message.payload?.sessionId === 'string' && Number.isFinite(charCount)) {
+        void import('../services/ai-terminal').then(({ terminalViewerAck }) => {
+          terminalViewerAck(message.payload.sessionId, client.id, charCount)
+        })
+      }
+      break
+    }
 
     default:
       console.log(`[WS] Unknown message type: ${message.type}`)
