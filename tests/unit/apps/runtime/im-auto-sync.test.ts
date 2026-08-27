@@ -147,7 +147,7 @@ describe('autoSyncRunResult', () => {
       const [, body] = instance.pushToChat.mock.calls[0]
       expect(body.length).toBeLessThanOrEqual(5000)
       expect(body.startsWith('a'.repeat(4000))).toBe(true)
-      expect(body.endsWith('(truncated, see Halo for full content)')).toBe(true)
+      expect(body.endsWith('(truncated, see Meco for full content)')).toBe(true)
     })
   })
 

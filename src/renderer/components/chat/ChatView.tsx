@@ -552,7 +552,7 @@ function EmptyState({
 
         {/* Title - concise and warm */}
         <h2 className="mt-6 text-xl font-medium">
-          Halo
+          Meco
         </h2>
         <p className="mt-2 text-muted-foreground">
           {t('Not just chat, help you get things done')}

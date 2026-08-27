@@ -316,7 +316,7 @@ export function HomePageNew() {
             <div className="w-[22px] h-[22px] rounded-full border-2 border-primary/60 flex items-center justify-center">
               <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary/30 to-transparent" />
             </div>
-            <span className="text-sm font-medium">Halo</span>
+            <span className="text-sm font-medium">Meco</span>
           </>
         }
         right={

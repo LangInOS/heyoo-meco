@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Halo</string>
+        <string>Meco</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,8 +48,8 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Halo needs camera access to scan QR codes for adding servers</string>
+	<string>Meco needs camera access to scan QR codes for adding servers</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Halo needs microphone access for voice input</string>
+	<string>Meco needs microphone access for voice input</string>
 </dict>
 </plist>

@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.halo.mobile',
-  appName: 'Halo',
+  appId: 'com.meco.mobile',
+  appName: 'Meco',
   // Vite mobile build output directory
   webDir: 'dist-mobile',
   // Server configuration: load from local assets (not a remote URL)

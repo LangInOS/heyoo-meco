@@ -263,7 +263,7 @@ function registerHaloTemp(map: Map<string, SpaceIndexEntry>): void {
   const now = new Date().toISOString()
   map.set('halo-temp', {
     path: tempPath,
-    name: 'Halo',
+    name: 'Meco',
     icon: 'sparkles',
     createdAt: now,
     updatedAt: now,
@@ -885,7 +885,7 @@ export function saveOnboardingConversation(
 
     const conversation = {
       id: conversationId,
-      title: 'Welcome to Halo',
+      title: 'Welcome to Meco',
       createdAt: now,
       updatedAt: now,
       messages: [

@@ -684,7 +684,7 @@ class WecomBotInstance implements ImChannelInstance {
     try {
       notifyAppEvent(
         'WeCom bot on standby',
-        'This bot is now active on another device, so Halo put this connection on standby to avoid a conflict. Open Settings → Message Channels and choose "Use on this device" to take over here.',
+        'This bot is now active on another device, so Meco put this connection on standby to avoid a conflict. Open Settings → Message Channels and choose "Use on this device" to take over here.',
       )
     } catch (err) {
       logEvent(this.instanceId, 'warn', 'standby_notify_failed', {

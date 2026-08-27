@@ -38,7 +38,7 @@ describe('Space Service', () => {
       const haloSpace = getHaloSpace()
 
       expect(haloSpace.id).toBe('halo-temp')
-      expect(haloSpace.name).toBe('Halo')
+      expect(haloSpace.name).toBe('Meco')
       expect(haloSpace.isTemp).toBe(true)
       expect(haloSpace.icon).toBe('sparkles')
     })

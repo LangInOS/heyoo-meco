@@ -1,12 +1,10 @@
 {
-  "name": "halo",
-  "version": "2.1.14-dev.0",
-  "version": "2.1.10-rc.31",
-  "version": "2.1.14-dev.0",
+  "name": "heyoo-meco",
+  "version": "2.1.14-dev.1",
   "description": "AI that gets things done",
   "type": "module",
   "main": "./out/main/index.mjs",
-  "author": "Halo Team",
+  "author": "Meco Team",
   "license": "MIT",
   "scripts": {
     "rebrand": "node scripts/rebrand.mjs",

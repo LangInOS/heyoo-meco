@@ -75,7 +75,7 @@ function _computePulseItems(state: ChatState): PulseItem[] {
   const addedIds = new Set<string>()
 
   const getSpaceName = (spaceId: string): string => {
-    return spaceId === 'halo-temp' ? 'Halo' : spaceId
+    return spaceId === 'halo-temp' ? 'Meco' : spaceId
   }
 
   // 1. Active sessions

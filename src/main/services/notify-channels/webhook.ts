@@ -70,8 +70,8 @@ export async function sendWebhook(
 export async function testWebhook(config: WebhookChannelConfig): Promise<{ success: boolean; error?: string }> {
   try {
     const testPayload: NotificationPayload = {
-      title: 'Halo Test',
-      body: 'This is a test notification from Halo.',
+      title: 'Meco Test',
+      body: 'This is a test notification from Meco.',
       timestamp: Date.now(),
     }
     const result = await sendWebhook(config, testPayload)

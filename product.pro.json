@@ -1,7 +1,8 @@
 {
   "$schema": "./product.schema.json",
-  "name": "Halo",
-  "dataFolderName": "halo",
+  "name": "Meco",
+  "appId": "com.meco.app",
+  "dataFolderName": "meco",
   "version": "1.0.0",
   "updateConfig": {
     "provider": "github",

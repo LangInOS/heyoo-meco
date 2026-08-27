@@ -12,8 +12,8 @@ import { api } from '../../api'
 const GITHUB_URL = 'https://github.com/openkursar/hello-halo'
 
 /** Share text templates */
-const SHARE_TEXT_EN = 'Halo - An open-source AI assistant with browser automation. Create AI digital humans to automate tasks.'
-const SHARE_TEXT_ZH = 'Halo - 开源 AI 助手，内置浏览器自动化，可创建 AI 数字人自动完成任务。'
+const SHARE_TEXT_EN = 'Meco - An open-source AI assistant with browser automation. Create AI digital humans to automate tasks.'
+const SHARE_TEXT_ZH = 'Meco - 开源 AI 助手，内置浏览器自动化，可创建 AI 数字人自动完成任务。'
 
 /** Platform types for share modal */
 type SharePlatform = 'wechat' | 'xiaohongshu' | 'bilibili' | null

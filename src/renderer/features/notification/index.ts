@@ -88,7 +88,7 @@ function notifyMobileForeground(title: string, preview?: string): void {
   //    后台时由 App.tsx 的 LocalNotifications 处理，这里不重复
   try {
     useNotificationStore.getState().show({
-      title: 'Halo',
+      title: 'Meco',
       body: preview || title,
       variant: 'default',
       duration: 6000,
@@ -116,7 +116,7 @@ function notifyElectronEnhanced(title: string, preview?: string): void {
   // 后续做"来源区分"时，标题区将换成"空间名/数字人名"。
   try {
     useNotificationStore.getState().show({
-      title: 'Halo',
+      title: 'Meco',
       body: preview || title,   // 优先用回复预览，无预览时回退到会话标题
       variant: 'default',
       duration: 6000,

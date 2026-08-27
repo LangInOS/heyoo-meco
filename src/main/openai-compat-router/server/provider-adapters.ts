@@ -103,7 +103,7 @@ const openRouterAdapter: ProviderAdapter = {
   getExtraHeaders(): Record<string, string> {
     return {
       'HTTP-Referer': 'https://hello-halo.cc/',
-      'X-Title': 'Halo'
+      'X-Title': 'Meco'
     }
   }
 }
@@ -133,7 +133,7 @@ const requestyAdapter: ProviderAdapter = {
   getExtraHeaders(): Record<string, string> {
     return {
       'HTTP-Referer': 'https://hello-halo.cc/',
-      'X-Title': 'Halo'
+      'X-Title': 'Meco'
     }
   }
 }

@@ -8,7 +8,7 @@
 // ========================================
 // Initialize electron-log before any other code to capture all logs
 // This replaces console.log/warn/error globally with electron-log
-// Logs are written to: ~/Library/Logs/Halo/ (macOS), %USERPROFILE%\AppData\Roaming\Halo\logs (Windows)
+// Logs are written to: ~/Library/Logs/Meco/ (macOS), %USERPROFILE%\AppData\Roaming\Meco\logs (Windows)
 import log from 'electron-log/main.js'
 
 // Initialize for renderer process support (IPC transport)
@@ -524,7 +524,7 @@ app.whenReady().then(async () => {
   checkAndArmSessionIntegrity()
 
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.halo.app')
+  electronApp.setAppUserModelId('com.meco.app')
 
   // Register custom protocols (halo-file://, etc.)
   registerProtocols()

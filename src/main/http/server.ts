@@ -538,7 +538,7 @@ function getRemoteLoginPage(): string {
       } catch (e) {}
     })();
   </script>
-  <title>Halo Remote Access</title>
+  <title>Meco Remote Access</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -605,7 +605,7 @@ function getRemoteLoginPage(): string {
 <body>
   <div class="container">
     <div class="logo">◯</div>
-    <h1>Halo Remote Access</h1>
+    <h1>Meco Remote Access</h1>
 
     <p>Enter access code to connect to your desktop</p>
     <div class="input-group">
