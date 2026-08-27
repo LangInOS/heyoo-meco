@@ -6,8 +6,8 @@
   "version": "1.0.0",
   "updateConfig": {
     "provider": "github",
-    "owner": "openkursar",
-    "repo": "hello-halo"
+    "owner": "LangInOS",
+    "repo": "heyoo-meco"
   },
   "authProviders": [
     {

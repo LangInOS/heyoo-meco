@@ -9,7 +9,7 @@ import { useTranslation } from '../../i18n'
 import { api } from '../../api'
 
 /** GitHub repository URL */
-const GITHUB_URL = 'https://github.com/openkursar/hello-halo'
+const GITHUB_URL = 'https://github.com/LangInOS/heyoo-meco'
 
 /** Share text templates */
 const SHARE_TEXT_EN = 'Meco - An open-source AI assistant with browser automation. Create AI digital humans to automate tasks.'

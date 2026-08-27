@@ -120,7 +120,7 @@ export function SettingsPage() {
               )}
 
               {/* Recommend Section */}
-              <RecommendSection />
+              {/* <RecommendSection /> */}
 
               {/* About Section */}
               <AboutSection />

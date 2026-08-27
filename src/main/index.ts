@@ -370,7 +370,7 @@ function createAppMenu(): void {
         {
           label: 'Learn More',
           click: async () => {
-            await open('https://github.com/openkursar/hello-halo')
+            await open('https://github.com/LangInOS/heyoo-meco')
           }
         }
       ]

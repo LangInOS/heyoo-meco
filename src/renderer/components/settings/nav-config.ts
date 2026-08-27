@@ -49,11 +49,11 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     icon: Globe,
     desktopOnly: true
   },
-  {
-    id: 'recommend',
-    labelKey: 'Recommend Halo',
-    icon: Heart
-  },
+  // {
+  //   id: 'recommend',
+  //   labelKey: 'Recommend Halo',
+  //   icon: Heart
+  // },
   {
     id: 'about',
     labelKey: 'About',
