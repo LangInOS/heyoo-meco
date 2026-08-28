@@ -17,6 +17,7 @@ import { ChevronDown, Search, Check, Star } from 'lucide-react'
 import type { BuiltinProvider, ProviderId } from '../../types'
 import { getApiKeyProviders, getBuiltinProvider } from '../../types'
 import { useTranslation } from '../../i18n'
+import { ProviderCapabilityBadge } from './ProviderCapabilityBadge'
 
 interface ProviderCatalogDropdownProps {
   /** Selected provider id, or '' for no selection (shows placeholder). */
@@ -90,6 +91,7 @@ export function ProviderCatalogDropdown({ value, onChange, placeholder }: Provid
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{t(provider.name)}</span>
+          <ProviderCapabilityBadge providerId={provider.id} />
           {showRecommended && provider.recommended && (
             <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
           )}
