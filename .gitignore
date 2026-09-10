@@ -25,6 +25,7 @@ resources/git-bash/
 
 # E2E test results
 tests/e2e/results/
+tests/e2e/fixtures/.e2e-seed-tmp/
 
 app.log
 # Local docs
@@ -75,12 +76,6 @@ RELEASE_NOTES.md
 # Halo Agent SDK (managed in separate private repo)
 src/sdk/
 /temp/
-.agents/
-AGENTS.md
-.reasonix
-.qoder
-.codegraph
-.zcode
 # Stray KB wiki artifacts (real wikis live under ~/.halo, never in-repo)
 /wiki/
 # Personal marketing/intro drafts (not product code)
@@ -93,3 +88,10 @@ AGENTS.md
 AGENTS.md
 .reasonix
 .qoder
+
+# Meco-specific local files
+meco-website
+resources/logo-preview.png
+resources/meco-logo.png
+.codegraph
+.zcode

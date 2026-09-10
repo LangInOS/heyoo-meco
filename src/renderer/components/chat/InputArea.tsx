@@ -176,7 +176,6 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
     }
     // 'transcribing' is a no-op — the background transcription must finish.
   }, [micState, startMic, stopMic])
-
   // Consume a composer prefill requested for this space (e.g. a skill's slash
   // command from the store's "Use" action): fill the box once, focus, cursor to
   // end. Cleared immediately so it never re-fires or leaks into another space.

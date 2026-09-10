@@ -18,7 +18,6 @@ import { useToolsetsStore, type ToolsetsChangedEvent, type ToolsetsRequestedEven
 import { useTlonStore } from './stores/tlon.store'
 import { SplashPage } from './pages/SplashPage'
 import { SetupPage } from './pages/SetupPage'
-import { GuidePage } from './pages/GuidePage'
 import { GitBashSetupPage } from './pages/GitBashSetupPage'
 import { ServerConnectPage } from './pages/ServerConnectPage'
 import type { ServerAddedInfo } from './pages/ServerConnectPage'
@@ -162,16 +161,7 @@ export default function App() {
       if (savedUrl && hasToken) {
         // Has saved connection — try to initialize immediately
         console.log('[App] Capacitor: saved connection found, initializing...')
-
-        // Timeout fallback: if server is unreachable, don't stay on splash forever
-        const capacitorTimeout = setTimeout(() => {
-          if (useAppStore.getState().view === 'splash') {
-            console.warn('[App] Capacitor: init timeout after 5s, showing server list')
-            setView('serverList')
-          }
-        }, 5_000)
-
-        initialize().then(() => initializeOnboarding()).finally(() => clearTimeout(capacitorTimeout))
+        initialize().then(() => initializeOnboarding())
       } else {
         // No saved connection — check if we have servers in the list
         const { servers } = useServerStore.getState()
@@ -1023,8 +1013,7 @@ export default function App() {
           <span className="text-foreground">{t('Reconnecting...')}</span>
         </div>
       )}
-      {/* Show GuidePage on first launch, completely overriding view state */}
-      {config?.isFirstLaunch ? <GuidePage /> : renderView()}
+      {renderView()}
       {/* Search panel - full screen edit mode */}
       <SearchPanel isOpen={isSearchOpen} onClose={closeSearch} />
       {/* Search highlight bar - floating navigation mode */}
