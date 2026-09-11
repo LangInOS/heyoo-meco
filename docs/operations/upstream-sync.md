@@ -42,6 +42,7 @@ Meco keeps this full chain for now because `hello-halo/dev` may still receive st
 9. Stop immediately if a command would overwrite, delete, or reset local work.
 10. Stop immediately if tests fail in a way that is not clearly unrelated.
 11. Never include secrets, tokens, private keys, access codes, or local-only credentials in commits, logs, or documents.
+12. `npm run rebrand` (global Halo→Meco replacement) is only for publishing from `dev` to a `public` snapshot branch — a one-way, rebuild-from-scratch operation where `public` never receives incremental code updates. Never use it during branch merges (e.g. `main` into `refactor/rebrand-to-meco`); resolve only real conflicts and convert brand words surgically in user-visible text of incoming changes (see Stage 5).
 
 ## AI Execution Policy
 
@@ -238,6 +239,59 @@ Stop conditions:
 - App IDs, package names, product names, data directory names, icons, or visible descriptions change unexpectedly.
 - Large unrelated changes appear.
 - Tests fail unclearly.
+
+## Stage 5: Merge heyoo-meco/main into refactor/rebrand-to-meco
+
+`refactor/rebrand-to-meco` is the shipped product branch. It is a curated **mixed state**, not a blanket-rebranded tree:
+
+- User-visible surface (product name, data folder name, bundle IDs, tray tooltip, window title, i18n values, icons) is **Meco**.
+- Internal code stays **Halo** until Phase 2: type/variable names (e.g. `HaloConfig`), comments, the SDK package, `scripts.dev` (`HALO_DATA_DIR=~/.halo-dev`), the `read_halo_doc` tool name, unrenamed files (`HaloLogo.tsx`, `halo.adapter.ts`), and the Java package `com.halo.mobile`.
+
+### Hard rule — never run blanket rebrand during a merge
+
+`npm run rebrand` (global Halo→Meco replacement) is a one-way publish operation: it runs when cutting a `public` snapshot branch from `dev`, rebuilding everything from scratch. The `public` branch never receives incremental code updates.
+
+Merging `main` into `refactor/rebrand-to-meco` is the opposite scenario — it is an incremental code update on a curated mixed-state branch. Do NOT run `npm run rebrand` here. Git three-way merge already preserves every curated Meco edit in untouched files. A blanket run re-converts internal Halo in hundreds of untouched files (comments, types, dev paths) and produces a massive unreviewable diff. This happened once (2026-09-11 sync) and must not be repeated. Brand conversion is applied surgically to user-visible text in incoming `main` code only.
+
+### Merge procedure
+
+```bash
+cd ${HOME}/repos/source/heyoo-meco
+git checkout refactor/rebrand-to-meco
+git status --short
+git merge main
+```
+
+Resolve only the reported conflicts. Auto-merged hunks are already correct — do not touch them.
+
+### Per-file conflict policy
+
+| Conflict area | Resolution |
+|---|---|
+| Internal code (`*.ts`/`*.tsx`; LLM prompts, tool names, services, tests) | Take `main`. Internal Halo stays; user-visible text is not expected here. |
+| `package.json` | Take `main`, then restore only two Meco identity fields: top-level `name: heyoo-meco` and `author: Meco Team`. Keep `main`'s version, scripts, and dependencies. Never change `scripts.dev` — `HALO_DATA_DIR=~/.halo-dev` stays. |
+| i18n locale JSON (`src/renderer/i18n/locales/*.json`) | Apply the semantic merge below; never a one-sided checkout. |
+| Anything under `resources/` (icons, tray, splash) | Keep the rebrand side. Compare bytes with the rebrand branch before accepting any upstream asset change. |
+| Fields listed in the Rebrand Impact Map | Follow that map; stop for human confirmation. |
+
+### i18n semantic merge
+
+1. Use `main`'s key set (it is the superset; upstream adds new keys there).
+2. For keys present on both sides, normalize Meco↔Halo and compare values: if the brand word is the ONLY difference, keep the rebrand Meco value; if wording also differs (upstream re-translation), take `main`.
+3. Convert the brand word only inside values of newly added `main` keys (`\bHalo\b` → `Meco`). English KEYS stay unchanged — they must match literal `t('...')` calls in source.
+4. Dynamic keys reached through variables (e.g. `t(v.labelKey)` voice-tone keys like `Voice: Magnetic Male`) are invisible to `npm run i18n:extract`. After running extract, restore them from the pre-merge branch with `git show HEAD:src/renderer/i18n/locales/<lang>.json`.
+5. Zero empty values remain; fill real translations for genuinely new keys.
+
+### Verification before hand-off
+
+```bash
+npm run build
+npm run test:unit   # a zod validate.test.ts failure pre-exists on main; do not treat it as merge damage
+grep -rIn 'MecoConfig\|MECO_DATA_DIR' src/   # must be empty: no internal brand leakage
+git show :package.json | grep '"name"'        # heyoo-meco
+```
+
+Leave the merge uncommitted for human review. After approval, `git add -A && git commit` finalizes the two-parent merge commit. Never push without confirmation.
 
 ## Conflict Handling
 
