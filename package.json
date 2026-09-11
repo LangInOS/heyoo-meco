@@ -1,6 +1,6 @@
 {
   "name": "heyoo-meco",
-  "version": "2.1.14-dev.1-rc.1",
+  "version": "2.1.15-dev.0",
   "description": "AI that gets things done",
   "type": "module",
   "main": "./out/main/index.mjs",
@@ -16,6 +16,7 @@
     "build": "electron-vite build",
     "prebuild": "node scripts/sync-builtin-apps.mjs",
     "bundle:builtin": "node scripts/sync-builtin-apps.mjs --interactive",
+    "sync:ai-guides": "node scripts/sync-ai-guides.mjs",
     "product": "node scripts/select-product.mjs",
     "start": "electron-vite preview",
     "postinstall": "node scripts/postinstall.mjs",
@@ -24,10 +25,12 @@
     "build:mac-signed": "bash scripts/build-mac-signed.sh",
     "build:win": "npm run bump-rc && node scripts/prepare-binaries.mjs --platform win && npm run build && electron-builder --win --config electron-builder.cjs",
     "build:win-x64": "npm run bump-rc && node scripts/prepare-binaries.mjs --platform win && npm run build && electron-builder --win --x64 --config electron-builder.cjs",
+
     "prepare": "node scripts/prepare-binaries.mjs",
     "prepare:all": "node scripts/prepare-binaries.mjs --platform all",
     "build:mac-x64": "npm run bump-rc && node scripts/prepare-binaries.mjs --platform mac-x64 && npm run build && electron-builder --mac --x64 --config electron-builder.cjs",
     "build:linux": "npm run bump-rc && node scripts/prepare-binaries.mjs --platform linux && npm run build && electron-builder --linux --config electron-builder.cjs",
+
     "build:server": "bash scripts/build-server-halo.sh",
     "icons": "bash scripts/generate-icons.sh",
     "release": "npm run prepare:all && npm run build && electron-builder --mac --win --publish always",
@@ -160,7 +163,7 @@
     "uuid": "^13.0.0",
     "ws": "^8.18.3",
     "yaml": "^2.8.2",
-    "zod": "^4.0.0",
+    "zod": "^3.24.1",
     "zustand": "^4.5.0"
   },
   "devDependencies": {

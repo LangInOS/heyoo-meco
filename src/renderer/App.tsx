@@ -18,7 +18,7 @@ import { useToolsetsStore, type ToolsetsChangedEvent, type ToolsetsRequestedEven
 import { useTlonStore } from './stores/tlon.store'
 import { SplashPage } from './pages/SplashPage'
 import { SetupPage } from './pages/SetupPage'
-import { GuidePage } from './pages/GuidePage'
+//import { GuidePage } from './pages/GuidePage'
 import { GitBashSetupPage } from './pages/GitBashSetupPage'
 import { ServerConnectPage } from './pages/ServerConnectPage'
 import type { ServerAddedInfo } from './pages/ServerConnectPage'
@@ -1024,7 +1024,8 @@ export default function App() {
         </div>
       )}
       {/* Show GuidePage on first launch, completely overriding view state */}
-      {config?.isFirstLaunch ? <GuidePage /> : renderView()}
+      {/* {config?.isFirstLaunch ? <GuidePage /> : renderView()} */}
+      {renderView()}
       {/* Search panel - full screen edit mode */}
       <SearchPanel isOpen={isSearchOpen} onClose={closeSearch} />
       {/* Search highlight bar - floating navigation mode */}
