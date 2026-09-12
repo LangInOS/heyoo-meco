@@ -27,6 +27,7 @@ import { registerArtifactHandlers } from '../ipc/artifact'
 import { registerTerminalHandlers } from '../ipc/terminal'
 import { registerSystemHandlers } from '../ipc/system'
 import { registerUpdaterHandlers, initAutoUpdater } from '../services/updater.service'
+import { registerBadgeIpc } from '../services/notification.service'
 import { registerAuthHandlers } from '../ipc/auth'
 import { registerBootstrapStatusHandler } from './state'
 
@@ -77,6 +78,10 @@ export function initializeEssentialServices(): void {
   // Updater: Lightweight, starts checking for updates in background
   registerUpdaterHandlers()
   initAutoUpdater()
+
+  // Renderer clears the Dock badge on window focus — must be registered before
+  // the first focus, not lazily on task completion
+  registerBadgeIpc()
 
   const duration = performance.now() - start
   console.log(`[Bootstrap] Essential services initialized in ${duration.toFixed(1)}ms`)

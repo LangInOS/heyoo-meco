@@ -28,7 +28,7 @@ import type { ToastPayload } from '../../shared/types/notification'
 // 在窗口聚焦时清除 macOS Dock 角标和停止 Windows 任务栏闪烁。
 
 let badgeIpcRegistered = false
-function registerBadgeIpc(): void {
+export function registerBadgeIpc(): void {
   if (badgeIpcRegistered) return
   badgeIpcRegistered = true
   ipcMain.handle('notification:clear-badge', () => {

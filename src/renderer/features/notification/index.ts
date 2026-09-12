@@ -187,7 +187,7 @@ export function getWebNotificationPermission(): 'default' | 'granted' | 'denied'
 export function clearNotificationBadge(): void {
   if (isElectron()) {
     const halo = (window as unknown as { halo?: { clearNotificationBadge?: () => Promise<unknown> } }).halo
-    void halo?.clearNotificationBadge?.()
+    void halo?.clearNotificationBadge?.()?.catch?.(() => {})
   }
 }
 
