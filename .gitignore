@@ -95,3 +95,7 @@ resources/logo-preview.png
 resources/meco-logo.png
 .codegraph
 .zcode
+
+# Local multi-node cluster runtime: per-node .halo data dirs, logs, and the
+# node manifest, which holds plaintext access tokens.
+/.cluster/
