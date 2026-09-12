@@ -78,6 +78,14 @@ export { CHROME_USER_AGENT, H5_USER_AGENT } from './user-agent-resolver'
  */
 export const H5_VIEWPORT_WIDTH = 430
 
+/**
+ * Parking bounds for hidden views. Hidden views stay attached to the window
+ * and are moved here instead of being detached — see hide(). Shared with the
+ * policy-block branch of applyBounds() so "invisible but attached" has a
+ * single definition.
+ */
+const HIDDEN_VIEW_BOUNDS = { x: -10000, y: -10000, width: 0, height: 0 }
+
 /** H5 (mobile) emulation — iPhone 16 Pro Max (430×932 pt, 3× scale) */
 export const H5_DEVICE_METRICS = {
   width: 430,
@@ -421,15 +429,30 @@ class BrowserViewManager {
       this.hide(this.activeViewId)
     }
 
-    // Add to window
-    console.log(`[BrowserView] Adding BrowserView to window...`)
-    this.mainWindow.addBrowserView(view)
-    console.log(`[BrowserView] BrowserView added to window`)
+    // Add to window if not already attached. Hidden views stay attached (see
+    // hide()), so in the common tab-switch path the view is already attached
+    // and only its bounds change — which is the transition that repaints
+    // correctly. A duplicate addBrowserView would stack the view twice.
+    if (!this.mainWindow.getBrowserViews().includes(view)) {
+      console.log(`[BrowserView] Adding BrowserView to window...`)
+      this.mainWindow.addBrowserView(view)
+      console.log(`[BrowserView] BrowserView added to window`)
+    }
 
     // Set bounds with integer values (H5-aware, respects policy-block state)
     const intBounds = this.resolveBounds(viewId, bounds)
     console.log(`[BrowserView] Setting bounds:`, intBounds)
     this.applyBounds(viewId, intBounds)
+
+    // Belt-and-suspenders for the PDF-plugin black-surface issue: schedule a
+    // full repaint of the window after every visibility/bounds change, so a
+    // tab that was parked offscreen paints its content immediately on re-show
+    // instead of waiting for a window blur+focus cycle.
+    try {
+      view.webContents.invalidate()
+    } catch {
+      // webContents may be gone between the destroy check above and here
+    }
 
     // Auto-resize with window (only width and height, not position)
     view.setAutoResize({
@@ -445,22 +468,35 @@ class BrowserViewManager {
   }
 
   /**
-   * Hide a BrowserView (remove from window but keep in memory)
+   * Hide a BrowserView (keep attached to its host window, parked offscreen)
    */
   hide(viewId: string) {
     const view = this.views.get(viewId)
     if (!view) return false
 
-    // Remove from the correct host window
-    const hostWindow = this.offscreenViewIds.has(viewId)
-      ? this.offscreenWindow
-      : this.mainWindow
-
-    if (hostWindow && !hostWindow.isDestroyed()) {
+    // Park user-visible views offscreen instead of detaching them. A
+    // removeBrowserView + re-addBrowserView cycle leaves the compositor with
+    // a stale surface — tabs render black on re-show (PDF tabs worst, since
+    // the PDF plugin produces no new frame until the window is
+    // blurred+refocused). Views stay attached from creation until destroy(),
+    // so visibility is decided purely by bounds: an offscreen 0x0 view draws
+    // nothing and intercepts no mouse events.
+    if (this.offscreenViewIds.has(viewId)) {
+      // AI automation views live on the hidden host window — keep the old
+      // detach behavior there
+      const hostWindow = this.offscreenWindow
+      if (hostWindow && !hostWindow.isDestroyed()) {
+        try {
+          hostWindow.removeBrowserView(view)
+        } catch {
+          // View might already be removed
+        }
+      }
+    } else {
       try {
-        hostWindow.removeBrowserView(view)
-      } catch (e) {
-        // View might already be removed
+        view.setBounds(HIDDEN_VIEW_BOUNDS)
+      } catch {
+        // View might already be destroyed
       }
     }
 
@@ -884,7 +920,7 @@ class BrowserViewManager {
     this.lastBounds.set(viewId, bounds)
 
     if (state?.blockedByPolicy) {
-      view.setBounds({ x: -10000, y: -10000, width: 0, height: 0 })
+      view.setBounds(HIDDEN_VIEW_BOUNDS)
     } else {
       view.setBounds(bounds)
     }
