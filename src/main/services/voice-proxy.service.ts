@@ -17,11 +17,24 @@ import { WebSocket, WebSocketServer, WebSocketClient } from 'ws'
 import { createServer, Server as HttpServer } from 'http'
 import { randomUUID } from 'crypto'
 import log from 'electron-log/main.js'
+import { getConfig } from '../foundation/config.service'
 
 // Hostnames we are willing to proxy to. Prevents open-proxy misuse.
 const ALLOWED_UPSTREAM_HOSTS = new Set([
   'api.stepfun.com',
 ])
+
+/**
+ * Validate an upstream voice URL against the proxy allowlist. Shared with the
+ * HTTP SSE route (/voice/asr/sse) so both voice paths enforce the same rule.
+ */
+export function isAllowedUpstreamTarget(url: string): boolean {
+  try {
+    return ALLOWED_UPSTREAM_HOSTS.has(new URL(url).hostname)
+  } catch {
+    return false
+  }
+}
 
 let server: HttpServer | null = null
 let wss: WebSocketServer | null = null
@@ -50,6 +63,21 @@ export function handleVoiceProxyConnection(
     const parsed = new URL(req.url || '/', 'http://localhost')
     targetUrl = parsed.searchParams.get('target')
     apiKey = parsed.searchParams.get('apiKey')
+
+    // Remote clients get masked keys ('***') from the config API, so the
+    // Capacitor /voice/asr path passes sourceId and the server resolves the
+    // real key from its own config instead of trusting the query param.
+    const sourceId = parsed.searchParams.get('sourceId')
+    if (sourceId) {
+      const resolvedKey = getConfig()
+        .aiSources?.sources?.find(source => source.id === sourceId)?.apiKey
+      if (resolvedKey) {
+        apiKey = resolvedKey
+        log.info(`[VoiceProxy] Resolved apiKey server-side for source ${sourceId}`)
+      } else {
+        log.warn(`[VoiceProxy] sourceId ${sourceId} not found in local config`)
+      }
+    }
 
     if (!targetUrl || !apiKey) {
       log.error('[VoiceProxy] Missing target or apiKey in connection URL')

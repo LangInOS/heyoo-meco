@@ -4,10 +4,12 @@
  * Runs inside the main HTTP server and proxies `/voice/asr` connections
  * to the upstream provider. Clients (Capacitor renderer) connect with:
  *
- *   wss://<server>/voice/asr?target=<upstreamWsUrl>&apiKey=<key>&token=<authToken>
+ *   wss://<server>/voice/asr?target=<upstreamWsUrl>&apiKey=<key>&sourceId=<id>&token=<authToken>
  *
- * The proxy validates the token, injects `Authorization: Bearer <apiKey>` on
- * the upstream leg, and bidirectionally forwards frames.
+ * The proxy validates the token, resolves the real key for `sourceId` (the
+ * config API masks secrets for remote clients), injects
+ * `Authorization: Bearer <apiKey>` on the upstream leg, and bidirectionally
+ * forwards frames.
  */
 
 import { WebSocket, WebSocketServer, WebSocketClient } from 'ws'

@@ -1,9 +1,9 @@
 {
-  "totalRoutes": 181,
+  "totalRoutes": 182,
   "expose": {
     "ai": 146,
     "wrapped": 11,
-    "internal": 24,
+    "internal": 25,
     "unlabeled": 0
   },
   "groups": {
@@ -28,6 +28,7 @@
     "system",
     "apps",
     "store",
-    "tlon"
+    "tlon",
+    "voice"
   ]
 }

@@ -18,6 +18,7 @@ import type { VoiceConfig } from '../../types'
 import type { AISourcesConfig } from '../../types'
 import { isCapacitor, getRemoteServerUrl, getAuthToken } from '../../api/transport'
 import { matchesShortcut, formatShortcut, describeShortcut } from '../../utils/keyboard-shortcut'
+import { useNotificationStore } from '../../stores/notification.store'
 import { playMicFeedback } from './sound'
 
 // ── Voice-capable provider registry ────────────────────────────────────
@@ -625,6 +626,19 @@ export function useVoiceSTT(
     onPartialRef.current = onPartial
   }, [onTranscript, onPartial])
 
+  // Surface STT failures as an in-app toast: micError is otherwise only
+  // reachable via the mic button's hover title, which does not exist on
+  // mobile — failures there look like "no reaction".
+  useEffect(() => {
+    if (state !== 'error' || !error) return
+    useNotificationStore.getState().show({
+      title: 'Voice input failed',
+      body: error,
+      variant: 'error',
+      duration: 8000,
+    })
+  }, [state, error])
+
   // Resolve the selected AISource and its voice provider metadata
   const resolved = useMemo(() => {
     if (!voiceConfig?.sourceId || !aiSources) return null
@@ -680,8 +694,24 @@ export function useVoiceSTT(
       } else if (source.provider === 'stepfun') {
         const isSSE = voiceConfig?.transport === 'sse' && providerMeta.sseUrl
         if (isSSE) {
+          // Remote clients get a masked apiKey ('***') from the config API,
+          // so they must not call StepFun directly. Route through the server,
+          // which resolves the real key for sourceId and streams the SSE
+          // response back verbatim — the adapter's parsing is unchanged.
+          let endpoint = providerMeta.sseUrl
+          if (isCapacitor()) {
+            const serverUrl = getRemoteServerUrl()
+            if (!serverUrl) {
+              throw new Error('Server URL not configured.')
+            }
+            const token = getAuthToken()
+            if (!token) {
+              throw new Error('Not authenticated.')
+            }
+            endpoint = `${serverUrl}/voice/asr/sse?target=${encodeURIComponent(providerMeta.sseUrl)}&sourceId=${encodeURIComponent(source.id)}&token=${encodeURIComponent(token)}`
+          }
           session = await startStepFunSSE(
-            providerMeta.sseUrl,
+            endpoint,
             source.apiKey!,
             voiceConfig.sttModel || providerMeta.defaultSseModel!,
             {
@@ -712,7 +742,9 @@ export function useVoiceSTT(
             if (!token) {
               throw new Error('Not authenticated.')
             }
-            proxyUrl = `${serverUrl.replace(/^http/, 'ws')}/voice/asr?target=${encodeURIComponent(providerMeta.wsUrl)}&apiKey=${encodeURIComponent(source.apiKey!)}&token=${encodeURIComponent(token)}`
+            // sourceId lets the server resolve the real key from its own
+            // config — remote config responses mask apiKey as '***'.
+            proxyUrl = `${serverUrl.replace(/^http/, 'ws')}/voice/asr?target=${encodeURIComponent(providerMeta.wsUrl)}&apiKey=${encodeURIComponent(source.apiKey!)}&sourceId=${encodeURIComponent(source.id)}&token=${encodeURIComponent(token)}`
           } else {
             const portResp = await window.halo.voiceGetProxyPort()
             if (!portResp.success) {

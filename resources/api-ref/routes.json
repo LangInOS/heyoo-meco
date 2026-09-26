@@ -879,5 +879,9 @@
     "method": "GET",
     "path": "/api/tlon/:kbId/ingest-status",
     "group": "knowledge-base"
+  },
+  {
+    "method": "POST",
+    "path": "/voice/asr/sse"
   }
 ]

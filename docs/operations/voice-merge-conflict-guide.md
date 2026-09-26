@@ -9,8 +9,9 @@
 | `src/renderer/features/voice/index.tsx` | **新文件** | 无 | 语音核心逻辑：adapters、hook、VoicePanel |
 | `src/renderer/utils/keyboard-shortcut.ts` | **新文件** | 无 | 快捷键解析工具 |
 | `src/main/ipc/voice.ts` | **新文件** | 无 | IPC handler |
-| `src/main/services/voice-proxy.service.ts` | **新文件** | 无 | 本地 WebSocket 代理（handler 已提取可复用） |
+| `src/main/services/voice-proxy.service.ts` | **新文件** | 无 | 本地 WebSocket 代理（handler 已提取可复用）；新增 sourceId 服务端 key 解析与 `isAllowedUpstreamTarget` 导出 |
 | `src/main/http/voice-websocket.ts` | **新文件** | 无 | 独立 VoiceWebSocket，管理 `/voice/asr` 路径 |
+| `src/main/http/routes/voice.routes.ts` | **新文件** | 无 | `/voice/asr/sse` HTTP 转发路由：远程客户端上传录音，服务端按 sourceId 解析真实 key 后转发 StepFun SSE 并原样回流（配套 `voice.routes.meta.ts`；`scripts/gen-api-ref.mjs` 的 ROUTE_FILES 已同步登记，新增 routes 文件时勿漏，否则 prebuild 报错） |
 | `src/main/http/websocket.ts` | **未修改** | 无 | 零改动 |
 | `src/main/http/server.ts` | **修改** | 低 | import + 启动调用 `initVoiceWebSocket()` + upgrade 放行 `/voice/asr` + 关闭调用 `shutdownVoiceWebSocket()` |
 | `src/renderer/components/chat/InputArea.tsx` | **修改** | **高** | 4 个独立改动块（见下文） |
@@ -18,6 +19,19 @@
 | `src/renderer/assets/styles/globals.css` | **修改** | 低 | 新增 `@keyframes voice-wave` |
 | `src/preload/index.ts` | **修改** | 低 | `HaloAPI` 接口 + api 实现各加一行 |
 | `src/main/bootstrap/extended.ts` | **修改** | 低 | 启动/清理各插一行 |
+
+---
+
+## 背景：远程客户端不再持有真实 apiKey（2026-09 sync）
+
+上游把 `POST /api/config/refresh-ai-sources` 改为走 masking 控制器（安全修复，不可回退），远程客户端（Capacitor 手机端）从配置接口拿到的 `aiSources[].apiKey` 是 `'***'`。语音此前在手机端"直连 StepFun"的路径因此全部失效（桌面端走 IPC 拿真实 key，不受影响）。
+
+修复原则：**真实 key 只在服务端出现**。两条语音路径均由服务端按 `sourceId` 从本地配置解析真实 key：
+
+- WS 流式：`/voice/asr?...&sourceId=...`（voice-websocket.ts → voice-proxy.service.ts）
+- SSE 整段转写：`POST /voice/asr/sse?target=...&sourceId=...&token=...`（voice.routes.ts）
+
+若上游再次改动鉴权或 config 路由，需检查这两条路径是否被波及。
 
 ---
 
