@@ -156,6 +156,27 @@ function applyRules(content, rules) {
   return result
 }
 
+/**
+ * Per-file protect rules derived from the file's own original content: every
+ * halo-form identifier, kebab word and SHOUTING_CASE constant keeps its name
+ * after the brand pass, so exports defined in a replaced file stay resolvable
+ * for consumers that are not replaced.
+ */
+function dynamicProtect(content) {
+  const rules = []
+  for (const ident of new Set(content.match(/[Hh]alo[A-Z]\w*/g) || [])) {
+    const stem = ident.slice(4)
+    rules.push({ from: (ident[0] === 'H' ? 'Meco' : 'meco') + stem, to: ident })
+  }
+  for (const word of new Set(content.match(/\bhalo-[a-z0-9-]+\b/g) || [])) {
+    rules.push({ from: 'meco-' + word.slice(5), to: word })
+  }
+  for (const constant of new Set(content.match(/\bHALO_[A-Z_]+\b/g) || [])) {
+    rules.push({ from: 'MECO_' + constant.slice(5), to: constant })
+  }
+  return rules
+}
+
 function walkFiles(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name)
@@ -182,6 +203,15 @@ function processFile(file, rules, dryRun, label) {
   if (updated === content) return false
   if (!dryRun) fs.writeFileSync(file, updated, 'utf-8')
   console.log(`  ✓ ${label || path.relative(ROOT_DIR, file)}`)
+  return true
+}
+
+function processFileWithRules(file, rules, dryRun) {
+  const content = fs.readFileSync(file, 'utf-8')
+  const updated = applyRules(content, rules)
+  if (updated === content) return false
+  if (!dryRun) fs.writeFileSync(file, updated, 'utf-8')
+  console.log(`  ✓ ${path.relative(ROOT_DIR, file)}`)
   return true
 }
 
@@ -222,13 +252,16 @@ function runRebrand(dryRun) {
 
   console.log('\n[2/5] renderer files containing brand words (UI layer)\n')
   for (const file of findBrandFiles(RENDERER_DIR)) {
-    if (processFile(file, [...BRAND_RULES, ...PROTECT_RULES], dryRun)) changed++
+    const rules = [...BRAND_RULES, ...dynamicProtect(fs.readFileSync(file, 'utf-8')), ...PROTECT_RULES]
+    if (processFileWithRules(file, rules, dryRun)) changed++
   }
 
   console.log('\n[3/5] main-process user-visible files\n')
   for (const rel of MAIN_VISIBLE_FILES) {
     const file = path.join(ROOT_DIR, rel)
-    if (fs.existsSync(file) && processFile(file, [...BRAND_RULES, ...PROTECT_RULES], dryRun)) changed++
+    if (!fs.existsSync(file)) continue
+    const rules = [...BRAND_RULES, ...dynamicProtect(fs.readFileSync(file, 'utf-8')), ...PROTECT_RULES]
+    if (processFileWithRules(file, rules, dryRun)) changed++
   }
 
   console.log('\n[4/5] identity configs\n')
