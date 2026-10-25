@@ -44,7 +44,7 @@ All previous Meco product work stays reachable through the archived branches. No
 6. Never push without explicit human confirmation.
 7. Stop immediately on: merge conflict, dirty working tree, unclear validation failure, or any command that would overwrite, delete, or reset local work.
 8. Meco identity (product name, app IDs, data folder, logos, user-visible strings) is owned by two places only: work done in `dev`, and the replacement rules in `scripts/rebrand.mjs`. If upstream introduces new user-visible Halo strings, extend the script's rules — do not hand-edit generated output on `public`.
-9. Known gap: `scripts/rebrand.mjs` currently performs text replacement only. Logo/asset replacement for `public` is a pending script extension; until then the Meco logo assets are kept as untracked local files (e.g. `resources/meco-logo.png`, `meco-website/`) and must not be committed to `main` or `dev`.
+9. Brand assets live in `resources/rebrand-assets/` (mirrors repository-relative paths) and are copied onto their original paths by `scripts/rebrand.mjs` during public generation; that directory is excluded from text replacement. Derived assets (icon-1024, macOS icons, tray icons) are generated from the master logo `resources/meco-logo.png` with ImageMagick — regenerate them in `resources/rebrand-assets/`, never on `public`.
 
 ## Stage 1: Sync Original Upstream into hello-halo/main
 
@@ -101,7 +101,7 @@ git commit -m "chore: generate Meco public snapshot from dev @ <dev-sha>"
 
 Notes:
 
-- `npm run rebrand` is a global string replacement (`hello-halo`→`heyoo-meco`, `Halo`→`Meco`, case variants, with rollback rules that keep Java packages, class names, and SDK paths consistent with unchanged file/directory names). It does not rename files or directories; logo/asset handling is a pending extension (see Rule 9).
+- `npm run rebrand` is a global string replacement (`hello-halo`→`heyoo-meco`, `Halo`→`Meco`, case variants, plus the repository org rule `openkursar/hello-halo`→`LangInOS/heyoo-meco`, with rollback rules that keep Java packages, class names, and SDK paths consistent with unchanged file/directory names). It does not rename files or directories. It also copies brand assets from `resources/rebrand-assets/` onto their original paths (app icons, tray, splash). The reverse direction restores text only — on `dev` restore binaries with `git restore`; on `public` they are rebuilt from scratch each release.
 - `npm run rebrand:check` reports whether the tree is currently in Halo or Meco state; `npm run rebrand:dry-run` previews the diff without writing.
 - `git reset --hard dev` here is the documented rebuild step and only ever runs on `public`, never on `main` or `dev`.
 
