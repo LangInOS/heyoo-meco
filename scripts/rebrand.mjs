@@ -83,8 +83,10 @@ const PHASE1_ROLLBACK = [
   // Data directory identity: the dev data dir stays ~/.halo-dev (v1 rebrand decision)
   { from: 'MECO_DATA_DIR', to: 'HALO_DATA_DIR' },
   { from: '.meco-dev', to: '.halo-dev' },
-  // Electron bridge detection keeps the halo name (src/preload is not replaced)
-  { from: "'meco' in window", to: "'halo' in window" }
+  // Electron bridge keeps the halo name (src/preload is not replaced): both
+  // the detection and every property access on the bridge object
+  { from: "'meco' in window", to: "'halo' in window" },
+  { from: 'window.meco', to: 'window.halo' }
 ]
 
 // Reverse direction rollback rules: restore patterns that should persist as Meco
