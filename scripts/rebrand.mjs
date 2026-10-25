@@ -65,6 +65,13 @@ const PHASE1_ROLLBACK = [
   // Document path references (file names not renamed in Phase 1)
   { from: 'meco-meco-steps', to: 'meco-next-steps' },
   { from: 'rebrand-meco-to-meco', to: 'rebrand-halo-to-meco' },
+  // halo-file-url module stays at upstream original (internal plumbing, not user-visible):
+  // module content is excluded (see EXCLUDE_FILES) and every reference reverts to the halo names
+  { from: 'meco-file-url', to: 'halo-file-url' },
+  { from: 'mecoFileUrlToPath', to: 'haloFileUrlToPath' },
+  { from: 'toMecoFileUrl', to: 'toHaloFileUrl' },
+  { from: 'MECO_FILE_SCHEME', to: 'HALO_FILE_SCHEME' },
+  { from: 'meco-file://', to: 'halo-file://' },
   // npm package identity follows the v1 rebrand decision, not the generic halo→meco rule
   { from: '"name": "meco"', to: '"name": "heyoo-meco"' }
 ]
@@ -108,6 +115,7 @@ const EXCLUDE_FILES = [
   'yarn.lock',
   '.DS_Store',
   'rebrand.mjs', // This script itself
+  'halo-file-url.ts', // Shared file-url codec stays at upstream original (internal, not user-visible)
   'CLAUDE.md', // Agent startup instructions — contains .claude/skills/halo-dev/ paths that must not change
   'SKILL.md' // Agent skill definitions — references file/branch/directory names unchanged in Phase 1
 ]
