@@ -61,7 +61,9 @@ const PROTECT_RULES = [
   { from: 'meco-sdk', to: 'halo-sdk' },
   { from: '@heyoo-meco/agent-sdk', to: '@hello-halo/agent-sdk' },
   { from: 'MecoLogo', to: 'HaloLogo' },
-  { from: 'meco.adapter', to: 'halo.adapter' }
+  { from: 'meco.adapter', to: 'halo.adapter' },
+  // Android package declaration is bound to the com/halo/mobile directory path
+  { from: 'package com.meco.mobile', to: 'package com.halo.mobile' }
 ]
 
 // User-visible source files (proven scope of the v1 rebrand, mapped to the
@@ -96,6 +98,8 @@ const USER_VISIBLE_FILES = [
   'src/main/services/security-policy.ts',
   'src/main/services/space.service.ts',
   'src/main/store/publish/dispatchers/github-pr.ts',
+  'android/app/src/main/java/com/halo/mobile/ForegroundServicePlugin.java',
+  'android/app/src/main/java/com/halo/mobile/HaloForegroundService.java',
   'src/renderer/App.tsx',
   'src/renderer/api/transport.ts',
   'src/renderer/components/ErrorBoundary.tsx',
