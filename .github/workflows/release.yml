@@ -1,0 +1,256 @@
+# Meco release pipeline: desktop packages for macOS / Windows / Linux plus an
+# Android APK, published as a GitHub Release with curated bilingual notes.
+#
+# Trigger: manual only — the Actions page (Release → Run workflow, enter the
+# version) or `gh workflow run release.yml --ref public -f version=1.0.0`.
+#
+# Version: injected at build time via --config.extraMetadata.version so the
+# artifact names and the v<version> tag always agree; package.json is not
+# modified.
+#
+# Release notes: docs/release-notes/<version>.md must be committed on this
+# branch beforehand (bilingual: full English block, then full Chinese block).
+# The gate fails before any build when the file is missing. Re-runs are
+# idempotent: an existing release only gets its artifacts re-uploaded
+# (--clobber).
+#
+# Signing: desktop builds are unsigned (macOS ad-hoc / no notarization,
+# Windows NSIS without a certificate) and the Android APK is debug-signed —
+# the release notes carry the first-launch guidance. iOS is not packaged
+# here; the release notes document building it from source.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version without the leading "v" (e.g. 1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate and normalize the version input
+        id: validate
+        env:
+          RELEASE_REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          set -eu
+          VERSION="${RELEASE_REQUESTED_VERSION#v}"
+          if ! printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$'; then
+            echo "Invalid version '${RELEASE_REQUESTED_VERSION}' (expected e.g. 1.0.0 or v1.0.0)." >&2
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Require curated bilingual release notes
+        env:
+          RELEASE_VERSION: ${{ steps.validate.outputs.version }}
+        run: |
+          set -eu
+          NOTES_FILE="docs/release-notes/${RELEASE_VERSION}.md"
+          if [ ! -f "$NOTES_FILE" ]; then
+            echo "${NOTES_FILE} is missing on this branch." >&2
+            echo "Write it (bilingual: full English block, then full Chinese block), commit, then dispatch again." >&2
+            exit 1
+          fi
+          echo "notes=${NOTES_FILE}" >> "$GITHUB_OUTPUT"
+
+  build-macos:
+    needs: gate
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Materialize the product identity
+        run: cp product.example.json product.json
+      - name: Prepare platform binaries
+        run: node scripts/prepare-binaries.mjs --platform mac-arm64
+      - name: Build the renderer and main bundles
+        run: npm run build
+      - name: Package unsigned macOS dmg + zip
+        run: |
+          set -eu
+          npx electron-builder \
+            --mac dmg:arm64 zip:arm64 \
+            --config electron-builder.cjs \
+            -c.mac.identity=null \
+            -c.mac.notarize=false \
+            --publish never \
+            --config.extraMetadata.version=${{ needs.gate.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+          if-no-files-found: error
+
+  build-windows:
+    needs: gate
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Materialize the product identity
+        run: cp product.example.json product.json
+      - name: Prepare platform binaries
+        run: node scripts/prepare-binaries.mjs --platform win
+      - name: Build the renderer and main bundles
+        run: npm run build
+      - name: Package the Windows NSIS installer
+        run: |
+          npx electron-builder `
+            --win `
+            --config electron-builder.cjs `
+            --publish never `
+            --config.extraMetadata.version=${{ needs.gate.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+
+  build-linux:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Materialize the product identity
+        run: cp product.example.json product.json
+      - name: Prepare platform binaries
+        run: node scripts/prepare-binaries.mjs --platform linux
+      - name: Build the renderer and main bundles
+        run: npm run build
+      - name: Package Linux AppImage and deb
+        run: |
+          set -eu
+          npx electron-builder \
+            --linux AppImage deb \
+            --config electron-builder.cjs \
+            --publish never \
+            --config.extraMetadata.version=${{ needs.gate.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+          if-no-files-found: error
+
+  build-android:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Sync the Capacitor web assets
+        run: npm run cap:sync
+      - name: Build the debug APK
+        run: ./android/gradlew -p android assembleDebug --no-daemon
+      - name: Rename the APK
+        run: |
+          set -eu
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/Meco-${{ needs.gate.outputs.version }}-android.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/Meco-*-android.apk
+          if-no-files-found: error
+
+  github-release:
+    needs: [gate, build-macos, build-windows, build-linux, build-android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos
+          path: artifacts/macos
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: artifacts/windows
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: artifacts/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: artifacts/android
+      - name: Create the GitHub release and upload artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: v${{ needs.gate.outputs.version }}
+          RELEASE_VERSION: ${{ needs.gate.outputs.version }}
+          RELEASE_NOTES_FILE: docs/release-notes/${{ needs.gate.outputs.version }}.md
+        run: |
+          set -eu
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "release ${RELEASE_TAG} already exists — re-uploading artifacts with --clobber"
+          else
+            gh release create "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "Meco v${RELEASE_VERSION}" \
+              --notes-file "$RELEASE_NOTES_FILE"
+          fi
+          gh release upload "$RELEASE_TAG" artifacts/macos/* artifacts/windows/* artifacts/linux/* artifacts/android/* --clobber
