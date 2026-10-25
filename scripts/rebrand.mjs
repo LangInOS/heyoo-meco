@@ -120,7 +120,8 @@ const EXCLUDE_DIRS = [
   'resources/rebrand-assets', // Meco asset source for public generation — copied verbatim, never text-replaced
   'meco-website', // Separate website repository — never part of the app snapshot
   'src/preload', // Electron bridge layer stays at upstream original (window.halo, IPC channels) — v1 evidence
-  'src/sdk' // Agent SDK source copy stays at upstream original
+  'src/sdk', // Agent SDK source copy stays at upstream original
+  '.agents' // AI agent skill definitions — internal tooling docs; skill dirs are named halo-dev/halo-logging (v1 kept them original)
 ]
 
 // File patterns to exclude (binary files, lockfiles, etc.)
