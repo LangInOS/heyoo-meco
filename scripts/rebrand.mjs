@@ -47,7 +47,7 @@ const PROTECT_RULES = [
   { from: "'meco' in window", to: "'halo' in window" },
   { from: 'window.meco', to: 'window.halo' },
   // Deep-link protocol stays halo:// end to end (v1 kept it original)
-  { from: 'mego://', to: 'halo://' },
+  { from: 'meco://', to: 'halo://' },
   // Data directory identity: the dev data dir stays ~/.halo-dev (v1 decision)
   { from: 'MECO_DATA_DIR', to: 'HALO_DATA_DIR' },
   { from: '.meco-dev', to: '.halo-dev' },
