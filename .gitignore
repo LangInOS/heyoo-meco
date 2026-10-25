@@ -79,6 +79,9 @@ scripts/deploy_local_*.sh
 # Website (landing page, managed separately)
 website/
 
+# Meco website repository (separate repo, never part of the app snapshot)
+meco-website/
+
 # Capacitor mobile build output
 dist-mobile/
 
