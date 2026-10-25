@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 /**
- * Rebrand script: Halo → Meco string replacement
+ * Rebrand script: whitelist-based Halo → Meco replacement.
  *
- * Phase 1 implementation: global string replacement without file/directory renaming.
- * See docs/plans/rebrand-implementation-phases.md for full strategy.
+ * The whitelist mirrors the archived v1 rebrand result (commits e9b4f5a3 +
+ * 1d587e96 + 5fe438f9): i18n locales (UI + notification text), the
+ * user-visible source files that carried the product name, product identity
+ * configs, and brand assets. Everything else — MD files, docs, tests beyond
+ * the v1 pair, Go services, the Electron preload bridge, the agent SDK,
+ * AI skill definitions — stays at upstream original, exactly as the v1
+ * curated branch did.
  *
  * Usage:
- *   node scripts/rebrand.mjs           # Apply rebrand (Halo → Meco)
- *   node scripts/rebrand.mjs --reverse # Reverse rebrand (Meco → Halo)
- *   node scripts/rebrand.mjs --check   # Check current state (Halo or Meco)
+ *   node scripts/rebrand.mjs                          # Apply rebrand
+ *   node scripts/rebrand.mjs --check                  # Report current state
+ *   node scripts/rebrand.mjs --dry-run                # Preview without writing
+ *   node scripts/rebrand.mjs --reverse --scope <dir>  # Restore a scope
  */
 
 import fs from 'node:fs'
@@ -18,220 +24,155 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT_DIR = path.resolve(__dirname, '..')
 const REBRAND_ASSETS_DIR = path.join(ROOT_DIR, 'resources', 'rebrand-assets')
+const LOCALES_DIR = path.join(ROOT_DIR, 'src', 'renderer', 'i18n', 'locales')
 
-// Replacement rules (order matters: longer strings first)
-const REPLACEMENTS_FORWARD = [
-  // Repository org: must run before the generic hello-halo rule
+// Brand replacement applied inside whitelisted files only
+const BRAND_RULES = [
+  // Repository org (product update/feed configs)
   { from: 'openkursar/hello-halo', to: 'LangInOS/heyoo-meco' },
-  // Owner/repo field form (product configs, release scripts, updater tests)
   { from: '"owner": "openkursar"', to: '"owner": "LangInOS"' },
   { from: "owner: 'openkursar'", to: "owner: 'LangInOS'" },
+  { from: 'hello-halo.cc', to: 'heyoo-meco.cc' },
   { from: 'hello-halo', to: 'heyoo-meco' },
   { from: 'HALO', to: 'MECO' },
   { from: 'Halo', to: 'Meco' },
   { from: 'halo', to: 'meco' }
 ]
 
-const REPLACEMENTS_REVERSE = [
-  // Repository org: must run before the generic heyoo-meco rule
+// Inside whitelisted files, references to entities that keep their Halo names
+// (the preload bridge, deep-link protocol, halo-named modules and data dir)
+// stay halo — matching the v1 curated state
+const PROTECT_RULES = [
+  // Electron bridge keeps the preload-exposed halo name
+  { from: "'meco' in window", to: "'halo' in window" },
+  { from: 'window.meco', to: 'window.halo' },
+  // Deep-link protocol stays halo:// end to end (v1 kept it original)
+  { from: 'mego://', to: 'halo://' },
+  // Data directory identity: the dev data dir stays ~/.halo-dev (v1 decision)
+  { from: 'MECO_DATA_DIR', to: 'HALO_DATA_DIR' },
+  { from: '.meco-dev', to: '.halo-dev' },
+  // Modules and files that keep their Halo names on disk
+  { from: 'meco-file-url', to: 'halo-file-url' },
+  { from: 'mecoFileUrlToPath', to: 'haloFileUrlToPath' },
+  { from: 'toMecoFileUrl', to: 'toHaloFileUrl' },
+  { from: 'MECO_FILE_SCHEME', to: 'HALO_FILE_SCHEME' },
+  { from: 'meco-file://', to: 'halo-file://' },
+  { from: 'meco-local', to: 'halo-local' },
+  { from: 'meco-sdk', to: 'halo-sdk' },
+  { from: '@heyoo-meco/agent-sdk', to: '@hello-halo/agent-sdk' },
+  { from: 'MecoLogo', to: 'HaloLogo' },
+  { from: 'meco.adapter', to: 'halo.adapter' }
+]
+
+// User-visible source files (proven scope of the v1 rebrand, mapped to the
+// current tree; missing files are skipped)
+const USER_VISIBLE_FILES = [
+  'src/main/apps/conversation-mcp/index.ts',
+  'src/main/apps/manager/seed.ts',
+  'src/main/apps/runtime/dispatch-inbound.ts',
+  'src/main/apps/runtime/im-auto-sync.ts',
+  'src/main/apps/runtime/im-channels/wecom-bot-default-spec.ts',
+  'src/main/apps/runtime/im-channels/wecom-bot.provider.ts',
+  'src/main/foundation/product-config.ts',
+  'src/main/http/server.ts',
+  'src/main/http/invite-page.ts',
+  'src/main/index.ts',
+  'src/main/openai-compat-router/server/provider-adapters.ts',
+  'src/main/platform/background/index.ts',
+  'src/main/platform/background/tray.ts',
+  'src/main/services/agent/capabilities.ts',
+  'src/main/services/agent/codex/options.ts',
+  'src/main/services/agent/codex/transport/server-request-handler.ts',
+  'src/main/services/agent/system-prompt.ts',
+  'src/main/services/ai-browser/index.ts',
+  'src/main/services/ai-sources/providers/zhipu-coding-oauth.provider.ts',
+  'src/main/services/health/recovery-manager/strategies.ts',
+  'src/main/services/health/recovery-manager/ui.ts',
+  'src/main/services/notification.service.ts',
+  'src/main/services/notify-channels/email.ts',
+  'src/main/services/notify-channels/webhook.ts',
+  'src/main/services/onboarding.service.ts',
+  'src/main/services/search.service.ts',
+  'src/main/services/security-policy.ts',
+  'src/main/services/space.service.ts',
+  'src/main/store/publish/dispatchers/github-pr.ts',
+  'src/renderer/App.tsx',
+  'src/renderer/api/transport.ts',
+  'src/renderer/components/ErrorBoundary.tsx',
+  'src/renderer/components/apps/AppInstallDialog.tsx',
+  'src/renderer/components/chat/ChatView.tsx',
+  'src/renderer/components/onboarding/onboardingData.ts',
+  'src/renderer/components/pulse/PulseList.tsx',
+  'src/renderer/components/settings/AboutSection.tsx',
+  'src/renderer/components/settings/RecommendSection.tsx',
+  'src/renderer/components/settings/RegistrySection.tsx',
+  'src/renderer/components/settings/nav-config.ts',
+  'src/renderer/components/setup/PreferencesStep.tsx',
+  'src/renderer/components/setup/ServerConnect.tsx',
+  'src/renderer/components/setup/SetupProviderConfig.tsx',
+  'src/renderer/pages/SettingsPage.tsx',
+  'src/renderer/pages/SetupPage.tsx',
+  'src/renderer/pages/SplashPage.tsx',
+  'src/renderer/stores/chat.store.ts',
+  'tests/unit/apps/runtime/im-auto-sync.test.ts',
+  'tests/unit/services/space.test.ts',
+  'scripts/translate-i18n.mjs',
+  'gateway/internal/invite/page.html'
+]
+
+// Identity configs: full brand replacement (identity-only files)
+const IDENTITY_FULL_FILES = [
+  'product.example.json',
+  'product.pro.json',
+  'server.product.json',
+  'capacitor.config.ts',
+  'src/renderer/index.html',
+  'android/app/src/main/res/values/strings.xml',
+  'ios/App/App/Info.plist',
+  'resources/installer.nsh',
+  'resources/README.txt'
+]
+
+// Identity configs with path-bound content: replace only the identity field
+const IDENTITY_TARGETED_FILES = [
+  {
+    file: 'package.json',
+    rules: [
+      { from: '"name": "halo"', to: '"name": "heyoo-meco"' },
+      { from: '"author": "Halo Team"', to: '"author": "Meco Team"' }
+    ]
+  },
+  {
+    file: 'android/app/build.gradle',
+    rules: [{ from: 'applicationId "com.halo.mobile"', to: 'applicationId "com.meco.mobile"' }]
+  },
+  {
+    file: 'ios/App/App.xcodeproj/project.pbxproj',
+    rules: [
+      { from: 'PRODUCT_BUNDLE_IDENTIFIER = com.halo.mobile', to: 'PRODUCT_BUNDLE_IDENTIFIER = com.meco.mobile' }
+    ]
+  }
+]
+
+// Reverse rules restore a scope (e.g. src/sdk/halo-sdk) to upstream original
+const REVERSE_RULES = [
   { from: 'LangInOS/heyoo-meco', to: 'openkursar/hello-halo' },
   { from: '"owner": "LangInOS"', to: '"owner": "openkursar"' },
   { from: "owner: 'LangInOS'", to: "owner: 'openkursar'" },
+  { from: 'heyoo-meco.cc', to: 'hello-halo.cc' },
   { from: 'heyoo-meco', to: 'hello-halo' },
   { from: 'MECO', to: 'HALO' },
   { from: 'Meco', to: 'Halo' },
   { from: 'meco', to: 'halo' }
 ]
 
-// Phase 1 rollback rules: after global replacement, restore specific patterns
-// These keep Java package/namespace/class names consistent with directory/file paths
-// Applied in forward direction (Halo → Meco)
-const PHASE1_ROLLBACK = [
-  // Java package declaration (must match directory path)
-  { from: 'package com.meco.mobile', to: 'package com.halo.mobile' },
-  // Gradle namespace (must match Java package)
-  { from: 'namespace com.meco.mobile', to: 'namespace com.halo.mobile' },
-  { from: "namespace 'com.meco.mobile'", to: "namespace 'com.halo.mobile'" },
-  { from: 'namespace "com.meco.mobile"', to: 'namespace "com.halo.mobile"' },
-  { from: 'namespace = "com.meco.mobile"', to: 'namespace = "com.halo.mobile"' },
-  { from: "namespace = 'com.meco.mobile'", to: "namespace = 'com.halo.mobile'" },
-  // Java class names (must match file names)
-  { from: 'MecoForegroundService', to: 'HaloForegroundService' },
-  // Component file not renamed in Phase 1 (HaloLogo.tsx)
-  { from: 'MecoLogo', to: 'HaloLogo' },
-  // Adapter file not renamed in Phase 1 (halo.adapter.ts)
-  { from: 'meco.adapter', to: 'halo.adapter' },
-  { from: 'MecoAdapter', to: 'HaloAdapter' },
-  // SDK package name and local path (independently published artifact, not renamed in Phase 1)
-  { from: '@heyoo-meco/agent-sdk', to: '@hello-halo/agent-sdk' },
-  { from: 'meco-sdk', to: 'halo-sdk' },
-  // Runtime path references (directory not renamed in Phase 1)
-  { from: 'meco-local', to: 'halo-local' },
-  // Shared file-url module (src/shared/halo-file-url.ts)
-  { from: 'shared/meco-file-url', to: 'shared/halo-file-url' },
-  // Brand asset (src/renderer/assets/brand/halo-mark-animated.svg)
-  { from: 'meco-mark-animated', to: 'halo-mark-animated' },
-  // Document path references (file names not renamed in Phase 1)
-  { from: 'meco-meco-steps', to: 'meco-next-steps' },
-  { from: 'rebrand-meco-to-meco', to: 'rebrand-halo-to-meco' },
-  // npm package identity follows the v1 rebrand decision, not the generic halo→meco rule
-  { from: '"name": "meco"', to: '"name": "heyoo-meco"' },
-  // Scripts and directories that keep their Halo file names on disk
-  { from: 'build-server-meco.sh', to: 'build-server-halo.sh' },
-  { from: 'cmd/meco-update-helper', to: 'cmd/halo-update-helper' },
-  { from: 'cmd/meco-update-packer', to: 'cmd/halo-update-packer' },
-  // Data directory identity: the dev data dir stays ~/.halo-dev (v1 rebrand decision)
-  { from: 'MECO_DATA_DIR', to: 'HALO_DATA_DIR' },
-  { from: '.meco-dev', to: '.halo-dev' },
-  // Electron bridge keeps the halo name (src/preload is not replaced): both
-  // the detection and every property access on the bridge object
-  { from: "'meco' in window", to: "'halo' in window" },
-  { from: 'window.meco', to: 'window.halo' }
-]
+const REVERSE_PROTECT_RULES = [{ from: '"name": "hello-halo"', to: '"name": "halo"' }]
 
-// Reverse direction rollback rules: restore patterns that should persist as Meco
-// Applied in reverse direction (Meco → Halo) to protect meco-specific names
-const PHASE1_ROLLBACK_REVERSE = [
-  // package.json script names (keep meco: prefix after reverse)
-  { from: '"halo:dev"', to: '"meco:dev"' },
-  { from: '"halo:build"', to: '"meco:build"' },
-  { from: '"halo:build:mobile"', to: '"meco:build:mobile"' },
-  { from: '"halo:release:android"', to: '"meco:release:android"' },
-  // Document path references (file names not renamed in Phase 1)
-  { from: 'halo-next-steps', to: 'meco-next-steps' },
-  { from: 'rebrand-halo-to-halo', to: 'rebrand-halo-to-meco' },
-  // Restore the upstream package name exactly (generic rules would land on hello-halo)
-  { from: '"name": "hello-halo"', to: '"name": "halo"' }
-]
+const SCOPE_EXCLUDE_DIRS = ['node_modules', 'dist', 'out', '.git']
 
-// Directories to exclude (relative to ROOT_DIR)
-const EXCLUDE_DIRS = [
-  'node_modules',
-  'dist',
-  'dist-mobile', // Mobile build output (regenerated by vite build)
-  'out',
-  '.git',
-  '.github',
-  'docs/plans', // Rebrand documentation describes the process itself
-  'docs/operations', // Upstream sync workflow references hello-halo repository
-  'ios/DerivedData', // iOS build artifacts
-  'ios/App/App/public', // Capacitor iOS build output (regenerated by cap sync)
-  'android/app/src/main/assets', // Capacitor Android build output (regenerated by cap sync)
-  'resources/rebrand-assets', // Meco asset source for public generation — copied verbatim, never text-replaced
-  'meco-website', // Separate website repository — never part of the app snapshot
-  'src/preload', // Electron bridge layer stays at upstream original (window.halo, IPC channels) — v1 evidence
-  'src/sdk', // Agent SDK source copy stays at upstream original
-  '.agents' // AI agent skill definitions — internal tooling docs; skill dirs are named halo-dev/halo-logging (v1 kept them original)
-]
-
-// File patterns to exclude (binary files, lockfiles, etc.)
-const EXCLUDE_FILES = [
-  'package-lock.json',
-  'pnpm-lock.yaml',
-  'yarn.lock',
-  '.DS_Store',
-  'rebrand.mjs', // This script itself
-  'CLAUDE.md', // Agent startup instructions — contains .claude/skills/halo-dev/ paths that must not change
-  'AGENTS.md', // Same rationale as CLAUDE.md — references skill directory names unchanged in Phase 1
-  'SKILL.md' // Agent skill definitions — references file/branch/directory names unchanged in Phase 1
-]
-
-// File extensions to process
-// No .go/.mod: the gateway and win-update-helper module paths are self-consistent
-// internal identifiers (a v1-era scope had no Go code either)
-const INCLUDE_EXTENSIONS = [
-  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-  '.json', '.html', '.css', '.scss',
-  '.xml', '.java', '.gradle', '.kt',
-  '.plist', '.pbxproj', '.xcconfig',
-  '.md', '.txt', '.nsh', '.yaml', '.yml',
-  '.svg', '.config', '.example',
-  '.sh', '.py'
-]
-
-// Files without extension to process
-const INCLUDE_NO_EXT_FILES = [
-  'gradlew',
-  'gradlew.bat',
-  'Dockerfile',
-  '.gitignore'
-]
-
-/**
- * Check if a file should be processed
- */
-function shouldProcessFile(filePath) {
-  const fileName = path.basename(filePath)
-  const ext = path.extname(filePath)
-
-  // Exclude specific files
-  if (EXCLUDE_FILES.includes(fileName)) return false
-
-  // Exclude binary files by extension
-  if ([
-    '.png', '.jpg', '.jpeg', '.gif', '.ico', '.icns',
-    '.woff', '.woff2', '.ttf', '.eot',
-    '.zip', '.tar', '.gz',
-    '.exe', '.dll', '.so', '.dylib',
-    '.mp3', '.mp4', '.wav', '.avi',
-    '.pdf', '.doc', '.docx'
-  ].includes(ext)) return false
-
-  // Include specific extensions
-  if (INCLUDE_EXTENSIONS.includes(ext)) return true
-
-  // Include specific no-extension files
-  if (INCLUDE_NO_EXT_FILES.includes(fileName)) return true
-
-  // Default: don't process
-  return false
-}
-
-/**
- * Check if a directory should be traversed
- */
-function shouldTraverseDir(dirPath) {
-  const relativePath = path.relative(ROOT_DIR, dirPath)
-
-  // Check if any exclude dir matches (as prefix or exact match)
-  for (const excludeDir of EXCLUDE_DIRS) {
-    if (relativePath === excludeDir || relativePath.startsWith(excludeDir + '/')) {
-      return false
-    }
-  }
-
-  return true
-}
-
-/**
- * Recursively collect all files to process
- */
-function collectFiles(dir, files = []) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true })
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name)
-
-    if (entry.isDirectory()) {
-      if (shouldTraverseDir(fullPath)) {
-        collectFiles(fullPath, files)
-      }
-    } else if (entry.isFile()) {
-      if (shouldProcessFile(fullPath)) {
-        files.push(fullPath)
-      }
-    }
-  }
-
-  return files
-}
-
-/**
- * Apply replacements to a file content
- */
-function applyReplacements(content, replacements) {
+function applyRules(content, rules) {
   let result = content
-  for (const { from, to } of replacements) {
+  for (const { from, to } of rules) {
     result = result.split(from).join(to)
   }
   return result
@@ -239,10 +180,9 @@ function applyReplacements(content, replacements) {
 
 /**
  * Per-file protect rules derived from the file's own original content: every
- * halo-form identifier (HaloFoo/haloFoo), kebab word (halo-xxx), event/channel
- * name (halo:xxx) and SHOUTING_CASE constant (HALO_XXX) keeps its name, so the
- * replaced and untouched sides of every cross-file coupling stay consistent —
- * matching the v1 curated rebrand, which kept these at their original names.
+ * halo-form identifier (HaloFoo/haloFoo), kebab word (halo-xxx), event name
+ * (halo:xxx) and SHOUTING_CASE constant (HALO_XXX) keeps its name, so replaced
+ * and untouched files stay consistent across every coupling.
  */
 function dynamicProtect(content) {
   const rules = []
@@ -262,25 +202,45 @@ function dynamicProtect(content) {
   return rules
 }
 
-/**
- * Copy Meco brand assets onto their original repository paths.
- * resources/rebrand-assets mirrors repository-relative paths, so a file at
- * resources/rebrand-assets/android/... lands at android/... — forward only,
- * assets stay untouched by text replacement (see EXCLUDE_DIRS).
- */
-function collectAssetFiles(dir, files = []) {
+function walkFiles(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name)
-    if (entry.isDirectory()) collectAssetFiles(fullPath, files)
-    else if (entry.isFile() && entry.name !== 'README.txt') files.push(fullPath)
+    if (entry.isDirectory()) {
+      if (!SCOPE_EXCLUDE_DIRS.includes(entry.name)) walkFiles(fullPath, files)
+    } else if (entry.isFile()) {
+      files.push(fullPath)
+    }
   }
   return files
 }
 
-function applyRebrandAssets(dryRun) {
+/** Asset copies take every file — icons and splash images are binary */
+function walkAllFiles(dir, files = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (!SCOPE_EXCLUDE_DIRS.includes(entry.name)) walkAllFiles(fullPath, files)
+    } else if (entry.isFile()) {
+      files.push(fullPath)
+    }
+  }
+  return files
+}
+
+function processFile(file, rules, dryRun) {
+  const content = fs.readFileSync(file, 'utf-8')
+  const updated = applyRules(content, rules)
+  if (updated === content) return false
+  if (!dryRun) fs.writeFileSync(file, updated, 'utf-8')
+  console.log(`  ✓ ${path.relative(ROOT_DIR, file)}`)
+  return true
+}
+
+function copyBrandAssets(dryRun) {
   if (!fs.existsSync(REBRAND_ASSETS_DIR)) return 0
-  const files = collectAssetFiles(REBRAND_ASSETS_DIR)
-  for (const src of files) {
+  let copied = 0
+  for (const src of walkAllFiles(REBRAND_ASSETS_DIR)) {
+    if (path.basename(src) === 'README.txt') continue
     const target = path.join(ROOT_DIR, path.relative(REBRAND_ASSETS_DIR, src))
     if (dryRun) {
       console.log(`  ✓ ${path.relative(ROOT_DIR, target)} (asset)`)
@@ -288,141 +248,91 @@ function applyRebrandAssets(dryRun) {
       fs.mkdirSync(path.dirname(target), { recursive: true })
       fs.copyFileSync(src, target)
     }
+    copied++
   }
-  return files.length
+  return copied
 }
 
-/**
- * Check current state: is codebase Halo or Meco?
- * Uses package.json "name" field as primary indicator (no rollback applies to it).
- */
 function checkState() {
-  const pkgPath = path.join(ROOT_DIR, 'package.json')
-  if (fs.existsSync(pkgPath)) {
-    try {
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-      if (pkg.name === 'meco') return 'meco'
-      if (pkg.name === 'halo') return 'halo'
-    } catch {}
-  }
-  // Fallback: count Halo/Meco occurrences in key files
-  const checkFiles = [
-    'package.json',
-    'product.example.json',
-    'src/renderer/index.html'
-  ]
-
-  let haloCount = 0
-  let mecoCount = 0
-
-  for (const file of checkFiles) {
-    const filePath = path.join(ROOT_DIR, file)
-    if (fs.existsSync(filePath)) {
-      const content = fs.readFileSync(filePath, 'utf-8')
-      if (content.includes('Halo') || content.includes('halo')) {
-        haloCount++
-      }
-      if (content.includes('Meco') || content.includes('meco')) {
-        mecoCount++
-      }
-    }
-  }
-
-  if (haloCount > mecoCount) {
-    return 'halo'
-  } else if (mecoCount > haloCount) {
-    return 'meco'
-  } else {
-    return 'mixed'
-  }
+  const pkgPath = path.join(ROOT_DIR, 'product.example.json')
+  try {
+    const product = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
+    if (product.name === 'Meco') return 'meco'
+    if (product.name === 'Halo') return 'halo'
+  } catch {}
+  return 'unknown'
 }
 
-/**
- * Main function
- */
+function runRebrand(dryRun) {
+  let changed = 0
+
+  console.log('\n[1/5] i18n locale files (UI + notification text)\n')
+  for (const file of walkFiles(LOCALES_DIR)) {
+    if (processFile(file, BRAND_RULES, dryRun)) changed++
+  }
+
+  console.log('\n[2/5] user-visible source files (v1 whitelist)\n')
+  for (const rel of USER_VISIBLE_FILES) {
+    const file = path.join(ROOT_DIR, rel)
+    if (!fs.existsSync(file)) continue
+    const rules = [...BRAND_RULES, ...dynamicProtect(fs.readFileSync(file, 'utf-8')), ...PROTECT_RULES]
+    if (processFile(file, rules, dryRun)) changed++
+  }
+
+  console.log('\n[3/5] identity configs (full replacement)\n')
+  for (const rel of IDENTITY_FULL_FILES) {
+    const file = path.join(ROOT_DIR, rel)
+    if (fs.existsSync(file) && processFile(file, BRAND_RULES, dryRun)) changed++
+  }
+
+  console.log('\n[4/5] identity configs (targeted fields)\n')
+  for (const { file, rules } of IDENTITY_TARGETED_FILES) {
+    const fullPath = path.join(ROOT_DIR, file)
+    if (fs.existsSync(fullPath) && processFile(fullPath, rules, dryRun)) changed++
+  }
+
+  console.log('\n[5/5] brand assets\n')
+  changed += copyBrandAssets(dryRun)
+
+  console.log(`\n${dryRun ? 'Would change' : 'Changed'} ${changed} file(s).`)
+}
+
+function runReverse(scope, dryRun) {
+  const base = path.join(ROOT_DIR, scope)
+  if (!fs.existsSync(base)) {
+    console.error(`Scope does not exist: ${scope}`)
+    process.exit(1)
+  }
+  const rules = [...REVERSE_RULES, ...REVERSE_PROTECT_RULES]
+  let changed = 0
+  for (const file of walkFiles(base)) {
+    if (processFile(file, rules, dryRun)) changed++
+  }
+  console.log(`\n${dryRun ? 'Would restore' : 'Restored'} ${changed} file(s) in ${scope}.`)
+}
+
 function main() {
   const args = process.argv.slice(2)
-  const isReverse = args.includes('--reverse')
-  const isCheck = args.includes('--check')
-  const isAuto = args.includes('--auto')
   const dryRun = args.includes('--dry-run')
 
-  if (isCheck) {
+  if (args.includes('--check')) {
     const state = checkState()
     console.log(`Current state: ${state}`)
-    console.log(state === 'halo' ? '✓ Codebase is Halo (ready for rebrand)' : '✓ Codebase is Meco (ready for reverse)')
+    console.log(state === 'halo' ? '✓ Codebase is Halo (ready for rebrand)' : '✓ Codebase is Meco (ready for regeneration)')
     return
   }
 
-  // Auto mode: only apply if needed
-  if (isAuto) {
-    const state = checkState()
-    if (isReverse && state === 'meco') {
-      console.log('Auto: codebase is Meco, reversing to Halo...')
-    } else if (!isReverse && state === 'halo') {
-      console.log('Auto: codebase is Halo, applying rebrand to Meco...')
-    } else {
-      console.log(`Auto: codebase is ${state}, no action needed`)
-      return
+  if (args.includes('--reverse')) {
+    const scopeArg = args.find((arg) => arg.startsWith('--scope='))
+    if (!scopeArg) {
+      console.error('Reverse requires --scope=<relative-dir> (it only restores a scope to upstream original)')
+      process.exit(1)
     }
+    runReverse(scopeArg.split('=').slice(1).join('='), dryRun)
+    return
   }
 
-  const replacements = isReverse ? REPLACEMENTS_REVERSE : REPLACEMENTS_FORWARD
-  const rollback = isReverse ? PHASE1_ROLLBACK_REVERSE : PHASE1_ROLLBACK
-  const action = isReverse ? 'Reversing rebrand (Meco → Halo)' : 'Applying rebrand (Halo → Meco)'
-
-  console.log(`\n${action}...\n`)
-
-  const files = collectFiles(ROOT_DIR)
-  console.log(`Found ${files.length} files to process\n`)
-
-  let changedCount = 0
-  const changedFiles = []
-
-  for (const filePath of files) {
-    // Step 1: Apply global replacements
-    let content = fs.readFileSync(filePath, 'utf-8')
-    let newContent = applyReplacements(content, replacements)
-
-    // Step 2: Keep every halo-form identifier/event/constant at its original
-    // name so replaced and untouched sides of cross-file couplings agree
-    newContent = applyReplacements(newContent, dynamicProtect(content))
-
-    // Step 3: Apply rollback to protect specific patterns
-    if (rollback) {
-      newContent = applyReplacements(newContent, rollback)
-    }
-    
-    if (content !== newContent) {
-      if (!dryRun) {
-        fs.writeFileSync(filePath, newContent, 'utf-8')
-      }
-      changedCount++
-      changedFiles.push(path.relative(ROOT_DIR, filePath))
-      console.log(`  ✓ ${path.relative(ROOT_DIR, filePath)}`)
-    }
-  }
-
-  console.log(`\n${dryRun ? 'Would change' : 'Changed'} ${changedCount} files\n`)
-
-  if (changedCount === 0) {
-    console.log('No changes needed. Codebase may already be in target state.')
-  }
-
-  if (!isReverse) {
-    const assetCount = applyRebrandAssets(dryRun)
-    if (assetCount > 0) {
-      console.log(`\n${dryRun ? 'Would copy' : 'Copied'} ${assetCount} brand asset file(s) onto their original paths.`)
-    }
-  }
-
-  if (!dryRun && changedCount > 0) {
-    console.log('Rebrand complete.')
-    console.log(isReverse
-      ? '⚠ Remember: repository code should stay Halo for upstream sync compatibility.'
-      : '⚠ Remember: run reverse script before committing to keep repository as Halo.'
-    )
-  }
+  runRebrand(dryRun)
 }
 
 main()
