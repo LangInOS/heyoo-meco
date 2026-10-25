@@ -205,7 +205,8 @@ function dynamicProtect(content) {
   for (const name of new Set(content.match(/\bhalo:[a-z0-9-]+\b/g) || [])) {
     rules.push({ from: 'meco:' + name.slice(5), to: name })
   }
-  for (const constant of new Set(content.match(/\bHALO_[A-Z_]+\b/g) || [])) {
+  // No word boundaries: flags like __HALO_APP_MOUNTED__ sit inside underscores
+  for (const constant of new Set(content.match(/HALO_[A-Z_]+/g) || [])) {
     rules.push({ from: 'MECO_' + constant.slice(5), to: constant })
   }
   // Locale keys stay halo: t('...') literals and dynamic *Key values must keep
