@@ -136,6 +136,8 @@ const EXCLUDE_FILES = [
 ]
 
 // File extensions to process
+// No .go/.mod: the gateway and win-update-helper module paths are self-consistent
+// internal identifiers (a v1-era scope had no Go code either)
 const INCLUDE_EXTENSIONS = [
   '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
   '.json', '.html', '.css', '.scss',
@@ -143,7 +145,7 @@ const INCLUDE_EXTENSIONS = [
   '.plist', '.pbxproj', '.xcconfig',
   '.md', '.txt', '.nsh', '.yaml', '.yml',
   '.svg', '.config', '.example',
-  '.sh', '.go', '.mod', '.py'
+  '.sh', '.py'
 ]
 
 // Files without extension to process
