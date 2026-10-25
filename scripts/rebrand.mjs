@@ -64,9 +64,13 @@ const PHASE1_ROLLBACK = [
   { from: 'MecoAdapter', to: 'HaloAdapter' },
   // SDK package name and local path (independently published artifact, not renamed in Phase 1)
   { from: '@heyoo-meco/agent-sdk', to: '@hello-halo/agent-sdk' },
-  { from: 'src/sdk/meco-sdk', to: 'src/sdk/halo-sdk' },
+  { from: 'meco-sdk', to: 'halo-sdk' },
   // Runtime path references (directory not renamed in Phase 1)
-  { from: './meco-local/', to: './halo-local/' },
+  { from: 'meco-local', to: 'halo-local' },
+  // Shared file-url module (src/shared/halo-file-url.ts)
+  { from: 'shared/meco-file-url', to: 'shared/halo-file-url' },
+  // Brand asset (src/renderer/assets/brand/halo-mark-animated.svg)
+  { from: 'meco-mark-animated', to: 'halo-mark-animated' },
   // Document path references (file names not renamed in Phase 1)
   { from: 'meco-meco-steps', to: 'meco-next-steps' },
   { from: 'rebrand-meco-to-meco', to: 'rebrand-halo-to-meco' },
