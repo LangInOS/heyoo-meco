@@ -51,6 +51,11 @@ const PROTECT_RULES = [
   // Data directory identity: the dev data dir stays ~/.halo-dev (v1 decision)
   { from: 'MECO_DATA_DIR', to: 'HALO_DATA_DIR' },
   { from: '.meco-dev', to: '.halo-dev' },
+  // Storage keys and on-disk names that existing user data depends on (v1 kept them halo)
+  { from: '.meco', to: '.halo' },
+  { from: 'meco_remote_token', to: 'halo_remote_token' },
+  { from: 'meco_authenticated', to: 'halo_authenticated' },
+  { from: 'meco_doc', to: 'halo_doc' },
   // Modules and files that keep their Halo names on disk
   { from: 'meco-file-url', to: 'halo-file-url' },
   { from: 'mecoFileUrlToPath', to: 'haloFileUrlToPath' },
@@ -204,12 +209,13 @@ function dynamicProtect(content) {
     rules.push({ from: 'MECO_' + constant.slice(5), to: constant })
   }
   // Locale keys stay halo: t('...') literals and dynamic *Key values must keep
-  // matching the locale files, whose keys are never replaced
-  for (const m of content.matchAll(/\bt\(\s*(['"])([^'"]*[Hh]alo[^'"]*)\1/g)) {
+  // matching the locale files, whose keys are never replaced. The content
+  // pattern is escape-aware so literals containing apostrophes are covered.
+  for (const m of content.matchAll(/\bt\(\s*(['"])((?:\\.|(?!\1).)*)\1/g)) {
     const mecoForm = applyRules(m[2], BRAND_RULES)
     if (mecoForm !== m[2]) rules.push({ from: mecoForm, to: m[2] })
   }
-  for (const m of content.matchAll(/([A-Za-z]*[Kk]ey\s*:\s*['"])([^'"]*[Hh]alo[^'"]*)(['"])/g)) {
+  for (const m of content.matchAll(/([A-Za-z]*[Kk]ey\s*:\s*['"])((?:\\.|(?!\1).)*)\1/g)) {
     const mecoForm = applyRules(m[2], BRAND_RULES)
     if (mecoForm !== m[2]) rules.push({ from: mecoForm, to: m[2] })
   }
