@@ -23,9 +23,6 @@ const REBRAND_ASSETS_DIR = path.join(ROOT_DIR, 'resources', 'rebrand-assets')
 const REPLACEMENTS_FORWARD = [
   // Repository org: must run before the generic hello-halo rule
   { from: 'openkursar/hello-halo', to: 'LangInOS/heyoo-meco' },
-  // Owner/repo field form (product configs, release scripts, updater tests)
-  { from: '"owner": "openkursar"', to: '"owner": "LangInOS"' },
-  { from: "owner: 'openkursar'", to: "owner: 'LangInOS'" },
   { from: 'hello-halo', to: 'heyoo-meco' },
   { from: 'HALO', to: 'MECO' },
   { from: 'Halo', to: 'Meco' },
@@ -35,8 +32,6 @@ const REPLACEMENTS_FORWARD = [
 const REPLACEMENTS_REVERSE = [
   // Repository org: must run before the generic heyoo-meco rule
   { from: 'LangInOS/heyoo-meco', to: 'openkursar/hello-halo' },
-  { from: '"owner": "LangInOS"', to: '"owner": "openkursar"' },
-  { from: "owner: 'LangInOS'", to: "owner: 'openkursar'" },
   { from: 'heyoo-meco', to: 'hello-halo' },
   { from: 'MECO', to: 'HALO' },
   { from: 'Meco', to: 'Halo' },
@@ -71,11 +66,7 @@ const PHASE1_ROLLBACK = [
   { from: 'meco-meco-steps', to: 'meco-next-steps' },
   { from: 'rebrand-meco-to-meco', to: 'rebrand-halo-to-meco' },
   // npm package identity follows the v1 rebrand decision, not the generic halo→meco rule
-  { from: '"name": "meco"', to: '"name": "heyoo-meco"' },
-  // Scripts and directories that keep their Halo file names on disk
-  { from: 'build-server-meco.sh', to: 'build-server-halo.sh' },
-  { from: 'cmd/meco-update-helper', to: 'cmd/halo-update-helper' },
-  { from: 'cmd/meco-update-packer', to: 'cmd/halo-update-packer' }
+  { from: '"name": "meco"', to: '"name": "heyoo-meco"' }
 ]
 
 // Reverse direction rollback rules: restore patterns that should persist as Meco
@@ -118,7 +109,6 @@ const EXCLUDE_FILES = [
   '.DS_Store',
   'rebrand.mjs', // This script itself
   'CLAUDE.md', // Agent startup instructions — contains .claude/skills/halo-dev/ paths that must not change
-  'AGENTS.md', // Same rationale as CLAUDE.md — references skill directory names unchanged in Phase 1
   'SKILL.md' // Agent skill definitions — references file/branch/directory names unchanged in Phase 1
 ]
 
@@ -129,16 +119,13 @@ const INCLUDE_EXTENSIONS = [
   '.xml', '.java', '.gradle', '.kt',
   '.plist', '.pbxproj', '.xcconfig',
   '.md', '.txt', '.nsh', '.yaml', '.yml',
-  '.svg', '.config', '.example',
-  '.sh', '.go', '.mod', '.py'
+  '.svg', '.config', '.example'
 ]
 
 // Files without extension to process
 const INCLUDE_NO_EXT_FILES = [
   'gradlew',
-  'gradlew.bat',
-  'Dockerfile',
-  '.gitignore'
+  'gradlew.bat'
 ]
 
 /**
