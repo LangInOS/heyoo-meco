@@ -82,7 +82,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Materialize the product identity
         run: cp product.example.json product.json
       - name: Prepare platform binaries
@@ -120,7 +120,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Materialize the product identity
         run: cp product.example.json product.json
       - name: Prepare platform binaries
@@ -155,7 +155,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Materialize the product identity
         run: cp product.example.json product.json
       - name: Prepare platform binaries
@@ -194,7 +194,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Sync the Capacitor web assets
         run: npm run cap:sync
       - name: Build the debug APK
