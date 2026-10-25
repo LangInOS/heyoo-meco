@@ -17,3 +17,6 @@ Sources:
 After a logo change, regenerate the derived files with ImageMagick and
 update this directory; the rebrand script copies everything here verbatim
 and never text-replaces this directory (see EXCLUDE_DIRS).
+- src/renderer/assets/brand/halo-mark-animated.svg: the renderer brand mark, generated
+  from resources/meco-logo.png (static wrap of the master logo; the upstream
+  animated Halo mark has no Meco counterpart yet).
