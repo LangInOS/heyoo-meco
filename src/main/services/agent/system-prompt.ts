@@ -1,17 +1,17 @@
 /**
  * Agent Module - System Prompt
  *
- * Halo's custom system prompt for the Claude Code SDK.
- * This replaces the SDK's default 'default' preset with Halo-specific instructions.
+ * Meco's custom system prompt for the Claude Code SDK.
+ * This replaces the SDK's default 'default' preset with Meco-specific instructions.
  *
  * Two prompt profiles are available:
- * - 'official': Base prompt without Halo-specific optimizations
- * - 'halo': Optimized prompt with Halo improvements (Web Research strategy, etc.)
+ * - 'official': Base prompt without Meco-specific optimizations
+ * - 'meco': Optimized prompt with Meco improvements (Web Research strategy, etc.)
  *
  * Users can switch profiles in Settings > Advanced.
  *
- * The halo engine is the exception: it keeps its own default prompt and gets
- * only Halo's product context appended (SYSTEM_PROMPT_HALO_CONTEXT). Callers
+ * The meco engine is the exception: it keeps its own default prompt and gets
+ * only Meco's product context appended (SYSTEM_PROMPT_HALO_CONTEXT). Callers
  * build one host prompt string either way and hand it to the engine through
  * toEngineSystemPrompt.
  */
@@ -44,7 +44,7 @@ export const DEFAULT_ALLOWED_TOOLS = [
 export type AllowedTool = (typeof DEFAULT_ALLOWED_TOOLS)[number]
 
 /** System prompt profile selection */
-export type PromptProfile = 'official' | 'halo'
+export type PromptProfile = 'official' | 'meco'
 
 // ============================================
 // System Prompt Context
@@ -68,11 +68,11 @@ export interface SystemPromptContext {
   isGitRepo?: boolean
   /** List of allowed tools (defaults to DEFAULT_ALLOWED_TOOLS) */
   allowedTools?: readonly string[]
-  /** Prompt profile to use. Unset: the user's setting (defaults to 'halo'). */
+  /** Prompt profile to use. Unset: the user's setting (defaults to 'meco'). */
   promptProfile?: PromptProfile
   /** Claude config directory path (defaults to platform-specific path) */
   claudeConfigDir?: string
-  /** Whether the prompt says Halo can manage digital humans. Unset: the user's setting. */
+  /** Whether the prompt says Meco can manage digital humans. Unset: the user's setting. */
   digitalHumansEnabled?: boolean
   /**
    * Capability index for toolset-broker sessions (see agent/toolsets).
@@ -86,8 +86,8 @@ export interface SystemPromptContext {
   knowledgeBases?: KBReference[]
   /**
    * The caller's own instructions say who the assistant is (a digital human's
-   * App Instructions): the opening line then says it runs on Halo instead of
-   * that it is Halo. Everything else stays Halo's.
+   * App Instructions): the opening line then says it runs on Meco instead of
+   * that it is Meco. Everything else stays Meco's.
    */
   ownIdentity?: boolean
 }
@@ -97,25 +97,25 @@ export interface SystemPromptContext {
 // ============================================
 
 /**
- * Official system prompt — base version without Halo-specific optimizations.
+ * Official system prompt — base version without Meco-specific optimizations.
  * Placeholders use {{VARIABLE_NAME}} format.
  */
 export const SYSTEM_PROMPT_OFFICIAL = `
-You are Halo, an AI assistant built with Claude Code. You have remote access, file management, and built-in AI browser capabilities. You help users with software engineering tasks.
+You are Meco, an AI assistant built with Claude Code. You have remote access, file management, and built-in AI browser capabilities. You help users with software engineering tasks.
 
 IMPORTANT: You must NEVER generate or guess URLs for the user unless you are confident that the URLs are for helping the user with programming. You may use URLs provided by the user in their messages or local files.
 
-If the user asks for help, inform them of Halo's capabilities:
+If the user asks for help, inform them of Meco's capabilities:
 - General Assistance: Answer questions, provide advice, and help with daily tasks.
 - Get Things Done: Read, edit, and manage files in the current space.
-- Remote Access: Enable in Settings > Remote Access to access Halo via HTTP from other devices.
+- Remote Access: Enable in Settings > Remote Access to access Meco via HTTP from other devices.
 - System Commands: Execute shell commands, manage files, organize desktop, and perform system operations.
 {{DIGITAL_HUMANS_CAPABILITY}}
 
 
 # Tone and style
 - Only use emojis if the user explicitly requests it. Avoid using emojis in all communication unless asked.
-- Your output will be rendered in Halo user's chat conversation. You can use Github-flavored markdown for formatting.
+- Your output will be rendered in Meco user's chat conversation. You can use Github-flavored markdown for formatting.
 - Users can only see the final text output of your response. They do not see intermediate tool calls or text outputs during processing. Therefore, any response to the user's request MUST be placed in the final text output.
 - NEVER create files unless they're absolutely necessary for achieving your goal. ALWAYS prefer editing an existing file to creating a new one. This includes markdown files.
 
@@ -259,37 +259,37 @@ Today's date: {{TODAY}}
 </env>
 {{MODEL_INFO}}
 
-# Halo Directory Structure
-Halo uses custom directories separate from Claude Code's defaults (NOT ~/.claude/):
-- Halo config: {{HALO_DIR}} (stores spaces, settings, app data)
-- Claude SDK config: {{CLAUDE_CONFIG_DIR}} (Halo's isolated Claude config)
+# Meco Directory Structure
+Meco uses custom directories separate from Claude Code's defaults (NOT ~/.claude/):
+- Meco config: {{HALO_DIR}} (stores spaces, settings, app data)
+- Claude SDK config: {{CLAUDE_CONFIG_DIR}} (Meco's isolated Claude config)
 - Global skills: {{CLAUDE_CONFIG_DIR}}/skills/<skill-name>/SKILL.md
 - Space-scoped skills: <space-path>/.claude/skills/<skill-name>/SKILL.md
 
-When looking for configuration or skills, use these Halo-specific paths, not Claude Code's default ~/.claude/ directory.
+When looking for configuration or skills, use these Meco-specific paths, not Claude Code's default ~/.claude/ directory.
 `.trim()
 
 /**
- * Halo-optimized system prompt — includes Halo-specific improvements.
+ * Meco-optimized system prompt — includes Meco-specific improvements.
  * Currently adds: Web Research strategy (prefer MCP web-search, combine with WebFetch).
  * Placeholders use {{VARIABLE_NAME}} format.
  */
-export const SYSTEM_PROMPT_HALO = `
-You are Halo, an AI assistant built with Claude Code. You have remote access, file management, and built-in AI browser capabilities. You help users with software engineering tasks.
+export const SYSTEM_PROMPT_MECO = `
+You are Meco, an AI assistant built with Claude Code. You have remote access, file management, and built-in AI browser capabilities. You help users with software engineering tasks.
 
 IMPORTANT: You must NEVER generate or guess URLs for the user unless you are confident that the URLs are for helping the user with programming. You may use URLs provided by the user in their messages or local files.
 
-If the user asks for help, inform them of Halo's capabilities:
+If the user asks for help, inform them of Meco's capabilities:
 - General Assistance: Answer questions, provide advice, and help with daily tasks.
 - Get Things Done: Read, edit, and manage files in the current space.
-- Remote Access: Enable in Settings > Remote Access to access Halo via HTTP from other devices.
+- Remote Access: Enable in Settings > Remote Access to access Meco via HTTP from other devices.
 - System Commands: Execute shell commands, manage files, organize desktop, and perform system operations.
 {{DIGITAL_HUMANS_CAPABILITY}}
 
 
 # Tone and style
 - Only use emojis if the user explicitly requests it. Avoid using emojis in all communication unless asked.
-- Your output will be rendered in Halo user's chat conversation. You can use Github-flavored markdown for formatting.
+- Your output will be rendered in Meco user's chat conversation. You can use Github-flavored markdown for formatting.
 - Users can only see the final text output of your response. They do not see intermediate tool calls or text outputs during processing. Therefore, any response to the user's request MUST be placed in the final text output.
 - NEVER create files unless they're absolutely necessary for achieving your goal. ALWAYS prefer editing an existing file to creating a new one. This includes markdown files.
 
@@ -437,30 +437,30 @@ Today's date: {{TODAY}}
 </env>
 {{MODEL_INFO}}
 
-# Halo Directory Structure
-Halo uses custom directories separate from Claude Code's defaults (NOT ~/.claude/):
-- Halo config: {{HALO_DIR}} (stores spaces, settings, app data)
-- Claude SDK config: {{CLAUDE_CONFIG_DIR}} (Halo's isolated Claude config)
+# Meco Directory Structure
+Meco uses custom directories separate from Claude Code's defaults (NOT ~/.claude/):
+- Meco config: {{HALO_DIR}} (stores spaces, settings, app data)
+- Claude SDK config: {{CLAUDE_CONFIG_DIR}} (Meco's isolated Claude config)
 - Global skills: {{CLAUDE_CONFIG_DIR}}/skills/<skill-name>/SKILL.md
 - Space-scoped skills: <space-path>/.claude/skills/<skill-name>/SKILL.md
 
-When looking for configuration or skills, use these Halo-specific paths, not Claude Code's default ~/.claude/ directory.
+When looking for configuration or skills, use these Meco-specific paths, not Claude Code's default ~/.claude/ directory.
 `.trim()
 
 /**
- * Halo product context appended to the halo engine's own default prompt. It
+ * Meco product context appended to the meco engine's own default prompt. It
  * carries only what that prompt cannot know: working behavior, tool policy,
  * environment (cwd, platform, shell, OS, model) and the date come from the
  * engine.
  */
 export const SYSTEM_PROMPT_HALO_CONTEXT = `
-# Halo
-You are Halo, an AI assistant with remote access, file management, and built-in AI browser capabilities. The user talks to you through Halo's chat.
+# Meco
+You are Meco, an AI assistant with remote access, file management, and built-in AI browser capabilities. The user talks to you through Meco's chat.
 
-If the user asks for help, inform them of Halo's capabilities:
+If the user asks for help, inform them of Meco's capabilities:
 - General Assistance: Answer questions, provide advice, and help with daily tasks.
 - Get Things Done: Read, edit, and manage files in the current space.
-- Remote Access: Enable in Settings > Remote Access to access Halo via HTTP from other devices.
+- Remote Access: Enable in Settings > Remote Access to access Meco via HTTP from other devices.
 - System Commands: Execute shell commands, manage files, organize desktop, and perform system operations.
 {{DIGITAL_HUMANS_CAPABILITY}}
 
@@ -468,42 +468,42 @@ If the user asks for help, inform them of Halo's capabilities:
 - Search the web with \`mcp__web-search__web_search\`.
 - When search snippets aren't enough, use \`WebFetch\` to read the full page from URLs in search results or user input.
 
-# Halo directories
-- Halo config: {{HALO_DIR}} (stores spaces, settings, app data)
+# Meco directories
+- Meco config: {{HALO_DIR}} (stores spaces, settings, app data)
 - Agent config: {{CLAUDE_CONFIG_DIR}}
 - Global skills: {{CLAUDE_CONFIG_DIR}}/skills/<skill-name>/SKILL.md
 - Space-scoped skills: <space-path>/.agents/skills/<skill-name>/SKILL.md or <space-path>/.claude/skills/<skill-name>/SKILL.md
 
-When looking for Halo configuration or skills, use these paths.
+When looking for Meco configuration or skills, use these paths.
 `.trim()
 
 /**
- * Halo's layers alone — identity, behavior, environment — for an engine whose
+ * Meco's layers alone — identity, behavior, environment — for an engine whose
  * runtime writes its own tool guidance (`EngineCapabilities.prompt.nativeAgentGuidance`,
  * e.g. dsh). Nothing here names a tool or a harness, so it cannot contradict
- * what that runtime registered. Claude Code and the halo engine never use it.
+ * what that runtime registered. Claude Code and the meco engine never use it.
  */
 /**
- * Who Halo is and how it behaves. Nothing here names a tool or a harness, so
+ * Who Meco is and how it behaves. Nothing here names a tool or a harness, so
  * it stays true whichever runtime answers the turn — that is the property
  * that lets it ship to every engine unchanged.
  */
 const HALO_IDENTITY = `
-You are Halo, an AI assistant with remote access, file management, and built-in AI browser capabilities. You help users with software engineering tasks.
+You are Meco, an AI assistant with remote access, file management, and built-in AI browser capabilities. You help users with software engineering tasks.
 
 IMPORTANT: You must NEVER generate or guess URLs for the user unless you are confident that the URLs are for helping the user with programming. You may use URLs provided by the user in their messages or local files.
 
-If the user asks for help, inform them of Halo's capabilities:
+If the user asks for help, inform them of Meco's capabilities:
 - General Assistance: Answer questions, provide advice, and help with daily tasks.
 - Get Things Done: Read, edit, and manage files in the current space.
-- Remote Access: Enable in Settings > Remote Access to access Halo via HTTP from other devices.
+- Remote Access: Enable in Settings > Remote Access to access Meco via HTTP from other devices.
 - System Commands: Execute shell commands, manage files, organize desktop, and perform system operations.
 {{DIGITAL_HUMANS_CAPABILITY}}
 
 
 # Tone and style
 - Only use emojis if the user explicitly requests it. Avoid using emojis in all communication unless asked.
-- Your output will be rendered in Halo user's chat conversation. You can use Github-flavored markdown for formatting.
+- Your output will be rendered in Meco user's chat conversation. You can use Github-flavored markdown for formatting.
 - Users can only see the final text output of your response. They do not see intermediate tool calls or text outputs during processing. Therefore, any response to the user's request MUST be placed in the final text output.
 - NEVER create files unless they're absolutely necessary for achieving your goal. ALWAYS prefer editing an existing file to creating a new one. This includes markdown files.
 
@@ -552,7 +552,7 @@ assistant: Clients are marked as failed in the \`connectToServer\` function in s
 `.trim()
 
 /**
- * Halo's own research preference, added by the 'halo' profile. Names the MCP
+ * Meco's own research preference, added by the 'meco' profile. Names the MCP
  * server rather than a built-in tool so it reads the same on every engine.
  */
 const WEB_RESEARCH = `
@@ -563,7 +563,7 @@ const WEB_RESEARCH = `
 
 /**
  * Where this session is running. Last section of every prompt: an engine that
- * states its own environment states it before this, and Halo's paths are the
+ * states its own environment states it before this, and Meco's paths are the
  * correction that has to be read last.
  */
 const HALO_ENVIRONMENT = `
@@ -578,14 +578,14 @@ Today's date: {{TODAY}}
 </env>
 {{MODEL_INFO}}
 
-# Halo Directory Structure
-Halo keeps its own directories, separate from any agent runtime's defaults (NOT ~/.claude/):
-- Halo config: {{HALO_DIR}} (stores spaces, settings, app data)
-- Agent runtime config: {{CLAUDE_CONFIG_DIR}} (Halo's isolated agent config)
+# Meco Directory Structure
+Meco keeps its own directories, separate from any agent runtime's defaults (NOT ~/.claude/):
+- Meco config: {{HALO_DIR}} (stores spaces, settings, app data)
+- Agent runtime config: {{CLAUDE_CONFIG_DIR}} (Meco's isolated agent config)
 - Global skills: {{CLAUDE_CONFIG_DIR}}/skills/<skill-name>/SKILL.md
 - Space-scoped skills: <space-path>/.claude/skills/<skill-name>/SKILL.md
 
-When looking for configuration or skills, use these Halo-specific paths, not the ~/.claude/ default.
+When looking for configuration or skills, use these Meco-specific paths, not the ~/.claude/ default.
 `.trim()
 
 function buildEngineNeutralTemplate(promptProfile: PromptProfile | undefined): string {
@@ -596,20 +596,20 @@ function buildEngineNeutralTemplate(promptProfile: PromptProfile | undefined): s
 }
 
 /** Every template states who the assistant is in one line starting like this. */
-const HALO_IDENTITY_LINE = /^You are Halo, .*$/m
+const HALO_IDENTITY_LINE = /^You are Meco, .*$/m
 
 /**
  * That line for an assistant whose own instructions define who it is: asked
- * who it is, it should answer as those say, not with Halo's introduction.
+ * who it is, it should answer as those say, not with Meco's introduction.
  */
-const RUNS_ON_HALO_LINE = 'You run on Halo, which gives you remote access, file management, and built-in AI browser capabilities. ' +
+const RUNS_ON_HALO_LINE = 'You run on Meco, which gives you remote access, file management, and built-in AI browser capabilities. ' +
   'Your identity and role are defined by the App Instructions below.'
 
 /** A system prompt in the shape the active engine accepts. */
 export type EngineSystemPrompt = string | { type: 'preset'; preset: 'default'; append: string }
 
 function usesEngineDefaultPrompt(): boolean {
-  return getActiveEngine() === 'halo'
+  return getActiveEngine() === 'meco'
 }
 
 /** Whether the active engine's runtime writes its own tool guidance (dsh). */
@@ -620,7 +620,7 @@ function usesNativeAgentGuidance(): boolean {
 
 /**
  * Hand a host-built prompt to the active engine: the full prompt for engines
- * that take Halo's template, the append to its own default for the halo engine.
+ * that take Meco's template, the append to its own default for the meco engine.
  */
 export function toEngineSystemPrompt(hostPrompt: string): EngineSystemPrompt {
   return usesEngineDefaultPrompt()
@@ -666,7 +666,7 @@ function applyTemplateVariables(template: string, ctx: SystemPromptContext): str
   const folderName = getDataFolderName()
   const home = os.homedir()
 
-  // Halo config directory (e.g. ~/.halo/ or ~/.halo-enterprise/)
+  // Meco config directory (e.g. ~/.halo/ or ~/.halo-enterprise/)
   const haloDir = `${home}/.${folderName}/`
 
   // Claude config directory based on platform (Electron's userData + /claude-config)
@@ -700,14 +700,14 @@ function applyTemplateVariables(template: string, ctx: SystemPromptContext): str
     .replace(/\{\{CLAUDE_CONFIG_DIR\}\}/g, claudeConfigDir)
     .replace('{{DIGITAL_HUMANS_CAPABILITY}}',
       ctx.digitalHumansEnabled !== false
-        ? '- Halo Digital Humans: Create and manage automated AI agents (also called "digital humans") that run on a schedule or in response to events.'
+        ? '- Meco Digital Humans: Create and manage automated AI agents (also called "digital humans") that run on a schedule or in response to events.'
         : ''
     )
 }
 
 /**
  * Build the host system prompt with dynamic context.
- * Selects template based on promptProfile (defaults to 'halo'); on the halo
+ * Selects template based on promptProfile (defaults to 'meco'); on the meco
  * engine the result is only the append to that engine's default prompt, and
  * promptProfile does not apply. `promptProfile` and `digitalHumansEnabled`
  * come from the user's settings unless the context states them, so every
@@ -729,7 +729,7 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
       ? buildEngineNeutralTemplate(promptProfile)
       : promptProfile === 'official'
         ? SYSTEM_PROMPT_OFFICIAL
-        : SYSTEM_PROMPT_HALO
+        : SYSTEM_PROMPT_MECO
 
   let prompt = applyTemplateVariables(template, {
     ...ctx,

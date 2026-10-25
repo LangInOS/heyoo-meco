@@ -1,5 +1,5 @@
 /**
- * Halo Apps Conversation MCP Server
+ * Meco Apps Conversation MCP Server
  *
  * Creates an in-process MCP server using Claude Agent SDK's
  * tool() and createSdkMcpServer() functions.
@@ -134,7 +134,7 @@ function buildTools(spaceId: string, guideConsulted: () => boolean) {
     'Accepts a full App Spec object (type is forced to "automation"). Returns the new app ID on success.\n\n' +
     `REQUIRED FIRST STEP: call read_halo_doc with path "${CREATE_GUIDE_PATH}" and follow it. ` +
     'It holds the current authoring guide — interview checklist, real trigger mechanics, and the ' +
-    'full field reference — and is updated independently of this Halo version.\n\n' +
+    'full field reference — and is updated independently of this Meco version.\n\n' +
     'Rules that hold even when that guide cannot be reached:\n' +
     '  - Never create a digital human for a one-off or temporary reminder ("remind me in an hour", "tell the group at 3pm"). ' +
     'In a digital human\'s own conversation, use set_reminder; anywhere else, say that such reminders are set by asking a digital human in its chat. ' +
@@ -146,7 +146,7 @@ function buildTools(spaceId: string, guideConsulted: () => boolean) {
     'spec fields: name*, description*, system_prompt* (the sole driver of every run — write it so the ' +
     'agent can execute end to end without improvising; it receives no other context), subscriptions?, ' +
     'config_schema?, requires?, filters?, memory_schema?, output?, escalation?, permissions?, ' +
-    'browser_login?, version? (default "1.0"), author? (default "Halo").\n' +
+    'browser_login?, version? (default "1.0"), author? (default "Meco").\n' +
     'Working subscription sources: { source: { type: "schedule", config: { every: "30m" | cron: "0 8 * * *", workday_calendar?: true } } } ' +
     '(workday_calendar: only on mainland China working days, holidays and make-up workdays included; the schedule must then fire every day, not 1-5), ' +
     '{ source: { type: "file", config: { pattern?, path? } } }, ' +
@@ -154,7 +154,7 @@ function buildTools(spaceId: string, guideConsulted: () => boolean) {
     {
       spec: z.string().describe(
         'JSON string of the App Spec object. Must include name, description, system_prompt, and subscriptions. ' +
-        'type is always "automation". version defaults to "1.0", author defaults to "Halo".'
+        'type is always "automation". version defaults to "1.0", author defaults to "Meco".'
       )
     },
     async (args) => {
@@ -184,7 +184,7 @@ function buildTools(spaceId: string, guideConsulted: () => boolean) {
         // Force automation type and apply defaults
         parsedSpec.type = 'automation'
         if (!parsedSpec.version) parsedSpec.version = '1.0'
-        if (!parsedSpec.author) parsedSpec.author = 'Halo'
+        if (!parsedSpec.author) parsedSpec.author = 'Meco'
 
         // Validate using the canonical schema
         let validatedSpec
@@ -703,7 +703,7 @@ function buildTools(spaceId: string, guideConsulted: () => boolean) {
 // ============================================
 
 /**
- * Create Halo Apps SDK MCP Server.
+ * Create Meco Apps SDK MCP Server.
  * Runs in-process and handles all automation app management tools.
  *
  * @param spaceId - The current space ID (captured via closure by all tools)

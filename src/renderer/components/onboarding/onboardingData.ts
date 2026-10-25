@@ -4,7 +4,7 @@
  * Contains all pre-generated content for the onboarding flow:
  * - User prompt (displayed in input)
  * - AI response text
- * - HTML artifact content (a beautiful PPT introducing Halo)
+ * - HTML artifact content (a beautiful PPT introducing Meco)
  *
  * All text is built from i18n translations so onboarding follows the selected language.
  */
@@ -44,7 +44,7 @@ export function getOnboardingHtmlArtifact(translator?: TFunction, lang: string =
 
   const docTitle = t('Halo - AI that gets things done')
   const tagline = t('AI that gets things done')
-  const whatIsHalo = t('What is Halo?')
+  const whatIsMeco = t('What is Halo?')
   const moreThanChatTitle = t('More than chat')
   const moreThanChatDesc = t('Halo understands your goals, plans tasks, and can execute autonomously—not just answer questions.')
   const createsFilesTitle = t('Creates real files')
@@ -273,13 +273,13 @@ export function getOnboardingHtmlArtifact(translator?: TFunction, lang: string =
       <div class="logo">
         <div class="logo-inner"></div>
       </div>
-      <h1>Halo</h1>
+      <h1>Meco</h1>
       <p class="tagline">${tagline}</p>
     </section>
 
-    <!-- Slide 2: What is Halo -->
+    <!-- Slide 2: What is Meco -->
     <section class="slide slide-content">
-      <h2>${whatIsHalo}</h2>
+      <h2>${whatIsMeco}</h2>
       <div class="features">
         <div class="feature">
           <div class="feature-icon">💬</div>

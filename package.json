@@ -1,10 +1,10 @@
 {
-  "name": "halo",
+  "name": "heyoo-meco",
   "version": "3.0.4",
   "description": "AI that gets things done",
   "type": "module",
   "main": "./out/main/index.cjs",
-  "author": "Halo Team",
+  "author": "Meco Team",
   "license": "MIT",
   "engines": {
     "node": ">=22.14.0"

@@ -1,8 +1,8 @@
 /**
- * ServerConnect - Connection flow for adding a Halo server (Capacitor mobile app).
+ * ServerConnect - Connection flow for adding a Meco server (Capacitor mobile app).
  *
  * Allows the user to:
- * 1. Enter a Halo server URL manually
+ * 1. Enter a Meco server URL manually
  * 2. Scan a QR code from the desktop app
  * 3. Enter the access code (PIN) to authenticate
  *
@@ -332,7 +332,7 @@ export function ServerConnect({ onServerAdded, onBack }: ServerConnectProps) {
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/20" />
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
-            Halo
+            Meco
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {onBack ? t('Add a new device') : t('Connect to your desktop')}

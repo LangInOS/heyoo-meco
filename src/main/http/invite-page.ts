@@ -5,7 +5,7 @@
  * own server with `?office=&invite=` query params. When it is opened in a
  * BROWSER (instead of being pasted into the app), this page is what the invitee
  * sees: who invited them, to which office, one button that hands off into the
- * installed app via the `halo://join` deep link, and a download path when Halo
+ * installed app via the `halo://join` deep link, and a download path when Meco
  * is not installed yet.
  *
  * Security notes:
@@ -53,7 +53,7 @@ export function getInvitePage(ctx: InvitePageContext): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Halo</title>
+  <title>Meco</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -130,7 +130,7 @@ export function getInvitePage(ctx: InvitePageContext): string {
         + '&server=' + encodeURIComponent(location.origin)
       var open = document.getElementById('open')
       open.setAttribute('href', deepLink)
-      open.textContent = zh ? '在 Halo 中打开' : 'Open in Halo'
+      open.textContent = zh ? '在 Meco 中打开' : 'Open in Meco'
 
       // Set expectations up front: joining connects to the inviter's machine, so
       // both sides must be on the same network (or a gateway is configured). Without
@@ -143,12 +143,12 @@ export function getInvitePage(ctx: InvitePageContext): string {
       var hint = document.getElementById('hint')
       if (download) {
         hint.innerHTML = (zh
-          ? '还没有安装 Halo？<a href="' + download + '">下载安装</a>，装好后重新打开这条邀请链接即可。'
-          : 'Don\\u2019t have Halo yet? <a href="' + download + '">Download it</a>, then open this invite link again.')
+          ? '还没有安装 Meco？<a href="' + download + '">下载安装</a>，装好后重新打开这条邀请链接即可。'
+          : 'Don\\u2019t have Meco yet? <a href="' + download + '">Download it</a>, then open this invite link again.')
       } else {
         hint.textContent = zh
-          ? '还没有安装 Halo？安装后重新打开这条邀请链接即可。'
-          : 'Don\\u2019t have Halo yet? Install it, then open this invite link again.'
+          ? '还没有安装 Meco？安装后重新打开这条邀请链接即可。'
+          : 'Don\\u2019t have Meco yet? Install it, then open this invite link again.'
       }
     })()
   </script>
