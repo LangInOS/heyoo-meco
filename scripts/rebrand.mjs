@@ -203,7 +203,43 @@ function dynamicProtect(content) {
   for (const constant of new Set(content.match(/\bHALO_[A-Z_]+\b/g) || [])) {
     rules.push({ from: 'MECO_' + constant.slice(5), to: constant })
   }
+  // Locale keys stay halo: t('...') literals and dynamic *Key values must keep
+  // matching the locale files, whose keys are never replaced
+  for (const m of content.matchAll(/\bt\(\s*(['"])([^'"]*[Hh]alo[^'"]*)\1/g)) {
+    const mecoForm = applyRules(m[2], BRAND_RULES)
+    if (mecoForm !== m[2]) rules.push({ from: mecoForm, to: m[2] })
+  }
+  for (const m of content.matchAll(/([A-Za-z]*[Kk]ey\s*:\s*['"])([^'"]*[Hh]alo[^'"]*)(['"])/g)) {
+    const mecoForm = applyRules(m[2], BRAND_RULES)
+    if (mecoForm !== m[2]) rules.push({ from: mecoForm, to: m[2] })
+  }
   return rules
+}
+
+/**
+ * Locale files are values-only: keys keep their upstream Halo form so they
+ * match the t('...') literals in source (replaced or not) and the
+ * npm run i18n:extract workflow; only the displayed values become Meco.
+ * 3.0.4 locale JSON is canonical (JSON.stringify(,2) round-trips), so a
+ * parse/walk/re-serialize is formatting-safe.
+ */
+function rebrandLocaleFile(file, dryRun) {
+  const content = fs.readFileSync(file, 'utf-8')
+  const json = JSON.parse(content)
+  const walk = (node) => {
+    if (typeof node === 'string') return applyRules(node, BRAND_RULES)
+    if (Array.isArray(node)) return node.map(walk)
+    if (node && typeof node === 'object') {
+      for (const key of Object.keys(node)) node[key] = walk(node[key])
+      return node
+    }
+    return node
+  }
+  const updated = JSON.stringify(walk(json), null, 2) + '\n'
+  if (updated === content) return false
+  if (!dryRun) fs.writeFileSync(file, updated, 'utf-8')
+  console.log(`  ✓ ${path.relative(ROOT_DIR, file)} (values only)`)
+  return true
 }
 
 function walkFiles(dir, files = []) {
@@ -270,9 +306,9 @@ function checkState() {
 function runRebrand(dryRun) {
   let changed = 0
 
-  console.log('\n[1/5] i18n locale files (UI + notification text)\n')
+  console.log('\n[1/5] i18n locale files (values only — keys keep matching t() literals)\n')
   for (const file of walkFiles(LOCALES_DIR)) {
-    if (processFile(file, BRAND_RULES, dryRun)) changed++
+    if (rebrandLocaleFile(file, dryRun)) changed++
   }
 
   console.log('\n[2/5] user-visible source files (v1 whitelist)\n')
