@@ -169,7 +169,9 @@ jobs:
             --linux AppImage deb \
             --config electron-builder.cjs \
             --publish never \
-            --config.extraMetadata.version=${{ needs.gate.outputs.version }}
+            --config.extraMetadata.version=${{ needs.gate.outputs.version }} \
+            --config.extraMetadata.author="Meco Team <meco@heyoo-meco.cc>" \
+            --config.linux.maintainer="Meco Team <meco@heyoo-meco.cc>"
       - uses: actions/upload-artifact@v4
         with:
           name: linux
@@ -197,6 +199,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - name: Sync the Capacitor web assets
         run: npm run cap:sync
+      - name: Neutralize the machine-specific Gradle Java path
+        run: sed -i '/org.gradle.java.home/d' android/gradle.properties
       - name: Build the debug APK
         run: ./android/gradlew -p android assembleDebug --no-daemon
       - name: Rename the APK
