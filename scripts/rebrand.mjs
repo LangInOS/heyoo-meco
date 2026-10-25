@@ -215,10 +215,23 @@ function processFileWithRules(file, rules, dryRun) {
   return true
 }
 
+/** Asset copies take every file — icons and splash images are binary */
+function walkAllFiles(dir, files = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (!SCOPE_EXCLUDE_DIRS.includes(entry.name)) walkAllFiles(fullPath, files)
+    } else if (entry.isFile()) {
+      files.push(fullPath)
+    }
+  }
+  return files
+}
+
 function copyBrandAssets(dryRun) {
   if (!fs.existsSync(REBRAND_ASSETS_DIR)) return 0
   let copied = 0
-  for (const src of walkFiles(REBRAND_ASSETS_DIR)) {
+  for (const src of walkAllFiles(REBRAND_ASSETS_DIR)) {
     if (path.basename(src) === 'README.txt') continue
     const target = path.join(ROOT_DIR, path.relative(REBRAND_ASSETS_DIR, src))
     if (dryRun) {
