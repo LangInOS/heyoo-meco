@@ -328,7 +328,12 @@ function runRebrand(dryRun) {
   console.log('\n[3/5] identity configs (full replacement)\n')
   for (const rel of IDENTITY_FULL_FILES) {
     const file = path.join(ROOT_DIR, rel)
-    if (fs.existsSync(file) && processFile(file, BRAND_RULES, dryRun)) changed++
+    if (!fs.existsSync(file)) continue
+    // Identity files also carry code-ish strings (boot flags, theme keys, CSP
+    // schemes) that couple to unreplaced files — protect those while the
+    // display text becomes Meco
+    const rules = [...BRAND_RULES, ...dynamicProtect(fs.readFileSync(file, 'utf-8')), ...PROTECT_RULES]
+    if (processFile(file, rules, dryRun)) changed++
   }
 
   console.log('\n[4/5] identity configs (targeted fields)\n')
