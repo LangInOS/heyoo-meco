@@ -234,9 +234,9 @@ export interface ProductConfig {
   appId?: string
   version: string
   /**
-   * Data folder name for per-variant isolation (e.g. 'halo', 'halo-enterprise').
-   * Controls both the Halo config directory (~/.{dataFolderName}/) and
-   * Electron userData directory. Defaults to 'halo' when omitted.
+   * Data folder name for per-variant isolation (e.g. 'meco', 'halo-enterprise').
+   * Controls both the Meco config directory (~/.{dataFolderName}/) and
+   * Electron userData directory. Defaults to 'meco' when omitted.
    */
   dataFolderName?: string
   authProviders: AuthProviderConfig[]
@@ -519,11 +519,11 @@ export function loadProductConfig(): ProductConfig {
 }
 
 /** Default data folder name when product.json omits dataFolderName */
-export const DEFAULT_DATA_FOLDER_NAME = 'halo'
+export const DEFAULT_DATA_FOLDER_NAME = 'meco'
 
 /**
  * Get the data folder name from product.json configuration.
- * Returns the configured dataFolderName or 'halo' as default.
+ * Returns the configured dataFolderName or 'meco' as default.
  * Safe to call at any point after Electron app module is available.
  */
 export function getDataFolderName(): string {
@@ -620,7 +620,7 @@ export function getWorkdayCalendarUrl(): string | undefined {
  * Public docs host used when product.json declares no `officialContent.baseUrl`.
  * Kept here rather than in the reader so open-source builds work unconfigured.
  */
-const DEFAULT_OFFICIAL_CONTENT_BASE_URL = 'https://haloxe.com/docs/ai-guides'
+const DEFAULT_OFFICIAL_CONTENT_BASE_URL = 'https://mecoxe.com/docs/ai-guides'
 
 /**
  * Base URL of the official AI guides, never empty and never trailing-slashed.
@@ -740,7 +740,7 @@ export function getMacIconPath(): string {
  */
 function getDefaultProductConfig(): ProductConfig {
   return {
-    name: 'Halo',
+    name: 'Meco',
     appId: DEFAULT_APP_ID,
     version: '1.0.0',
     authProviders: [

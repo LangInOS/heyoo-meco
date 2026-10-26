@@ -65,7 +65,7 @@ export class TrayManager {
       return
     }
 
-    this.tray.setToolTip('Halo')
+    this.tray.setToolTip('Meco')
 
     // On macOS, clicking the tray icon should show a menu (default behavior).
     // On Windows, clicking should show the main window.
@@ -114,7 +114,7 @@ export class TrayManager {
           ]
         : []),
       {
-        label: 'Show Halo',
+        label: 'Show Meco',
         click: () => this.callbacks?.onShowWindow()
       },
       { type: 'separator' },
@@ -160,7 +160,7 @@ export class TrayManager {
     menuItems.push(
       { type: 'separator' },
       {
-        label: 'Quit Halo',
+        label: 'Quit Meco',
         click: () => this.callbacks?.onQuit()
       }
     )
@@ -170,10 +170,10 @@ export class TrayManager {
 
     // Update tooltip to show status
     const tooltip = notice
-      ? `Halo - ${notice.message}`
+      ? `Meco - ${notice.message}`
       : reasons.length > 0
-      ? `Halo (${isOnline ? 'Online' : 'Offline'}) - ${reasons.length} active task(s)`
-      : `Halo (${isOnline ? 'Online' : 'Offline'})`
+      ? `Meco (${isOnline ? 'Online' : 'Offline'}) - ${reasons.length} active task(s)`
+      : `Meco (${isOnline ? 'Online' : 'Offline'})`
     this.tray.setToolTip(tooltip)
   }
 

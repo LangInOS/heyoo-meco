@@ -1,12 +1,12 @@
 /**
- * Option translation: Halo's CC-shaped SDK options → Codex app-server JSON-RPC params.
+ * Option translation: Meco's CC-shaped SDK options → Codex app-server JSON-RPC params.
  *
  * Compared to the old subprocess-per-turn adapter this file is much smaller
  * because we no longer:
  *   - flatten nested config into `--config a.b.c=v` CLI flags
  *   - massage `RUST_LOG` for stderr capture (the long-running app-server
  *     emits its own diagnostics on stderr, which the connection layer
- *     forwards to Halo's logger)
+ *     forwards to Meco's logger)
  *   - resolve a Codex executable override (handled in
  *     transport/connection.ts with `resolveBundledCodexBinary`)
  *
@@ -110,7 +110,7 @@ export async function resolveCodexOptions(sdkOptions: Record<string, any>): Prom
       reasoningEffort,
       mcpServers: pickInjectedMcpServers(sdkOptions.mcpServers || {}, preparedMcp.injectedServerNames),
       mcpBridge: preparedMcp.bridge,
-      // Default to true to match Halo's chat path (sdk-config.ts sets it
+      // Default to true to match Meco's chat path (sdk-config.ts sets it
       // explicitly to true for interactive sessions). execute.ts overrides
       // to false for automation. Falling back to true keeps live-UI parity
       // with Claude SDK when the caller forgets to set it.
@@ -219,7 +219,7 @@ async function buildThreadConfig(
     // that defensively passes `items: []` alongside a real `message` trips
     // the "Provide either message or items, but not both" validator (see
     // codex-rs/core/src/tools/handlers/multi_agents_common.rs:170). v2 keeps
-    // only `message`, matching how Halo wants sub-agents invoked. Selecting
+    // only `message`, matching how Meco wants sub-agents invoked. Selecting
     // v2 also activates the modern collab-tools surface (wait_agent /
     // close_agent / send_input / resume_agent) under `Feature::MultiAgentV2`
     // (codex-rs/tools/src/tool_config.rs:179-180,257). The feature ships
@@ -237,8 +237,8 @@ async function buildThreadConfig(
   const processEnvAdditions: Record<string, string> = {}
 
   if (credentials.provider !== 'anthropic') {
-    // Route everything else through Halo's OpenAI-compat proxy so the
-    // app-server can speak responses/chat_completions while Halo handles
+    // Route everything else through Meco's OpenAI-compat proxy so the
+    // app-server can speak responses/chat_completions while Meco handles
     // upstream auth + adapter selection.
     const router = await ensureOpenAICompatRouter({ debug: false })
     const upstreamApiType = credentials.apiType || inferCodexUpstreamApiType(credentials.baseUrl)
@@ -255,14 +255,14 @@ async function buildThreadConfig(
 
     // Codex removed `wire_api = "chat"` (see codex-rs/model-provider-info
     // lib.rs L41 — "wire_api = \"chat\" is no longer supported"). Always
-    // tell codex to speak the Responses API; Halo's OpenAI-compat router
+    // tell codex to speak the Responses API; Meco's OpenAI-compat router
     // accepts /v1/responses and converts to whatever protocol the upstream
     // provider speaks (chat_completions vs responses) using the apiType
     // encoded in the router-key blob.
     config.model_provider = 'halo-router'
     config.model_providers = {
       'halo-router': {
-        name: 'Halo OpenAI compatibility router',
+        name: 'Meco OpenAI compatibility router',
         base_url: `${router.baseUrl}/v1`,
         wire_api: 'responses',
         requires_openai_auth: false,
@@ -308,7 +308,7 @@ export function normalizeCodexBaseUrl(input: string): string {
 // ============================================================================
 
 function resolveSandboxMode(_sdkOptions: Record<string, any>): SandboxMode {
-  // Halo always runs Codex with full access — gating happens at the Halo
+  // Meco always runs Codex with full access — gating happens at the Meco
   // layer (per-space scoping, AskUserQuestion bridge), not at the Codex
   // sandbox boundary.
   return 'danger-full-access'

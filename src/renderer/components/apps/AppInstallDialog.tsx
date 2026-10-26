@@ -62,7 +62,7 @@ type InstallMode = 'visual' | 'yaml' | 'import'
 
 const DEFAULT_YAML_TEMPLATE = `\
 # ============================================
-# Halo Digital Human Spec - Complete Example
+# Meco Digital Human Spec - Complete Example
 # ============================================
 # This template shows ALL available fields.
 # Delete or modify sections as needed.
@@ -315,7 +315,7 @@ export function AppInstallDialog({ onClose, onInstalled }: AppInstallDialogProps
   const spaces = useSpaceStore(state => state.spaces)
   const haloSpace = useSpaceStore(state => state.haloSpace)
 
-  // Install targets: Halo space first, then dedicated spaces. Halo is a valid
+  // Install targets: Meco space first, then dedicated spaces. Meco is a valid
   // home for a digital human (the WeCom scan-auth flow installs there too), so
   // offering it here keeps both entry points consistent.
   const allSpaces = useMemo(

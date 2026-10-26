@@ -1,6 +1,6 @@
 /**
  * Bridge between Codex app-server's bidirectional JSON-RPC requests and
- * Halo's existing user-interaction surfaces.
+ * Meco's existing user-interaction surfaces.
  *
  * Codex issues several kinds of server requests during a turn:
  *
@@ -13,14 +13,14 @@
  *   account/chatgptAuthTokens/refresh       only fires for ChatGPT auth (we use API keys)
  *   applyPatchApproval / execCommandApproval  legacy V1 names
  *
- * Approval-style requests are auto-approved here because Halo runs Codex in
+ * Approval-style requests are auto-approved here because Meco runs Codex in
  * "bypass permissions" mode by default (consistent with the CC engine
  * behavior). The user explicitly opted into Codex; we don't surface a
  * second consent prompt for every shell command. This matches the
  * user-confirmed answer (approvalPolicy='never' + elicitation→AskUserQuestion).
  *
  * Elicitation-style requests (`item/tool/requestUserInput` and
- * `mcpServer/elicitation/request`) are bridged to Halo's existing
+ * `mcpServer/elicitation/request`) are bridged to Meco's existing
  * `agent:ask-question` UI flow via the `askQuestion` callback the session
  * adapter injects. That keeps the user experience identical to CC's
  * AskUserQuestion tool — the renderer's `AskUserQuestionCard` does not
@@ -42,7 +42,7 @@ import {
 import type { JsonRpcClient, ServerRequestContext } from './jsonrpc-client'
 
 /**
- * A question payload compatible with Halo's `agent:ask-question` event.
+ * A question payload compatible with Meco's `agent:ask-question` event.
  * Mirrors the shape the renderer's `AskUserQuestionCard` consumes.
  */
 export interface AskQuestionPayload {
@@ -61,7 +61,7 @@ export interface ServerRequestHandlerDeps {
   /** Conversation context — used for logging / future auditing. */
   conversationId: string
   /**
-   * Bridge to Halo's existing AskUserQuestion UI. Must:
+   * Bridge to Meco's existing AskUserQuestion UI. Must:
    *   - emit an `agent:ask-question` event for the renderer
    *   - resolve with user's answers when the user submits
    *   - reject if the user cancels / interrupts / closes the conversation
@@ -162,7 +162,7 @@ export function registerServerRequestHandlers(
     client.onServerRequest(
       ServerRequestMethods.ItemToolCall,
       async () => {
-        const err = new Error('Halo does not register dynamic tools; rejecting item/tool/call')
+        const err = new Error('Meco does not register dynamic tools; rejecting item/tool/call')
         ;(err as any).code = -32601
         throw err
       },
@@ -170,7 +170,7 @@ export function registerServerRequestHandlers(
     client.onServerRequest(
       ServerRequestMethods.ChatgptAuthTokensRefresh,
       async () => {
-        const err = new Error('Halo uses API-key auth; chatgpt token refresh is not supported')
+        const err = new Error('Meco uses API-key auth; chatgpt token refresh is not supported')
         ;(err as any).code = -32601
         throw err
       },

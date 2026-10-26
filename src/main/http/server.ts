@@ -1,5 +1,5 @@
 /**		      	    				  	  	  	 		 		       	 	 	         	 	    					 
- * HTTP Server - Remote access server for Halo
+ * HTTP Server - Remote access server for Meco
  * Exposes REST API and serves the frontend for remote access
  */
 
@@ -335,7 +335,7 @@ export async function startHttpServer(
   // Create HTTP server
   httpServer = createServer(expressApp)
 
-  // Initialize WebSocket (for Halo communication on /ws path)
+  // Initialize WebSocket (for Meco communication on /ws path)
   initWebSocket(httpServer)
 
   // In dev mode, proxy Vite HMR WebSocket connections
@@ -343,7 +343,7 @@ export async function startHttpServer(
     httpServer.on('upgrade', (req, socket, head) => {
       const url = new URL(req.url || '/', `http://${req.headers.host}`)
 
-      // Don't intercept Halo's WebSocket connections
+      // Don't intercept Meco's WebSocket connections
       if (url.pathname === '/ws') {
         // Let the wss server handle it (already done by initWebSocket)
         return
@@ -544,7 +544,7 @@ function getRemoteLoginPage(): string {
       } catch (e) {}
     })();
   </script>
-  <title>Halo Remote Access</title>
+  <title>Meco Remote Access</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -610,7 +610,7 @@ function getRemoteLoginPage(): string {
 <body>
   <div class="container">
     <div class="logo">◯</div>
-    <h1>Halo Remote Access</h1>
+    <h1>Meco Remote Access</h1>
 
     <p>Enter access code to connect to your desktop</p>
     <div class="input-group">

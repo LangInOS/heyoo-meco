@@ -1,13 +1,13 @@
 {
   "$schema": "./product.schema.json",
-  "name": "Halo",
+  "name": "Meco",
   "appId": "com.halo.app",
-  "dataFolderName": "halo",
+  "dataFolderName": "meco",
   "version": "1.0.0",
   "updateConfig": {
     "provider": "github",
-    "owner": "openkursar",
-    "repo": "hello-halo"
+    "owner": "LangInOS",
+    "repo": "heyoo-meco"
   },
   "authProviders": [
     {
@@ -32,7 +32,7 @@
       "publish": {
         "target": "github-pr",
         "github": {
-          "owner": "openkursar",
+          "owner": "LangInOS",
           "repo": "digital-human-protocol"
         }
       }
