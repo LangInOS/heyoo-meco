@@ -5,17 +5,19 @@
 ## 1. 分支模型
 
 ```
-dev          开发分支——所有代码与发布说明的唯一源头
-  │  （git reset --hard dev + npm run rebrand）
-  ▼
-public       发布快照——每次从 dev 重建，永不增量更新；action 在此分支上触发
-main         默认分支——仅承载 workflow 文件供 GitHub 注册（dispatch 时实际执行的是 public 上的副本）
-archive/*    历史归档，只读
+dev ──reset --hard + rebrand──▶ public ──action 触发──▶ GitHub Release
 ```
 
-**为什么不能直接在 public 上开发**：public 是 rebrand 生成的 Meco 品牌树，任何直接提交都会在下次重建时被抹掉，且会污染"public 完全由脚本生成"这一不变式。开发只发生在 dev。
+| 分支 | 角色 | 规则 |
+|---|---|---|
+| `dev` | 开发分支 | 所有代码与发布说明的唯一源头 |
+| `public` | 发布快照 | 每次从 dev 重建，永不增量更新；action 在此分支上触发 |
+| `main` | 默认分支 | 仅承载 workflow 文件供 GitHub 注册；dispatch 时实际执行的是 public 上的副本 |
+| `archive/*` | 历史归档 | 只读，不要提交 |
 
-**为什么 workflow 和发布说明必须放在 dev**：它们是 public 重建后必须存活的文件。rebrand 是白名单制（只处理语言包、用户可见源文件清单、身份配置、品牌素材），不碰 `.github/` 与 `docs/release-notes/`——所以它们会原样跟随 dev 进入 public。
+**为什么不能直接在 public 上开发**：public 是 rebrand 生成的 Meco 品牌树，任何直接提交都会在下次重建时被抹掉，且会破坏“public 完全由脚本生成”这一不变式。开发只发生在 dev。
+
+**为什么 workflow 和发布说明必须放在 dev**：它们是 public 重建后必须存活的文件。rebrand 是白名单制（只处理语言包、用户可见源文件清单、身份配置、品牌素材），不碰 `.github/` 与 `docs/release-notes/`，所以它们会原样跟随 dev 进入 public。
 
 ## 2. 发布前检查
 
@@ -35,6 +37,27 @@ archive/*    历史归档，只读
 - gate 在构建前校验该文件存在，缺失即失败，不会发出只有自动生成描述的发布
 
 ## 4. 发布流程
+
+### 完整示例（以 1.0.1 为例）
+
+```bash
+# ① 在 dev 开发、提交、推送（发布说明也写在 dev：docs/release-notes/1.0.1.md）
+git checkout dev
+# ……干活……
+git push origin dev
+
+# ② 本地重建 public（这一步会把 dev 的全部代码 + 发布基建带成 Meco 树）
+git checkout public
+git reset --hard dev
+npm run rebrand
+git add -A && git commit -m "chore: generate Meco public snapshot from dev"
+git push origin public
+
+# ③ 触发发布
+gh workflow run release.yml --ref public -f version=1.0.1
+```
+
+以上三步就是一次发布的全部操作，下面各节是对每一步的说明与注意事项。
 
 ### 步骤 1：在 dev 完成开发并推送
 
