@@ -247,6 +247,8 @@
       "!resources/office-runtime/**/*",
       "product.json",
       "halo-local/dist/**/*",
+      "LICENSE",
+      "NOTICE.md",
       "!node_modules/@capacitor/**",
       "!node_modules/@hello-halo/agent-sdk/swe-bench-eval/**",
       "!node_modules/@hello-halo/agent-sdk/docs/**",
