@@ -1,0 +1,46 @@
+{
+  "$schema": "./product.schema.json",
+  "name": "Meco",
+  "appId": "com.halo.app",
+  "dataFolderName": "meco",
+  "version": "1.0.0",
+  "updateConfig": {
+    "provider": "github",
+    "owner": "LangInOS",
+    "repo": "heyoo-meco"
+  },
+  "analytics": {
+    "baidu": {
+      "siteId": "7f0c690f05b76dc2ced05497a3887153"
+    }
+  },
+  "authProviders": [
+    {
+      "type": "custom",
+      "displayName": {
+        "en": "Custom API",
+        "zh-CN": "自定义 API"
+      },
+      "description": {
+        "en": "Claude / OpenAI compatible — the only auth that works headless",
+        "zh-CN": "兼容 Claude / OpenAI — 服务端唯一可用的接入方式"
+      },
+      "icon": "key",
+      "iconBgColor": "#da7756",
+      "recommended": true,
+      "builtin": true,
+      "enabled": true
+    }
+  ],
+  "registryOverrides": {
+    "official": {
+      "publish": {
+        "target": "github-pr",
+        "github": {
+          "owner": "LangInOS",
+          "repo": "digital-human-protocol"
+        }
+      }
+    }
+  }
+}

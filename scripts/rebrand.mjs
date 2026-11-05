@@ -163,6 +163,17 @@ const IDENTITY_TARGETED_FILES = [
   }
 ]
 
+// Product analytics identity for the generated public snapshot.
+//
+// The site ID lives in resources/rebrand-assets/server.product.json, which
+// copyBrandAssets() lands on server.product.json at step 5 — after the profile
+// has been rebranded at step 3, so the copy is read verbatim and must already
+// carry the Meco identity. product.json itself cannot hold it: the gitignore
+// rule matches that name at every depth.
+const ANALYTICS_IDENTITY_FILES = [
+  { file: 'src/renderer/index.html', pattern: /hm\.baidu\.com\/hm\.js\?[0-9a-fA-F]{32}/ }
+]
+
 // Reverse rules restore a scope (e.g. src/sdk/halo-sdk) to upstream original
 const REVERSE_RULES = [
   { from: 'LangInOS/heyoo-meco', to: 'openkursar/hello-halo' },
@@ -274,6 +285,39 @@ function walkAllFiles(dir, files = []) {
   return files
 }
 
+/**
+ * Read the analytics site ID out of server.product.json.
+ *
+ * Returns null when the file is missing, malformed, or carries no site ID —
+ * the caller then leaves every matching file untouched, so a checkout without
+ * a product profile keeps whatever the committed source says.
+ */
+function readAnalyticsSiteId() {
+  const productPath = path.join(ROOT_DIR, 'server.product.json')
+  if (!fs.existsSync(productPath)) return null
+  try {
+    const config = JSON.parse(fs.readFileSync(productPath, 'utf-8'))
+    const siteId = config?.analytics?.baidu?.siteId
+    return typeof siteId === 'string' && siteId.length > 0 ? siteId : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Swap whichever 32-hex site ID a file carries for the active variant's.
+ * Idempotent: re-running on an already-swapped file is a no-op.
+ */
+function swapAnalyticsSiteId(file, pattern, siteId, dryRun) {
+  const content = fs.readFileSync(file, 'utf-8')
+  if (!pattern.test(content)) return false
+  const updated = content.replace(pattern, `hm.baidu.com/hm.js?${siteId}`)
+  if (updated === content) return false
+  if (!dryRun) fs.writeFileSync(file, updated, 'utf-8')
+  console.log(`  ✓ ${path.relative(ROOT_DIR, file)}`)
+  return true
+}
+
 function processFile(file, rules, dryRun) {
   const content = fs.readFileSync(file, 'utf-8')
   const updated = applyRules(content, rules)
@@ -313,12 +357,12 @@ function checkState() {
 function runRebrand(dryRun) {
   let changed = 0
 
-  console.log('\n[1/5] i18n locale files (values only — keys keep matching t() literals)\n')
+  console.log('\n[1/6] i18n locale files (values only — keys keep matching t() literals)\n')
   for (const file of walkFiles(LOCALES_DIR)) {
     if (rebrandLocaleFile(file, dryRun)) changed++
   }
 
-  console.log('\n[2/5] user-visible source files (v1 whitelist)\n')
+  console.log('\n[2/6] user-visible source files (v1 whitelist)\n')
   for (const rel of USER_VISIBLE_FILES) {
     const file = path.join(ROOT_DIR, rel)
     if (!fs.existsSync(file)) continue
@@ -326,7 +370,7 @@ function runRebrand(dryRun) {
     if (processFile(file, rules, dryRun)) changed++
   }
 
-  console.log('\n[3/5] identity configs (full replacement)\n')
+  console.log('\n[3/6] identity configs (full replacement)\n')
   for (const rel of IDENTITY_FULL_FILES) {
     const file = path.join(ROOT_DIR, rel)
     if (!fs.existsSync(file)) continue
@@ -337,14 +381,27 @@ function runRebrand(dryRun) {
     if (processFile(file, rules, dryRun)) changed++
   }
 
-  console.log('\n[4/5] identity configs (targeted fields)\n')
+  console.log('\n[4/6] identity configs (targeted fields)\n')
   for (const { file, rules } of IDENTITY_TARGETED_FILES) {
     const fullPath = path.join(ROOT_DIR, file)
     if (fs.existsSync(fullPath) && processFile(fullPath, rules, dryRun)) changed++
   }
 
-  console.log('\n[5/5] brand assets\n')
+  console.log('\n[5/6] brand assets\n')
   changed += copyBrandAssets(dryRun)
+
+  // Runs last, after the asset copy at step 5 has landed the public profile on
+  // server.product.json — that copy is where the site ID comes from.
+  const siteId = readAnalyticsSiteId()
+  if (siteId) {
+    console.log('\n[6/6] product analytics identity (site ID from server.product.json)\n')
+    for (const { file, pattern } of ANALYTICS_IDENTITY_FILES) {
+      const fullPath = path.join(ROOT_DIR, file)
+      if (fs.existsSync(fullPath) && swapAnalyticsSiteId(fullPath, pattern, siteId, dryRun)) changed++
+    }
+  } else {
+    console.log('\n[6/6] product analytics identity — no site ID in server.product.json, skipped\n')
+  }
 
   console.log(`\n${dryRun ? 'Would change' : 'Changed'} ${changed} file(s).`)
 }
