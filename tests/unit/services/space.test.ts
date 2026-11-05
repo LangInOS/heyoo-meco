@@ -52,11 +52,11 @@ describe('Space Service', () => {
   })
 
   describe('getHaloSpace', () => {
-    it('should return the Halo temp space', async () => {
+    it('should return the Meco temp space', async () => {
       const haloSpace = getHaloSpace()
 
       expect(haloSpace.id).toBe('halo-temp')
-      expect(haloSpace.name).toBe('Halo')
+      expect(haloSpace.name).toBe('Meco')
       expect(haloSpace.isTemp).toBe(true)
       expect(haloSpace.icon).toBe('sparkles')
     })
@@ -168,7 +168,7 @@ describe('Space Service', () => {
       expect(space).toBeFalsy() // null or undefined
     })
 
-    it('should return Halo space for halo-temp id', async () => {
+    it('should return Meco space for halo-temp id', async () => {
       const space = getSpace('halo-temp')
 
       expect(space).toBeDefined()
@@ -193,7 +193,7 @@ describe('Space Service', () => {
       expect(fs.existsSync(haloDir)).toBe(false)
     })
 
-    it('should not allow deleting Halo temp space', async () => {
+    it('should not allow deleting Meco temp space', async () => {
       // deleteSpace may return false or throw for temp space
       try {
         const result = await deleteSpace('halo-temp')

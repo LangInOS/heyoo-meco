@@ -1,5 +1,5 @@
 /**		      	    				  	  	  	 		 		       	 	 	         	 	    					 
- * Halo - Electron Main Process
+ * Meco - Electron Main Process
  * The main entry point for the Electron application
  */
 
@@ -8,7 +8,7 @@
 // ========================================
 // Initialize electron-log before any other code to capture all logs
 // This replaces console.log/warn/error globally with electron-log
-// Logs are written to: ~/Library/Logs/Halo/ (macOS), %USERPROFILE%\AppData\Roaming\Halo\logs (Windows)
+// Logs are written to: ~/Library/Logs/Meco/ (macOS), %USERPROFILE%\AppData\Roaming\Meco\logs (Windows)
 import log from 'electron-log/main.js'
 import { createNumberedArchiveFn, MAIN_LOG_ARCHIVES, MAIN_LOG_MAX_BYTES } from './foundation/logging'
 
@@ -139,7 +139,7 @@ app.commandLine.appendSwitch('disable-blink-features', 'AutomationControlled')
 
 // Per-variant data isolation: Override Electron userData path based on product.json dataFolderName.
 // Must be called before app.whenReady() and requestSingleInstanceLock() so that
-// each build variant (e.g. Halo vs Halo-Enterprise) uses its own userData directory.
+// each build variant (e.g. Meco vs Meco-Enterprise) uses its own userData directory.
 // This isolates cookies, sessions, localStorage, Claude SDK config, etc.
 import { getDataFolderName, DEFAULT_DATA_FOLDER_NAME, getMacIconPath, getUpdateChannel, loadProductConfig, getAppUserModelId } from './foundation/product-config'
 import {
@@ -456,7 +456,7 @@ function createAppMenu(): void {
         {
           label: 'Learn More',
           click: async () => {
-            await shell.openExternal('https://github.com/openkursar/hello-halo')
+            await shell.openExternal('https://github.com/LangInOS/heyoo-meco')
           }
         }
       ]
@@ -698,7 +698,7 @@ app.whenReady().then(async () => {
   await initializeApp()
 
   // Initialize SDK engine (must be after config is loaded, before any SDK usage)
-  // This loads the configured engine (halo or anthropic) dynamically.
+  // This loads the configured engine (meco or anthropic) dynamically.
   // Hard constraint: if the configured SDK is not available, startup fails.
   await initSdk()
 

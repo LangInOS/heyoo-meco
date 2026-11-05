@@ -1,4 +1,4 @@
-# Custom NSIS installer hooks for Halo
+# Custom NSIS installer hooks for Meco
 #
 # Fixes "cannot be closed" errors during upgrade install that occur when:
 #   1. Child processes (file-watcher worker etc.) survive parent death

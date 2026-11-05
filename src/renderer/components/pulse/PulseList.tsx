@@ -265,7 +265,7 @@ export function PulseList({ maxHeight, onItemClick, compact = false }: PulseList
         className={cn(
           // Lighter fill plus a faint edge lifts cards off the panel; the
           // selected one only swaps its edge to a light accent.
-          'group/tk flex items-center gap-[11px] rounded-lg border cursor-pointer transition-colors ease-halo mx-2 mb-1.5',
+          'group/tk flex items-center gap-[11px] rounded-lg border cursor-pointer transition-colors ease-meco mx-2 mb-1.5',
           px, py,
           isSelected
             ? 'border-primary/40 bg-background'
@@ -352,13 +352,13 @@ export function PulseList({ maxHeight, onItemClick, compact = false }: PulseList
             </span>
             <button
               onClick={(e) => handleKeep(e, item)}
-              className="h-[22px] px-[9px] rounded-sm border border-primary/[0.18] text-[11px] text-accent-on-dark transition-colors ease-halo hover:bg-primary/[0.12] hover:border-primary"
+              className="h-[22px] px-[9px] rounded-sm border border-primary/[0.18] text-[11px] text-accent-on-dark transition-colors ease-meco hover:bg-primary/[0.12] hover:border-primary"
             >
               {t('Keep')}
             </button>
             <button
               onClick={(e) => handleRemove(e, item)}
-              className="h-[22px] px-[9px] rounded-sm border border-border bg-card text-[11px] text-muted-foreground transition-colors ease-halo hover:bg-surface-hover hover:text-foreground"
+              className="h-[22px] px-[9px] rounded-sm border border-border bg-card text-[11px] text-muted-foreground transition-colors ease-meco hover:bg-surface-hover hover:text-foreground"
             >
               {t('Remove')}
             </button>
@@ -386,7 +386,7 @@ export function PulseList({ maxHeight, onItemClick, compact = false }: PulseList
             {item.kept && !!item.readAt && (
               <button
                 onClick={(e) => handleRemove(e, item)}
-                className="hidden group-hover/tk:block h-[22px] px-[9px] flex-shrink-0 rounded-sm border border-border bg-card text-[11px] text-muted-foreground transition-colors ease-halo hover:bg-surface-hover hover:text-foreground"
+                className="hidden group-hover/tk:block h-[22px] px-[9px] flex-shrink-0 rounded-sm border border-border bg-card text-[11px] text-muted-foreground transition-colors ease-meco hover:bg-surface-hover hover:text-foreground"
               >
                 {t('Remove')}
               </button>
@@ -398,7 +398,7 @@ export function PulseList({ maxHeight, onItemClick, compact = false }: PulseList
             space name) to mark where you are. */}
         <ChevronRight
           className={cn(
-            'w-4 h-4 flex-shrink-0 transition-[transform,color] ease-halo',
+            'w-4 h-4 flex-shrink-0 transition-[transform,color] ease-meco',
             'text-faint-foreground group-hover/tk:block group-hover/tk:translate-x-0.5 group-hover/tk:text-foreground',
             isSelected ? 'block' : 'hidden'
           )}

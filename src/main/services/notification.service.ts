@@ -95,7 +95,7 @@ export function notifyTaskComplete(conversationTitle: string): void {
   try {
     const mainWindow = getMainWindow()
     const notification = new Notification({
-      title: 'Halo',
+      title: 'Meco',
       body: `Task complete: ${conversationTitle}`,
       silent: false
     })
@@ -109,7 +109,7 @@ export function notifyTaskComplete(conversationTitle: string): void {
 
     notification.once('failed', (_event, error) => {
       console.warn('[Notification] Task notification rejected by the system; falling back to in-app toast:', error)
-      pushToast({ title: 'Halo', body: `Task complete: ${conversationTitle}` })
+      pushToast({ title: 'Meco', body: `Task complete: ${conversationTitle}` })
     })
 
     notification.show()

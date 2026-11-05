@@ -121,8 +121,8 @@ const openRouterAdapter: ProviderAdapter = {
 
   getExtraHeaders(): Record<string, string> {
     return {
-      'HTTP-Referer': 'https://hello-halo.cc/',
-      'X-Title': 'Halo'
+      'HTTP-Referer': 'https://heyoo-meco.cc/',
+      'X-Title': 'Meco'
     }
   }
 }
@@ -151,8 +151,8 @@ const requestyAdapter: ProviderAdapter = {
 
   getExtraHeaders(): Record<string, string> {
     return {
-      'HTTP-Referer': 'https://hello-halo.cc/',
-      'X-Title': 'Halo'
+      'HTTP-Referer': 'https://heyoo-meco.cc/',
+      'X-Title': 'Meco'
     }
   }
 }
@@ -180,8 +180,8 @@ const orcaRouterAdapter: ProviderAdapter = {
 
   getExtraHeaders(): Record<string, string> {
     return {
-      'HTTP-Referer': 'https://hello-halo.cc/',
-      'X-Title': 'Halo'
+      'HTTP-Referer': 'https://heyoo-meco.cc/',
+      'X-Title': 'Meco'
     }
   }
 }
@@ -337,7 +337,7 @@ const CODEX_REQUEST_FIELDS = new Set([
 /**
  * Ask for a reasoning summary when thinking is enabled.
  *
- * Without this Halo's thinking toggle is invisible on this backend: the catalog
+ * Without this Meco's thinking toggle is invisible on this backend: the catalog
  * default for these models is `none`, so a request that omits `summary` gets no
  * reasoning back at all — the official client shows it only because it asks.
  * `auto` lets the backend choose the detail level, the enum's own default.
@@ -382,7 +382,7 @@ function applyReasoningLevels(body: Record<string, unknown>, supported: readonly
 
 /**
  * Give every function tool its `strict` flag, which the CLI's tool struct
- * requires. Halo's converter forwards whatever the Anthropic side declared, and
+ * requires. Meco's converter forwards whatever the Anthropic side declared, and
  * that is usually absent — an omission this backend does not expect.
  */
 function applyToolStrictness(body: Record<string, unknown>): void {
@@ -397,18 +397,18 @@ function applyToolStrictness(body: Record<string, unknown>): void {
 /**
  * OpenAI Codex (ChatGPT subscription) adapter.
  *
- * The Codex backend serves the Responses API but not the generic shape Halo's
+ * The Codex backend serves the Responses API but not the generic shape Meco's
  * converter produces for every Responses upstream. The differences below come
  * from the open-source Codex CLI — the one client this endpoint has to accept —
  * and the request is then reduced to exactly the CLI's field set, because the
  * backend rejects parameters the CLI never sends (observed: HTTP 400
- * "Unsupported parameter: max_output_tokens", which Halo's converter injects
+ * "Unsupported parameter: max_output_tokens", which Meco's converter injects
  * for other upstreams).
  *
  * Reshapes, each one a field the server reads:
  * - The system prompt travels as the top-level `instructions` string. The CLI's
  *   request carries no `system` role in `input`, and its own conversion never
- *   emits one; Halo's generic converter does, so it is hoisted here.
+ *   emits one; Meco's generic converter does, so it is hoisted here.
  * - `store`, `stream` and `include` are unconditional. `include` carries
  *   `reasoning.encrypted_content`, which the subscription backend needs to
  *   round-trip reasoning across turns.

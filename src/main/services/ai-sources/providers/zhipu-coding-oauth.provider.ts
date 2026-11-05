@@ -451,7 +451,7 @@ class ZhipuCodingOAuthProvider implements OAuthAISourceProvider {
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.end(
       '<!doctype html><html><body style="font-family:sans-serif;padding:40px;text-align:center">' +
-      '<h2>Authorization received</h2><p>You can close this tab and return to Halo.</p></body></html>'
+      '<h2>Authorization received</h2><p>You can close this tab and return to Meco.</p></body></html>'
     )
 
     if (this.pendingAuth !== pending) {

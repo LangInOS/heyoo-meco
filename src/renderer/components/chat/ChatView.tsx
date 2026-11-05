@@ -315,7 +315,7 @@ export function ChatView({ isCompact = false, isVisible = true }: ChatViewProps)
 
   // ── Digital-human selector wiring ──
   // Locking reads the active conversation's own session so switching is
-  // blocked mid-reply no matter which side (Halo or a digital human) is
+  // blocked mid-reply no matter which side (Meco or a digital human) is
   // currently generating.
   const digitalHumanSelectorLocked = useChatStore(s => {
     const active = s.sessions.get(activeConversationId ?? '')
@@ -328,7 +328,7 @@ export function ChatView({ isCompact = false, isVisible = true }: ChatViewProps)
     locked: digitalHumanSelectorLocked,
     onChange: (appId, conversationId) => {
       trackHome('home.composer.recipient.switch', {
-        to: appId ? 'digital_human' : 'halo',
+        to: appId ? 'digital_human' : 'meco',
         appId: appId ?? undefined,
         surface: 'selector',
         entry: peekEntry(),
@@ -459,7 +459,7 @@ export function ChatView({ isCompact = false, isVisible = true }: ChatViewProps)
     // Not sent: false has the composer put back what it took.
     if ((!content.trim() && (!images || images.length === 0) && !references) || isGenerating) return false
 
-    if (activeConversationId) noteTurnSent(activeConversationId, isDigitalHuman ? 'digital_human' : 'halo')
+    if (activeConversationId) noteTurnSent(activeConversationId, isDigitalHuman ? 'digital_human' : 'meco')
     // Sending returns the reader to the end, wherever they were reading.
     messageListRef.current?.scrollToBottom('auto')
     return sendMessage(content, images, thinkingEnabled, references ? { references } : undefined)
@@ -730,8 +730,8 @@ function LoadFailedState({ message, onRetry }: { message: string; onRetry?: () =
 }
 
 // Fixed hover/press treatment shared by every suggestion chip below.
-const CHIP_CLASS = 'group flex items-center gap-[7px] h-[34px] px-3.5 rounded-full border border-border-faint bg-card text-[13px] text-muted-foreground transition-colors ease-halo hover:text-foreground hover:border-border hover:bg-secondary'
-const CHIP_ICON_CLASS = 'w-[15px] h-[15px] text-subtle-foreground transition-colors ease-halo group-hover:text-foreground'
+const CHIP_CLASS = 'group flex items-center gap-[7px] h-[34px] px-3.5 rounded-full border border-border-faint bg-card text-[13px] text-muted-foreground transition-colors ease-meco hover:text-foreground hover:border-border hover:bg-secondary'
+const CHIP_ICON_CLASS = 'w-[15px] h-[15px] text-subtle-foreground transition-colors ease-meco group-hover:text-foreground'
 
 // Empty state component - adapts to compact mode
 type EmptyStateChip = 'continue_task' | 'generate_code' | 'create_dh' | 'analyze_doc' | 'mount_kb'
@@ -825,7 +825,7 @@ function EmptyState({
           </div>
         )}
 
-        {/* Fixed set of entry points into Halo's capabilities. Wider cap than
+        {/* Fixed set of entry points into Meco's capabilities. Wider cap than
             the composer above: English labels ("Continue recent task",
             "Create digital human", ...) run noticeably longer than the
             Chinese originals and wrapped to two lines at 640px. flex-wrap

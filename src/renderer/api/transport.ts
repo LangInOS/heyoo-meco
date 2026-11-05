@@ -302,7 +302,7 @@ export function connectWebSocket(): void {
         // Start foreground service to keep WebSocket alive in background (Capacitor only)
         if (isCapacitor()) {
           import('./foreground-service').then(({ startForegroundService }) => {
-            startForegroundService('Halo', 'Connected to desktop')
+            startForegroundService('Meco', 'Connected to desktop')
           }).catch(() => { /* plugin not available */ })
         }
 
