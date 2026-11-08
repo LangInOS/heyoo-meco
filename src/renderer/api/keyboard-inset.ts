@@ -4,7 +4,7 @@
  * On iOS the layout viewport stays full-height while the keyboard shows, and
  * the Keyboard plugin's `body` resize only sets an inline body height — it
  * cannot move the position: fixed `#root`, so the composer stays behind the
- * keyboard. The native `keyboardWillShow` / `keyboardDidHide` events carry the
+ * keyboard. The native `keyboardWillShow` / `keyboardWillHide` events carry the
  * exact keyboard height; writing it as the `--keyboard-inset-bottom` variable
  * lets `globals.css` lift `#root` above the keyboard.
  *
@@ -32,7 +32,10 @@ export async function initKeyboardInset(): Promise<void> {
     Keyboard.addListener('keyboardWillShow', (info) => {
       document.documentElement.style.setProperty(KEYBOARD_INSET, `${Math.round(info.keyboardHeight)}px`)
     })
-    Keyboard.addListener('keyboardDidHide', () => {
+    // Lifts off at the start of the hide animation, like the plugin's native
+    // body resize — dropping at keyboardDidHide would leave the composer
+    // hanging above the gone keyboard for the whole animation.
+    Keyboard.addListener('keyboardWillHide', () => {
       document.documentElement.style.removeProperty(KEYBOARD_INSET)
     })
   } catch (err) {
