@@ -21,10 +21,13 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { initCapacitorMobileShell } from './api/safe-area'
+import { initKeyboardInset } from './api/keyboard-inset'
 import { initScrollbarReveal } from './lib/scrollbar-reveal'
 
 // Capacitor mobile shell — edge-to-edge + safe-area sync. No-op on Electron/Web.
 void initCapacitorMobileShell()
+// iOS keyboard inset — lifts #root above the on-screen keyboard. No-op outside iOS Capacitor.
+void initKeyboardInset()
 initScrollbarReveal()
 
 // i18n configuration - must be imported before App

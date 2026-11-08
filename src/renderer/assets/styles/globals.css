@@ -281,7 +281,9 @@ html.platform-capacitor #root {
   position: fixed;
   top: var(--sat);
   right: var(--sar);
-  bottom: var(--sab);
+  /* Keyboard height (api/keyboard-inset.ts, iOS). The native keyboard frame
+   * already spans the home-indicator area, so max() keeps --sab from stacking. */
+  bottom: max(var(--sab), var(--keyboard-inset-bottom, 0px));
   left: var(--sal);
   width: auto;
   height: auto;
