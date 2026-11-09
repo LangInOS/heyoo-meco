@@ -205,10 +205,13 @@ async function compressImage(
 }
 
 /**
- * Check if file is a valid image type
+ * Check if a file is a valid image type.
+ *
+ * HEIC/HEIF covers the iPhone camera's default format: the picker reports it
+ * before any conversion, and the pipeline re-encodes it to JPEG below.
  */
 export function isValidImageType(file: File): boolean {
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif']
   return validTypes.includes(file.type)
 }
 

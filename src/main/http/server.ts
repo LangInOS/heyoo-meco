@@ -55,6 +55,15 @@ const MAX_PORT_SEARCH_ATTEMPTS = 20
 const WEBHOOK_INGRESS_PATH = '/hooks'
 const WEBHOOK_INGRESS_BODY_LIMIT = '256kb'
 
+// The chat message endpoints carry images as inline base64 in the request
+// body: the renderer compresses each attachment to at most 20MB and allows 10
+// per message, and base64 adds a third on top. No default JSON limit holds
+// that, so these paths (declared in routes/agent.routes.ts and
+// routes/apps.routes.ts) get their own parser, mounted ahead of the default
+// one, while every other route keeps the default ceiling.
+const CHAT_MESSAGE_BODY_LIMIT = '50mb'
+const CHAT_MESSAGE_PATHS = ['/api/agent/message', '/api/apps/:appId/chat/send']
+
 // The ingress router is a process-lifetime singleton, NOT tied to a server
 // instance: apps/runtime initializes (and mounts WebhookSource routes) before
 // the HTTP server first starts, and the server may be stopped/restarted with
@@ -181,6 +190,9 @@ export async function startHttpServer(
   attachWebhookIngress(expressApp)
 
   // Middleware
+  for (const chatPath of CHAT_MESSAGE_PATHS) {
+    expressApp.use(chatPath, express.json({ limit: CHAT_MESSAGE_BODY_LIMIT }))
+  }
   expressApp.use(express.json())
   expressApp.use(express.urlencoded({ extended: true }))
 
@@ -241,6 +253,18 @@ export async function startHttpServer(
 
   // Register API routes
   registerApiRoutes(expressApp)
+
+  // Terminal error handler for /api. Without it a body-parser rejection (e.g. a
+  // body over the limit) answers with Express's default HTML stack trace —
+  // silent in the log and leaking internals to remote clients.
+  expressApp.use('/api', (err: Error & { status?: number }, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status ?? 500
+    console.warn(`[HTTP] /api request rejected (${status}): ${err.message}`)
+    res.status(status).json({
+      success: false,
+      error: status === 413 ? 'Request body too large' : 'Internal server error'
+    })
+  })
 
   // Serve static files (frontend)
   if (is.dev) {
