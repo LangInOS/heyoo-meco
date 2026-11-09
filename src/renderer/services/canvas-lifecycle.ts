@@ -18,6 +18,7 @@ import { planCanvasBudget, type CanvasBudgetLimits } from './canvas-budget'
 import { holdArtifactSpace } from './artifact-space-holds'
 import type { ChangesViewMemory } from '../types/changes-view'
 import type { ReferenceLineRange } from '../../shared/types/content-reference'
+import { toFileUrl } from '../../shared/halo-file-url'
 
 // ============================================
 // Types
@@ -753,7 +754,7 @@ class CanvasLifecycle {
   private async openPdf(path: string, title?: string): Promise<string> {
     const tabId = generateTabId()
     // Native PDF guests navigate directly to the file; the app never reads its bytes.
-    const pdfUrl = `file://${encodeURI(path)}`
+    const pdfUrl = toFileUrl(path)
 
     const tab: NewTab = {
       id: tabId,

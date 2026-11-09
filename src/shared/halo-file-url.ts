@@ -25,6 +25,16 @@ export function toHaloFileUrl(path: string): string {
 }
 
 /**
+ * Filesystem path (either separator style) as a `file://` URL, for an embedded
+ * guest that loads the file itself — a canvas PDF tab. The app renderer cannot
+ * reach a bare `file://` URL, so this is the only form such a tab can use.
+ */
+export function toFileUrl(path: string): string {
+  const segments = path.replace(/\\/g, '/').split('/').map(encodeURIComponent)
+  return `file:///${segments.join('/').replace(/^\//, '')}`
+}
+
+/**
  * Filesystem path addressed by a `halo-file://` URL, with forward slashes.
  * A `?v=<token>` cache-buster appended by the renderer is ignored.
  */

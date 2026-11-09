@@ -24,6 +24,7 @@ import type { CanvasTab } from '../../../stores/canvas.store'
 import { useCanvasActions } from '../../../hooks/useCanvasLifecycle'
 import { CodeMirrorEditor } from './CodeMirrorEditor'
 import { buildHtmlPreviewDocument, openIsolatedPreview } from './html-preview'
+import { toFileUrl } from '../../../../shared/halo-file-url'
 import { countLines } from './count-lines'
 import { useViewerResources } from '../viewer-resources'
 
@@ -113,7 +114,7 @@ export function HtmlViewer({ tab }: HtmlViewerProps) {
     if (!tab.path) return
 
     // For local files, use file:// protocol
-    const fileUrl = `file://${tab.path}`
+    const fileUrl = toFileUrl(tab.path)
     openUrl(fileUrl, tab.title)
 
     // Close the current HtmlViewer tab
