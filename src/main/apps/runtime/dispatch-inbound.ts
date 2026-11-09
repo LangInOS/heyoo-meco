@@ -116,7 +116,7 @@ const SUPPLEMENT_ACK_TRUNCATE_THRESHOLD = 5
  * Whether a message is one of `commands` (case-insensitive, trimmed).
  *
  * A group delivers the bot only messages that mention it, so a command there
- * arrives as "@Halo AI Team /stop" — and where a bot name ends cannot be told
+ * arrives as "@Meco AI Team /stop" — and where a bot name ends cannot be told
  * from the text, since it may contain spaces. So in a group a command also
  * counts when it ends a message that starts with a mention. The mentions are
  * never stripped from the text itself: who else a message addresses is part
@@ -182,10 +182,10 @@ function buildNoOwnerGuideMessage(): string {
   return (
     '⚠️ This bot has no owner yet, so it cannot execute tasks.\n' +
     'Send it a direct message — the sender is bound as owner automatically. ' +
-    'Or set the owner ID in Halo Settings → Message Channels.\n' +
+    'Or set the owner ID in Meco Settings → Message Channels.\n' +
     '⚠️ 该机器人尚未绑定主人，暂时无法执行任务。\n' +
     '请先与机器人私聊发送一条消息，发送者将自动绑定为主人；' +
-    '也可在 Halo 设置 → 消息通道中手动填写主人 ID。' +
+    '也可在 Meco 设置 → 消息通道中手动填写主人 ID。' +
     link
   )
 }
@@ -696,7 +696,7 @@ export async function dispatchInboundMessage(
 
   // ── Owner auto-claim / no-owner gate ──────────────────────────
   // permissionEnabled=true with empty owners means everyone is a deny-all
-  // guest — including the instance creator. Since Halo is a personal client,
+  // guest — including the instance creator. Since Meco is a personal client,
   // the first direct-message sender is the creator, so we bind them as owner
   // automatically. Group chats never auto-claim (first-sender-wins would be
   // unsafe); they get a throttled guide message instead.
@@ -1090,7 +1090,7 @@ export async function dispatchInboundMessage(
       } catch (err) {
         if (!turnStart.cancelled) {
           if (err instanceof RelayActionUnauthorizedError) throw err
-          throw new Error('The question context could not be prepared; pending messages are retained. Please answer in Halo.')
+          throw new Error('The question context could not be prepared; pending messages are retained. Please answer in Meco.')
         }
       }
     }

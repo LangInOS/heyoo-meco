@@ -17,18 +17,18 @@ import androidx.core.app.NotificationCompat;
 /**
  * Android Foreground Service to keep the WebView process alive in the background.
  *
- * When the Halo app is connected to a desktop server, this service prevents Android
+ * When the Meco app is connected to a desktop server, this service prevents Android
  * from suspending the WebView and killing the WebSocket connection. This ensures
  * real-time event delivery (task completion, digital human notifications, escalations)
  * even when the user switches to another app.
  *
- * The service shows a persistent notification: "Halo · Connected to desktop"
+ * The service shows a persistent notification: "Meco · Connected to desktop"
  * which is standard behavior for foreground services (similar to messaging apps).
  */
 public class HaloForegroundService extends Service {
 
     private static final String TAG = "HaloForegroundService";
-    private static final String CHANNEL_ID = "halo_connection_channel";
+    private static final String CHANNEL_ID = "meco_connection_channel";
     private static final int NOTIFICATION_ID = 1001;
 
     private PowerManager.WakeLock wakeLock;
@@ -53,7 +53,7 @@ public class HaloForegroundService extends Service {
         );
 
         // Extract custom title/body from intent (with defaults)
-        String title = "Halo";
+        String title = "Meco";
         String body = "Connected to desktop";
         if (intent != null) {
             if (intent.hasExtra("title")) title = intent.getStringExtra("title");
@@ -100,10 +100,10 @@ public class HaloForegroundService extends Service {
     private void createNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(
             CHANNEL_ID,
-            "Halo Connection",
+            "Meco Connection",
             NotificationManager.IMPORTANCE_LOW
         );
-        channel.setDescription("Keeps connection to Halo desktop alive for real-time notifications");
+        channel.setDescription("Keeps connection to Meco desktop alive for real-time notifications");
         channel.setShowBadge(false);
 
         NotificationManager manager = getSystemService(NotificationManager.class);
@@ -118,7 +118,7 @@ public class HaloForegroundService extends Service {
             if (powerManager != null) {
                 wakeLock = powerManager.newWakeLock(
                     PowerManager.PARTIAL_WAKE_LOCK,
-                    "Halo::ConnectionKeepAlive"
+                    "Meco::ConnectionKeepAlive"
                 );
                 // Auto-release after 4 hours to prevent battery drain if something goes wrong
                 wakeLock.acquire(4 * 60 * 60 * 1000L);

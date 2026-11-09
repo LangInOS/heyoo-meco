@@ -17,10 +17,10 @@
  * new fields is safe — renderer fallbacks tolerate missing flags.
  */
 
-export type EngineId = 'anthropic' | 'halo' | 'codex' | 'dsh'
+export type EngineId = 'anthropic' | 'meco' | 'codex' | 'dsh'
 
 /**
- * Logical tool kinds Halo's UI knows how to render. The renderer maps tool
+ * Logical tool kinds Meco's UI knows how to render. The renderer maps tool
  * calls to one of these via either:
  *   1. CC-shaped native name (Bash, Read, Edit, ...)
  *   2. Synthetic mapping declared in `EngineCapabilities.tools.synthetic`
@@ -95,7 +95,7 @@ export interface EngineCapabilities {
   subAgent: {
     /**
      * - `declarative`: engine surfaces structured Task/Agent lifecycle (CC).
-     * - `imperative`: engine drives sub-tasks via its own runtime; Halo only
+     * - `imperative`: engine drives sub-tasks via its own runtime; Meco only
      *   sees a flat tool stream. UI collapses to a compact card.
      * - `none`: no subagents.
      */
@@ -107,10 +107,10 @@ export interface EngineCapabilities {
     /**
      * The runtime writes its own agent guidance from the tools it actually
      * registered — dsh assembles one section per mounted plugin, Codex ships
-     * built-in instructions. Halo then contributes identity and product
+     * built-in instructions. Meco then contributes identity and product
      * context only: a second tool policy written against CC's tool names
      * would both contradict the runtime's own and name tools the model does
-     * not have. False means Halo owns that layer (see `system-prompt.ts`).
+     * not have. False means Meco owns that layer (see `system-prompt.ts`).
      */
     nativeAgentGuidance: boolean
   }
@@ -119,7 +119,7 @@ export interface EngineCapabilities {
     mcp: boolean
     hooks: boolean
     /**
-     * Whether the engine enforces Halo's permission options — `allowedTools` /
+     * Whether the engine enforces Meco's permission options — `allowedTools` /
      * `disallowedTools` rules and the `canUseTool` gate.
      *
      * This is what lets a turn driven by somebody other than the owner run at
@@ -133,7 +133,7 @@ export interface EngineCapabilities {
     /**
      * Whether the engine can branch a resumed session into a NEW session id
      * (SDK `resume` + `forkSession: true`), so a copy can continue independently
-     * without polluting the source. CC and Halo SDK support this; Codex's
+     * without polluting the source. CC and Meco SDK support this; Codex's
      * `thread/resume` only continues the original thread, so it is false there.
      * Gates the "continue in client" fork affordance.
      */
@@ -196,13 +196,13 @@ export const ANTHROPIC_CAPABILITIES: EngineCapabilities = {
 }
 
 /**
- * Halo SDK — mirrors CC's capability set since it implements the same protocol
+ * Meco SDK — mirrors CC's capability set since it implements the same protocol
  * surface, plus the features only it offers.
  */
 export const HALO_CAPABILITIES: EngineCapabilities = {
   ...ANTHROPIC_CAPABILITIES,
-  engineId: 'halo',
-  displayName: 'Halo SDK',
+  engineId: 'meco',
+  displayName: 'Meco SDK',
   features: {
     ...ANTHROPIC_CAPABILITIES.features,
     goal: true,
@@ -227,7 +227,7 @@ import { DSH_CAPABILITIES } from './dsh/capabilities'
 export function defaultCapabilitiesFor(engineId: EngineId): EngineCapabilities {
   switch (engineId) {
     case 'anthropic': return ANTHROPIC_CAPABILITIES
-    case 'halo': return HALO_CAPABILITIES
+    case 'meco': return HALO_CAPABILITIES
     case 'codex': return CODEX_CAPABILITIES
     case 'dsh': return DSH_CAPABILITIES
   }

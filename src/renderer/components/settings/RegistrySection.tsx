@@ -19,7 +19,7 @@ function reloadStore(): void {
 }
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
-  'halo': 'Halo',
+  'meco': 'Meco',
   'mcp-registry': 'MCP',
   'smithery': 'Smithery',
   'claude-skills': 'Claude Skills',

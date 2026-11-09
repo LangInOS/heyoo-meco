@@ -582,7 +582,7 @@ class WecomBotInstance implements ImChannelInstance {
 
     // On a machine that only reaches the internet through a proxy, a WebSocket
     // opened without an agent connects to nothing — the SDK reads neither
-    // Halo's proxy setting nor the system one. Resolving it here puts this
+    // Meco's proxy setting nor the system one. Resolving it here puts this
     // connection on the same route as every other outbound request.
     let agent: Awaited<ReturnType<typeof resolveProxyAgent>>
     try {
@@ -813,7 +813,7 @@ class WecomBotInstance implements ImChannelInstance {
     try {
       notifyAppEvent(
         'WeCom bot on standby',
-        'This bot is now active on another device, so Halo put this connection on standby to avoid a conflict. Open Settings → Message Channels and choose "Use on this device" to take over here.',
+        'This bot is now active on another device, so Meco put this connection on standby to avoid a conflict. Open Settings → Message Channels and choose "Use on this device" to take over here.',
       )
     } catch (err) {
       logEvent(this.instanceId, 'warn', 'standby_notify_failed', {

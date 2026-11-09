@@ -5,7 +5,7 @@
  * - spaces-index.json (v3) stores space registration info (name/icon/path/timestamps)
  * - Preferences are NOT stored in the index — they live in per-space meta.json
  * - Module-level registry Map is the in-memory working copy of the index
- * - Halo temp space is unified into the registry (no special branches)
+ * - Meco temp space is unified into the registry (no special branches)
  * - Lazy-loaded on first access; auto-migrates from v1/v2 formats if needed
  * - Mutations (create/update/delete) update both memory and disk atomically
  * - listSpaces() is pure memory read — zero disk I/O after startup
@@ -277,7 +277,7 @@ function registerHaloTemp(map: Map<string, SpaceIndexEntry>): void {
   const now = new Date().toISOString()
   map.set('halo-temp', {
     path: tempPath,
-    name: 'Halo',
+    name: 'Meco',
     icon: 'sparkles',
     createdAt: now,
     updatedAt: now,
@@ -434,7 +434,7 @@ function entryToSpaceWithPreferences(id: string, entry: SpaceIndexEntry): Space 
 }
 
 /**
- * Get Halo temp space. Delegates to unified getSpace().
+ * Get Meco temp space. Delegates to unified getSpace().
  */
 export function getHaloSpace(): Space {
   return getSpace('halo-temp')!
@@ -455,7 +455,7 @@ export function getSpace(spaceId: string): Space | null {
  * "what belongs to this space" for the AI agent (cwd), the Artifact panel,
  * the file explorer, and outbound file gates.
  *
- * Why a dedicated helper: `space.path` is Halo's internal record-keeping
+ * Why a dedicated helper: `space.path` is Meco's internal record-keeping
  * location (memory, session JSONL, app data). The user's actual workspace
  * — and the AI's cwd — is `workingDir` when set. Treating these as the same
  * is a category error that has caused real bugs (e.g. file-export gates
@@ -613,7 +613,7 @@ export async function createSpace(input: { name: string; icon: string; color?: s
  * Remove a space's registry entry without touching anything on disk —
  * distinct from deleteSpace(), which deletes files. For spaces whose path
  * is currently unreachable (external drive unplugged, etc.): the data isn't
- * gone, Halo just stops tracking it. Reconnecting the drive and creating a
+ * gone, Meco just stops tracking it. Reconnecting the drive and creating a
  * space pointed at the same path won't recover the old id/conversations —
  * this only clears the dead entry, it doesn't preserve a path to relink one.
  *
@@ -770,10 +770,10 @@ function writeMeta(spaceId: string, entry: SpaceIndexEntry): void {
 
 /**
  * Why `workingDir` cannot be a space's working directory, or null when it can:
- * an existing folder, given by its full path, outside the folders where Halo and
+ * an existing folder, given by its full path, outside the folders where Meco and
  * the engine keep their own data — except `ownDataDir`, the space's own data
  * folder, where a space without a project folder works. Nothing is created
- * here — Halo neither makes nor removes the user's folders.
+ * here — Meco neither makes nor removes the user's folders.
  */
 export function workingDirProblem(workingDir: string, ownDataDir?: string): string | null {
   if (!workingDir || !isAbsolute(workingDir)) return 'Choose a folder by its full path.'
@@ -785,7 +785,7 @@ export function workingDirProblem(workingDir: string, ownDataDir?: string): stri
   }
   const isOwnDataDir = ownDataDir !== undefined && canonicalPath(dir) === canonicalPath(ownDataDir)
   if (!isOwnDataDir && [getHaloDir(), resolveClaudeConfigDir()].some(root => isPathWithin(dir, root))) {
-    return 'That folder holds Halo’s own data. Choose a project folder.'
+    return 'That folder holds Meco’s own data. Choose a project folder.'
   }
   return null
 }
@@ -808,7 +808,7 @@ export function workingDirChangeProblem(spaceId: string, workingDir: string): st
 
 /**
  * Point a space at another working directory. Only the record changes: the
- * agent, the file panel and the space's digital humans follow it, and Halo's
+ * agent, the file panel and the space's digital humans follow it, and Meco's
  * own data for the space stays where it is. The default space keeps its own.
  * meta.json is written first, so a failure changes nothing.
  *
@@ -1143,7 +1143,7 @@ export function saveOnboardingConversation(
 
     const conversation = {
       id: conversationId,
-      title: 'Welcome to Halo',
+      title: 'Welcome to Meco',
       createdAt: now,
       updatedAt: now,
       messages: [

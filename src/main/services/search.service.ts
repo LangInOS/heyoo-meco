@@ -221,7 +221,7 @@ export class SearchService {
   private spaceNameOf(spaceId: string, cache: Map<string, string>): string {
     const cached = cache.get(spaceId)
     if (cached !== undefined) return cached
-    let name = spaceId === 'halo-temp' ? 'Halo' : spaceId
+    let name = spaceId === 'halo-temp' ? 'Meco' : spaceId
     if (spaceId !== 'halo-temp') {
       try {
         name = getSpace(spaceId)?.name ?? name
